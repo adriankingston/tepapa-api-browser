@@ -8,13 +8,20 @@ people and places with images and full metadata.
 
 ## How it works
 
-- **`server.js`** — a tiny zero-dependency Node server. It serves the UI and proxies
-  search requests to the Te Papa API, adding your `x-api-key` header **server-side**.
-  This keeps the key out of the browser and sidesteps the API's lack of CORS support.
 - **`public/`** — the front-end (plain HTML/CSS/JS, no build step).
+- **`api/`** — the backend, as small serverless functions (`search`, `typecounts`,
+  `collections`, `neighbors`, `record`, `wikipedia`). Each proxies requests to the
+  Te Papa API, adding your `x-api-key` header **server-side** — so the key never
+  reaches the browser and the API's lack of CORS support is sidestepped.
+- **`lib/tepapa.js`** — the shared logic those functions call (Te Papa requests, the
+  relationship-graph builder, the Wikipedia/Wikidata matcher).
+- **`server.js`** — a tiny zero-dependency Node server for **local development**. It
+  serves `public/` and routes `/api/*` to the *same* handler files, so `node server.js`
+  behaves just like the deployment.
 
-The browser only ever talks to the local `/api/search` proxy. Images load directly from
-`media.tepapa.govt.nz`.
+The browser only ever talks to the local `/api/*` proxy. Images load directly from
+`media.tepapa.govt.nz`. The same code runs locally (`node server.js`) and on a serverless
+host like Vercel — see **[Deploying to Vercel](#deploying-to-vercel)**.
 
 ## Running it
 
@@ -53,10 +60,45 @@ free API key (the key stays server-side and never reaches the browser):
   make their own from `.env.example`.
 - Don't share your API key; each person should register their own (Te Papa issues
   keys per user, with their own rate limits).
-- Want a public URL instead of local installs? It deploys to any Node host
-  (Render, Railway, Fly, a VPS…) — set `TEPAPA_API_KEY` as an environment variable
-  there. Note that a single hosted instance serves everyone from *one* key, so
-  check the [API terms of use](https://www.tepapa.govt.nz/api-terms-of-use) first.
+- Want a public URL instead of local installs? See **[Deploying to Vercel](#deploying-to-vercel)**
+  below (it also runs on any Node/serverless host — Render, Railway, Fly, a VPS…).
+  Note that a single hosted instance serves everyone from *one* key, so read the
+  caveat there and check the [API terms of use](https://www.tepapa.govt.nz/api-terms-of-use) first.
+
+## Deploying to Vercel
+
+The repo is laid out for **zero-config** Vercel deploys: static files in `public/`,
+serverless functions in `api/`. There's no `vercel.json` and no build step.
+
+1. Make sure this repo is on GitHub (it already is if you cloned it from there).
+2. In the [Vercel dashboard](https://vercel.com/new): **Add New… → Project**, then
+   **Import** this GitHub repo (authorise the Vercel GitHub app if prompted). Leave
+   the **Framework Preset** as **Other**; don't set a Build Command or Output Directory.
+3. Before the first deploy, expand **Environment Variables** and add your key:
+   - **Name** `TEPAPA_API_KEY`  ·  **Value** your key
+   - Apply it to **Production**, **Preview** *and* **Development**.
+4. Click **Deploy**. You get a `https://<project>.vercel.app` URL, and every push to
+   `main` redeploys automatically.
+
+Changing the key later goes through **Settings → Environment Variables → edit → Save**,
+then **redeploy** (Vercel only applies env-var changes to *new* deployments).
+
+> **CLI alternative:** `npm i -g vercel` → `vercel login` → `vercel` (preview deploy
+> + links the folder) → `vercel env add TEPAPA_API_KEY` → `vercel --prod`.
+
+### ⚠ Before you make it public
+
+A hosted instance serves **everyone from your one API key**, and the `/api/*` proxy is
+open to anyone who finds the URL:
+
+- All traffic counts against **your** personal Te Papa rate limit.
+- The [Te Papa API terms of use](https://www.tepapa.govt.nz/api-terms-of-use) are
+  written around per-user keys — a public proxy may need their OK first.
+- Anyone could script against your deployment and burn your quota.
+
+For a small personal or demo deploy this is usually fine. To harden it you can add a
+shared-secret/Basic-Auth gate or an origin allowlist in the `api/` functions, or turn on
+Vercel's Deployment Protection. (Happy to wire up a lightweight guard if you want one.)
 
 ## Features
 

@@ -11,8 +11,17 @@ new version (e.g. `## [1.1.0] — YYYY-MM-DD`), bump `version` in `package.json`
 cut a matching GitHub release. Delete any subsections you don't use._
 
 ### Added
+- **Vercel deployment support** — the backend is now structured as zero-config
+  serverless functions under `api/` (`search`, `typecounts`, `collections`,
+  `neighbors`, `record`, `wikipedia`), with shared logic in `lib/tepapa.js`. The app
+  deploys to Vercel (or any serverless/Node host) with no `vercel.json` and no build
+  step. See *Deploying to Vercel* in the README, including the shared-key caveat.
+- `.vercelignore` to keep `.env`, `.git` and local cruft out of any CLI deploy.
 
 ### Changed
+- `server.js` is now a thin **local-development** server: it serves `public/` and
+  routes `/api/*` to the very same handler files Vercel runs, so `node server.js`
+  behaves like the deployment. No change to behaviour, endpoints, or the UI.
 
 ### Fixed
 
