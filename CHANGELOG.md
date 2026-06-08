@@ -4,6 +4,18 @@ All notable changes to this project are documented here. The format is loosely
 based on [Keep a Changelog](https://keepachangelog.com/), and the project aims to
 follow [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+_Jot changes here as you make them. When you publish, rename this heading to the
+new version (e.g. `## [1.1.0] — YYYY-MM-DD`), bump `version` in `package.json`, and
+cut a matching GitHub release. Delete any subsections you don't use._
+
+### Added
+
+### Changed
+
+### Fixed
+
 ## [1.0.0] — 2026-06-08
 
 First public release on GitHub. The items below are the notable changes since the
@@ -46,4 +58,5 @@ earlier informally‑shared version.
 - The relationship‑graph view, grid/list toggle, and detail panel existed in the
   earlier shared version; the entries above are what changed since then.
 
+[Unreleased]: https://github.com/adriankingston/tepapa-api-browser/compare/v1.0.0...HEAD
 [1.0.0]: https://github.com/adriankingston/tepapa-api-browser/releases/tag/v1.0.0
