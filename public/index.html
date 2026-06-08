@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Te Papa Collections Browser</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">Te&nbsp;Papa</span>
+      <span class="brand-sub">Collections Browser</span>
+    </div>
+
+    <form id="search-form" class="search">
+      <input
+        id="q"
+        type="search"
+        placeholder="Search the collection — e.g. korowai, kiwi, Rita Angus, hei tiki…"
+        autocomplete="off"
+        autofocus
+      />
+      <button type="submit">Search</button>
+    </form>
+  </header>
+
+  <div class="toolbar">
+    <div id="status" class="status">Search Aotearoa New Zealand’s national collection.</div>
+    <div class="controls">
+      <label id="sort-control" class="sort-control" hidden>
+        <span>Sort</span>
+        <select id="sort-select" title="Sort results"></select>
+      </label>
+      <div class="viewswitch" role="group" aria-label="Result view">
+        <button id="view-grid" type="button" class="active" aria-pressed="true" title="Grid view">▦ Grid</button>
+        <button id="view-list" type="button" aria-pressed="false" title="List view">☰ List</button>
+      </div>
+      <label class="img-toggle">
+        <input type="checkbox" id="images-only" />
+        Images only
+      </label>
+    </div>
+  </div>
+
+  <nav id="result-tabs" class="result-tabs" role="tablist" aria-label="Record type" hidden></nav>
+
+  <div id="collection-filter" class="cfilter" hidden></div>
+
+  <main id="results" class="grid" aria-live="polite"></main>
+
+  <nav id="pager" class="pager" hidden>
+    <button id="prev" type="button">← Previous</button>
+    <span id="page-info"></span>
+    <button id="next" type="button">Next →</button>
+  </nav>
+
+  <footer class="footer">
+    Data &amp; images © Museum of New Zealand Te Papa Tongarewa, via the
+    <a href="https://data.tepapa.govt.nz/docs/" target="_blank" rel="noopener">Collections API</a>.
+    Metadata licensed CC BY 4.0 — images retain their own licences, check before reuse.
+  </footer>
+
+  <!-- Detail overlay -->
+  <div id="overlay" class="overlay" hidden>
+    <div class="sheet" role="dialog" aria-modal="true">
+      <button id="close-detail" class="close" aria-label="Close">×</button>
+      <div id="detail" class="detail"></div>
+    </div>
+  </div>
+
+  <!-- Knowledge-graph overlay -->
+  <div id="graph-overlay" class="graph-overlay" hidden>
+    <div class="graph-head">
+      <div class="graph-title">
+        <strong>Relationship graph</strong>
+        <span id="graph-focus-title" class="graph-focus"></span>
+      </div>
+      <div class="graph-actions">
+        <span id="graph-count" class="graph-count"></span>
+        <button id="graph-collapse-all" type="button">Collapse all</button>
+        <button id="graph-fit" type="button">Fit</button>
+        <button id="graph-relayout" type="button">Re-layout</button>
+        <button id="graph-close" type="button" class="close" aria-label="Close graph">×</button>
+      </div>
+    </div>
+    <div id="cy" class="cy"></div>
+    <div id="graph-legend" class="graph-legend"></div>
+    <aside id="graph-info" class="graph-info" hidden></aside>
+    <div id="graph-hint" class="graph-hint">Tap a node to expand · Right-click a node (or use the panel) to collapse its branches</div>
+    <div id="graph-toast" class="graph-toast" hidden></div>
+  </div>
+
+  <script src="/vendor/cytoscape.min.js"></script>
+  <script src="/app.js"></script>
+  <script src="/graph.js"></script>
+</body>
+</html>
