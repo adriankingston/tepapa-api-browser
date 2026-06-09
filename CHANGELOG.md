@@ -24,6 +24,9 @@ cut a matching GitHub release. Delete any subsections you don't use._
   behaves like the deployment. No change to behaviour, endpoints, or the UI.
 
 ### Fixed
+- Relationship graph: the transient status toast (e.g. *Loading relationships…*) is
+  now green instead of red, so loading/status messages no longer look like errors.
+  Genuine failures keep the red.
 
 ## [1.0.0] — 2026-06-08
 

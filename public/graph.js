@@ -73,8 +73,11 @@
   let toastTimer = null;
 
   // ---- small helpers ----
-  function toast(msg) {
+  // kind 'info' (default) shows a neutral green toast; 'error' shows red, so
+  // genuine failures still read as errors while loading/status messages don't.
+  function toast(msg, kind = 'info') {
     elToast.textContent = msg;
+    elToast.classList.toggle('error', kind === 'error');
     elToast.hidden = false;
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => (elToast.hidden = true), 2600);
@@ -217,7 +220,7 @@
     if (node.data('expanded')) return;
     node.data('expanded', true);
     const href = node.data('href');
-    if (!href) { toast('No record link to expand'); return; }
+    if (!href) { toast('No record link to expand', 'error'); return; }
     toast('Loading relationships…');
     let data;
     try {
@@ -229,7 +232,7 @@
       if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
     } catch (e) {
       node.data('expanded', false);
-      toast(`Couldn’t expand: ${e.message}`);
+      toast(`Couldn’t expand: ${e.message}`, 'error');
       return;
     }
 
@@ -286,7 +289,7 @@
           return { key: `${r.type}:${r.id}`, id: String(r.id), type: r.type, title: r.title || r.prefLabel || '(untitled)', href: r.href, thumb: reps[0] ? reps[0].thumbnailUrl : null };
         });
       } catch (e) {
-        toast(`Couldn’t load members: ${e.message}`);
+        toast(`Couldn’t load members: ${e.message}`, 'error');
         return;
       }
     }
@@ -413,7 +416,7 @@
       const res = await fetch(`/api/record?href=${encodeURIComponent(href)}`);
       const record = await res.json();
       if (record && record.id) openDetail(record); // detail overlay sits above the graph
-    } catch { toast('Couldn’t open details'); }
+    } catch { toast('Couldn’t open details', 'error'); }
   }
 
   // ---- entry / chrome ----

@@ -6,7 +6,8 @@
   --text: #1a1d23;
   --muted: #5b6472;
   --accent: #008e96;      /* Te Papa teal (darkened for contrast on white) */
-  --accent-2: #e23347;
+  --accent-2: #e23347;    /* error / danger red */
+  --ok: #15803d;          /* success / status green (white text passes AA) */
   --radius: 12px;
   --shadow: 0 8px 24px rgba(20, 30, 50, 0.12);
 }
@@ -691,10 +692,12 @@ a { color: var(--accent); }
   bottom: 22px;
   left: 50%;
   transform: translateX(-50%);
-  background: var(--accent-2);
+  background: var(--ok);
   color: #fff;
   padding: 9px 16px;
   border-radius: 99px;
   font-size: 13px;
   box-shadow: var(--shadow);
 }
+/* genuine failures keep the red so they still read as errors */
+.graph-toast.error { background: var(--accent-2); }
