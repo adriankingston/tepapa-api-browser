@@ -7,8 +7,16 @@ follow [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 _Jot changes here as you make them. When you publish, rename this heading to the
-new version (e.g. `## [1.3.0] — YYYY-MM-DD`), bump `version` in `package.json`, and
+new version (e.g. `## [1.4.0] — YYYY-MM-DD`), bump `version` in `package.json`, and
 cut a matching GitHub release. Delete any subsections you don't use._
+
+### Added
+
+### Changed
+
+### Fixed
+
+## [1.3.0] — 2026-06-09
 
 ### Added
 - **Editable home page.** On load (and via the logo) the app opens to a curated landing
@@ -19,10 +27,6 @@ cut a matching GitHub release. Delete any subsections you don't use._
   a **hand-picked pool** shown shuffled, a **randomised selection from any search/collection**,
   and **quick-search link chips**. Cards open straight into the detail / IIIF view; searching
   (or any link chip) leaves the home page, and the logo returns to it.
-
-### Changed
-
-### Fixed
 
 ## [1.2.1] — 2026-06-09
 
@@ -143,7 +147,8 @@ earlier informally‑shared version.
 - The relationship‑graph view, grid/list toggle, and detail panel existed in the
   earlier shared version; the entries above are what changed since then.
 
-[Unreleased]: https://github.com/adriankingston/tepapa-api-browser/compare/v1.2.1...HEAD
+[Unreleased]: https://github.com/adriankingston/tepapa-api-browser/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/adriankingston/tepapa-api-browser/compare/v1.2.1...v1.3.0
 [1.2.1]: https://github.com/adriankingston/tepapa-api-browser/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/adriankingston/tepapa-api-browser/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/adriankingston/tepapa-api-browser/compare/v1.0.0...v1.1.0
