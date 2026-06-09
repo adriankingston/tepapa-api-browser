@@ -7,8 +7,16 @@ follow [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 _Jot changes here as you make them. When you publish, rename this heading to the
-new version (e.g. `## [1.2.0] — YYYY-MM-DD`), bump `version` in `package.json`, and
+new version (e.g. `## [1.3.0] — YYYY-MM-DD`), bump `version` in `package.json`, and
 cut a matching GitHub release. Delete any subsections you don't use._
+
+### Added
+
+### Changed
+
+### Fixed
+
+## [1.2.0] — 2026-06-09
 
 ### Added
 - **Multi-image gallery + IIIF deep-zoom lightbox.** The detail panel shows a hero
@@ -26,8 +34,6 @@ cut a matching GitHub release. Delete any subsections you don't use._
 - Detail panel is now a **centered Material dialog** (28dp corners, elevation 3, content
   scrolls inside) with a scrim (~40%) + subtle background blur so the collection stays
   visible around it, going **full-screen on phones** — replacing the right-hand side sheet.
-
-### Fixed
 
 ## [1.1.0] — 2026-06-09
 
@@ -117,6 +123,7 @@ earlier informally‑shared version.
 - The relationship‑graph view, grid/list toggle, and detail panel existed in the
   earlier shared version; the entries above are what changed since then.
 
-[Unreleased]: https://github.com/adriankingston/tepapa-api-browser/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/adriankingston/tepapa-api-browser/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/adriankingston/tepapa-api-browser/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/adriankingston/tepapa-api-browser/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/adriankingston/tepapa-api-browser/releases/tag/v1.0.0
