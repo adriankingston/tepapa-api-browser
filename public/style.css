@@ -936,13 +936,32 @@ a { color: var(--md-primary); }
 .home-shelf { padding: 22px 0 2px; }
 .home-shelf-title { margin: 0 0 12px; padding: 0 20px; font: var(--md-title-md); font-size: 18px; color: var(--md-on-surface); }
 
+/* Card row + the same chevron side-scroll arrows as the detail-view filmstrip */
+.home-row-wrap { display: flex; align-items: center; gap: 6px; padding: 0 20px; }
 .home-row {
-  display: flex; gap: 14px; overflow-x: auto;
-  padding: 4px 20px 10px; scroll-behavior: smooth;
-  scroll-snap-type: x proximity; scrollbar-width: thin;
+  display: flex; gap: 14px; flex: 1; min-width: 0; overflow-x: auto;
+  padding: 4px 4px 10px; scroll-behavior: smooth;
+  justify-content: safe center;   /* centre when the cards fit, no clipping on overflow */
+  scrollbar-width: none;
 }
-.home-row::-webkit-scrollbar { height: 8px; }
-.home-row::-webkit-scrollbar-thumb { background: var(--md-outline-variant); border-radius: 99px; }
+.home-row::-webkit-scrollbar { display: none; }
+.home-arrow {
+  flex: 0 0 auto; width: 44px; height: 88px;
+  border: none; border-radius: var(--md-shape-full);
+  background: var(--md-surface-container-high); color: var(--md-on-surface-variant);
+  font-size: 26px; line-height: 1; cursor: pointer;
+  box-shadow: var(--md-elev-1);
+  transition: background-color var(--md-dur) var(--md-ease);
+}
+.home-arrow:hover { background: var(--md-surface-container-highest); }
+.home-arrow:disabled { opacity: 0.35; cursor: default; }
+.home-arrow[hidden] { display: none; }
+.home-arrow:focus-visible, .g-arrow:focus-visible { outline: 2px solid var(--md-primary); outline-offset: 2px; }
+@media (hover: none) { .home-arrow { display: none; } }   /* touch: swipe to scroll */
+@media (prefers-reduced-motion: reduce) {
+  .home-row, .g-strip { scroll-behavior: auto; }
+  .home-arrow, .g-arrow { transition: none; }
+}
 
 .hcard {
   flex: 0 0 auto; width: 180px; cursor: pointer; text-align: left;
@@ -950,7 +969,7 @@ a { color: var(--md-primary); }
   background: var(--md-surface-container-low); border: none;
   border-radius: var(--md-shape-md); box-shadow: var(--md-elev-1);
   transition: box-shadow var(--md-dur) var(--md-ease);
-  scroll-snap-align: start; position: relative;
+  position: relative;
 }
 .hcard:hover, .hcard:focus-visible { box-shadow: var(--md-elev-2); outline: none; }
 .hcard .thumb { aspect-ratio: 1; }

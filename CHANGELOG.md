@@ -11,6 +11,13 @@ new version (e.g. `## [1.4.0] — YYYY-MM-DD`), bump `version` in `package.json`
 cut a matching GitHub release. Delete any subsections you don't use._
 
 ### Added
+- **Side-scroll arrows on the home-page card rows.** Each home shelf now has the same
+  centred horizontal scroller with clickable left/right chevrons as the detail-view image
+  filmstrip: the arrows appear only when the row overflows, dim at the ends, page by ~80% of
+  the visible width, recompute on viewport resize, and hide on touch (swipe instead). They're
+  driven by a shared `attachScrollArrows` helper so the home rows and the filmstrip can't
+  drift apart — both now also respect `prefers-reduced-motion` and carry per-row aria-labels
+  and a keyboard focus ring.
 
 ### Changed
 - **Content width constrained for readability.** On wide screens the content now sits in a

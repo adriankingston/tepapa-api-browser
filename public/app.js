@@ -847,27 +847,46 @@ function renderGallery(images, sensitive, title) {
   return `<div class="gallery" data-gallery>${heroBlock}${thumbs}${note}</div>`;
 }
 
-// Wire the thumbnail filmstrip: show the chevrons only when it overflows,
-// disable them at the ends, and page on click. (Touch devices hide the arrows
-// via CSS and scroll by swipe.)
+// Show the chevron arrows only while a scroller overflows, disable them at the
+// ends, and page by ~80% of the visible width on click. Re-measures after
+// layout and on resize (ResizeObserver). Shared by the detail-view image
+// filmstrip and the home-page card rows; touch devices hide the arrows via CSS
+// and scroll by swipe.
+function attachScrollArrows(scroller, left, right) {
+  if (!scroller || !left || !right) return;
+  const update = () => {
+    const overflow = scroller.scrollWidth > scroller.clientWidth + 4;
+    left.hidden = right.hidden = !overflow;
+    if (!overflow) return;
+    left.disabled = scroller.scrollLeft <= 2;
+    right.disabled = scroller.scrollLeft + scroller.clientWidth >= scroller.scrollWidth - 2;
+  };
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const page = (dir) => scroller.scrollBy({ left: dir * scroller.clientWidth * 0.8, behavior: reduce ? 'auto' : 'smooth' });
+  left.addEventListener('click', () => page(-1));
+  right.addEventListener('click', () => page(1));
+  scroller.addEventListener('scroll', update, { passive: true });
+  if (typeof ResizeObserver !== 'undefined') new ResizeObserver(update).observe(scroller);
+  else window.addEventListener('resize', update);
+  requestAnimationFrame(() => requestAnimationFrame(update)); // after layout
+}
+
+// Detail-view image filmstrip.
 function wireGalleryStrip(container) {
   const strip = container.querySelector('[data-strip]');
   if (!strip) return;
   const wrap = strip.parentElement;
-  const left = wrap.querySelector('.g-arrow-l');
-  const right = wrap.querySelector('.g-arrow-r');
-  const update = () => {
-    const overflow = strip.scrollWidth > strip.clientWidth + 4;
-    left.hidden = right.hidden = !overflow;
-    if (!overflow) return;
-    left.disabled = strip.scrollLeft <= 2;
-    right.disabled = strip.scrollLeft + strip.clientWidth >= strip.scrollWidth - 2;
-  };
-  const page = (dir) => strip.scrollBy({ left: dir * strip.clientWidth * 0.8, behavior: 'smooth' });
-  left.addEventListener('click', () => page(-1));
-  right.addEventListener('click', () => page(1));
-  strip.addEventListener('scroll', update, { passive: true });
-  requestAnimationFrame(() => requestAnimationFrame(update)); // after layout
+  attachScrollArrows(strip, wrap.querySelector('.g-arrow-l'), wrap.querySelector('.g-arrow-r'));
+}
+
+// Home-page card rows — the same arrows, one independent instance per shelf.
+function wireShelfArrows(host) {
+  host.querySelectorAll('.home-row-wrap').forEach((wrap) =>
+    attachScrollArrows(
+      wrap.querySelector('[data-shelf]'),
+      wrap.querySelector('.home-arrow-l'),
+      wrap.querySelector('.home-arrow-r')
+    ));
 }
 
 // Full-screen IIIF deep-zoom lightbox (OpenSeadragon).
@@ -1209,9 +1228,15 @@ function homeCardHtml(record, idx) {
 }
 
 function renderShelf(title, records) {
+  const t = esc(title || '');
+  const lbl = (dir) => (t ? `Scroll ${t} ${dir}` : `Scroll ${dir}`);
   return `<section class="home-shelf">
-      <h2 class="home-shelf-title">${esc(title || '')}</h2>
-      <div class="home-row" data-shelf>${records.map((r, i) => homeCardHtml(r, i)).join('')}</div>
+      <h2 class="home-shelf-title">${t}</h2>
+      <div class="home-row-wrap">
+        <button class="home-arrow home-arrow-l" type="button" aria-label="${lbl('left')}" hidden>‹</button>
+        <div class="home-row" data-shelf>${records.map((r, i) => homeCardHtml(r, i)).join('')}</div>
+        <button class="home-arrow home-arrow-r" type="button" aria-label="${lbl('right')}" hidden>›</button>
+      </div>
     </section>`;
 }
 
@@ -1274,6 +1299,7 @@ async function loadHome() {
     host.querySelectorAll('[data-shelf] [data-h]').forEach((node) =>
       node.addEventListener('click', () => openDetail(records[Number(node.dataset.h)])));
     wireReveal(host);
+    wireShelfArrows(host);
   });
 
   // Live record counts → substitute {token}s in the hero text once they arrive.
