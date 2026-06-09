@@ -13,6 +13,11 @@ cut a matching GitHub release. Delete any subsections you don't use._
 ### Added
 
 ### Changed
+- **Content width constrained for readability.** On wide screens the content now sits in a
+  centred column capped at `--content-max` (1280px) — toolbar, tabs, home page, results grid,
+  pager and footer — while the top app bar stays full-bleed. Body prose (the home hero
+  description) is further capped to a ~70-character reading measure. One `--content-max`
+  variable tunes the whole app.
 
 ### Fixed
 

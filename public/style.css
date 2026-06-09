@@ -30,6 +30,7 @@
   --ok: #15803d;          /* success / status green (white text passes AA) */
   --radius: 12px;
   --shadow: 0 8px 24px rgba(20, 30, 50, 0.12);
+  --content-max: 1280px;  /* centred content column on wide screens (Material measure) */
 }
 
 /* ===== Material 3 design tokens — used by the knowledge-graph view =====
@@ -112,18 +113,34 @@ body {
 a { color: var(--md-primary); }
 
 /* ===== Top app bar ===== */
-.topbar {
+.topbar {                                    /* full-bleed app bar… */
   position: sticky;
   top: 0;
   z-index: 5;
+  background: var(--md-surface-container);
+  border-bottom: 1px solid var(--md-outline-variant);
+  box-shadow: var(--md-elev-2);
+}
+.topbar-inner {                              /* …with its content in the centred column */
+  max-width: var(--content-max);
+  margin-inline: auto;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 16px;
   padding: 12px 20px;
-  background: var(--md-surface-container);
-  border-bottom: 1px solid var(--md-outline-variant);
-  box-shadow: var(--md-elev-2);
+}
+
+/* Constrain the content to a centred column on wide screens (Material measure/margins) */
+.toolbar,
+#result-tabs,
+#collection-filter,
+#home,
+#results,
+.pager,
+.footer {
+  max-width: var(--content-max);
+  margin-inline: auto;
 }
 
 /* ===== Brand ===== */
