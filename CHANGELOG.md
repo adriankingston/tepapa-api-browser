@@ -13,6 +13,9 @@ cut a matching GitHub release. Delete any subsections you don't use._
 ### Added
 
 ### Changed
+- Detail panel is now a **centered Material dialog** (28dp corners, elevation 3, content
+  scrolls inside) with a scrim (~40%) + subtle background blur so the collection stays
+  visible around it, going **full-screen on phones** — replacing the right-hand side sheet.
 
 ### Fixed
 
