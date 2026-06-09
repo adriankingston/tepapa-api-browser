@@ -19,6 +19,15 @@ cut a matching GitHub release. Delete any subsections you don't use._
 - `.vercelignore` to keep `.env`, `.git` and local cruft out of any CLI deploy.
 
 ### Changed
+- **Material Design 3 applied across the whole app.** Building on the graph-view tokens:
+  a top app bar with a **pill search field** + filled Search button, a **segmented**
+  Grid/List toggle, an **M3 switch** for "Images only", **primary tabs**, **filter chips**
+  for the collection filter, **elevated result cards**, a Material **data table** for the
+  list view, and the detail panel as an **M3 side sheet** with filled/tonal/outlined
+  buttons and chips. **Roboto** is now the app-wide typeface. All driven by the shared
+  `--md-*` tokens; no markup or behaviour changed (every JS-coupled class kept). A darker
+  teal (`--md-primary-text`, `#00696f`) is used for teal **text** on light backgrounds so
+  it meets **WCAG AA** contrast — the brand teal stays for fills, borders and indicators.
 - **Knowledge-graph view restyled to Material Design 3.** A top app bar with pill
   text buttons and a round icon button; elevated cards for the node info panel and
   legend; an assist-chip hint; a Material snackbar (keeping the green-status /
