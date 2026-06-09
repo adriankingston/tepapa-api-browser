@@ -15,6 +15,10 @@ cut a matching GitHub release. Delete any subsections you don't use._
 ### Changed
 
 ### Fixed
+
+## [1.2.1] — 2026-06-09
+
+### Fixed
 - IIIF lightbox **opens instantly** instead of stalling on first view. Te Papa's IIIF
   server generates full-image overview scales on demand (~3–5s on a cold cache, then
   fast once warm), which OpenSeadragon requests for the fit-to-screen view. The lightbox
@@ -131,7 +135,8 @@ earlier informally‑shared version.
 - The relationship‑graph view, grid/list toggle, and detail panel existed in the
   earlier shared version; the entries above are what changed since then.
 
-[Unreleased]: https://github.com/adriankingston/tepapa-api-browser/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/adriankingston/tepapa-api-browser/compare/v1.2.1...HEAD
+[1.2.1]: https://github.com/adriankingston/tepapa-api-browser/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/adriankingston/tepapa-api-browser/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/adriankingston/tepapa-api-browser/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/adriankingston/tepapa-api-browser/releases/tag/v1.0.0
