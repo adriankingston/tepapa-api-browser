@@ -12,8 +12,10 @@ cut a matching GitHub release. Delete any subsections you don't use._
 
 ### Added
 - **Multi-image gallery + IIIF deep-zoom lightbox.** The detail panel shows a hero
-  image plus a capped thumbnail grid (records with dozens–hundreds of images no longer
-  produce an endless scroll). Tapping any image opens a full-screen viewer with
+  image plus a **scrollable thumbnail filmstrip** — centred when the images fit, with
+  chevron arrows on pointer devices and native swipe on touch (records with dozens–
+  hundreds of images no longer produce an endless scroll). Tapping any image opens a
+  full-screen viewer with
   **deep-zoom** into the 4000px+ originals, powered by Te Papa's **IIIF Image API**
   (`iiif.tepapa.govt.nz`) through OpenSeadragon — pan/zoom, prev/next, a counter, the
   rights caption, and keyboard/swipe. Works on restricted (no-download) images (tiled

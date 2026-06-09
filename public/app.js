@@ -815,8 +815,6 @@ function iiifInfo(img) {
     : null;
 }
 
-const GALLERY_THUMB_CAP = 11; // thumbnails beside the hero (hero + 11 = 12 shown)
-
 function renderGallery(images, sensitive, title) {
   if (!images.length) return '';
   const hero = images[0];
@@ -827,17 +825,15 @@ function renderGallery(images, sensitive, title) {
 
   let thumbs = '';
   if (images.length > 1) {
-    const rest = images.slice(1);
-    const shown = rest.slice(0, GALLERY_THUMB_CAP);
-    const more = rest.length - shown.length;
-    thumbs = '<div class="g-thumbs">' +
-      shown.map((img, k) =>
-        `<button class="g-thumb${sensitive ? ' sensitive' : ''}" type="button" data-lb="${k + 1}" aria-label="View image ${k + 2}">` +
-        `<img loading="lazy" src="${esc(img.thumbnailUrl)}" alt="">${sensitive ? '<span class="lthumb-warn" title="Potentially sensitive">⚠</span>' : ''}</button>`
-      ).join('') +
-      (more > 0
-        ? `<button class="g-thumb g-more" type="button" data-lb="${GALLERY_THUMB_CAP + 1}" aria-label="View all ${images.length} images">+${more}</button>`
-        : '') +
+    const strip = images.slice(1).map((img, k) =>
+      `<button class="g-thumb${sensitive ? ' sensitive' : ''}" type="button" data-lb="${k + 1}" aria-label="View image ${k + 2}">` +
+      `<img loading="lazy" src="${esc(img.thumbnailUrl)}" alt="">${sensitive ? '<span class="lthumb-warn" title="Potentially sensitive">⚠</span>' : ''}</button>`
+    ).join('');
+    thumbs =
+      '<div class="g-strip-wrap">' +
+      '<button class="g-arrow g-arrow-l" type="button" aria-label="Scroll thumbnails left" hidden>‹</button>' +
+      `<div class="g-strip" data-strip>${strip}</div>` +
+      '<button class="g-arrow g-arrow-r" type="button" aria-label="Scroll thumbnails right" hidden>›</button>' +
       '</div>';
   }
   const rights = (hero.rights && hero.rights.title) || '';
@@ -845,6 +841,29 @@ function renderGallery(images, sensitive, title) {
     ? `<p class="g-count">${images.length} images · tap any to zoom</p>`
     : `<p class="g-count">Tap to zoom${rights ? ' · ' + esc(rights) : ''}</p>`;
   return `<div class="gallery" data-gallery>${heroBlock}${thumbs}${note}</div>`;
+}
+
+// Wire the thumbnail filmstrip: show the chevrons only when it overflows,
+// disable them at the ends, and page on click. (Touch devices hide the arrows
+// via CSS and scroll by swipe.)
+function wireGalleryStrip(container) {
+  const strip = container.querySelector('[data-strip]');
+  if (!strip) return;
+  const wrap = strip.parentElement;
+  const left = wrap.querySelector('.g-arrow-l');
+  const right = wrap.querySelector('.g-arrow-r');
+  const update = () => {
+    const overflow = strip.scrollWidth > strip.clientWidth + 4;
+    left.hidden = right.hidden = !overflow;
+    if (!overflow) return;
+    left.disabled = strip.scrollLeft <= 2;
+    right.disabled = strip.scrollLeft + strip.clientWidth >= strip.scrollWidth - 2;
+  };
+  const page = (dir) => strip.scrollBy({ left: dir * strip.clientWidth * 0.8, behavior: 'smooth' });
+  left.addEventListener('click', () => page(-1));
+  right.addEventListener('click', () => page(1));
+  strip.addEventListener('scroll', update, { passive: true });
+  requestAnimationFrame(() => requestAnimationFrame(update)); // after layout
 }
 
 // Full-screen IIIF deep-zoom lightbox (OpenSeadragon).
@@ -1070,6 +1089,7 @@ function openDetail(record) {
       openLightbox(images, Number(t.dataset.lb), sensitive);
     });
   }
+  wireGalleryStrip(el.detail);
   if (WIKI_TYPES.has(record.type)) loadWikipedia(record);
 
   el.overlay.hidden = false;
