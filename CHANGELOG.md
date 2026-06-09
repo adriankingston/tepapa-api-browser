@@ -24,6 +24,11 @@ cut a matching GitHub release. Delete any subsections you don't use._
   behaves like the deployment. No change to behaviour, endpoints, or the UI.
 
 ### Fixed
+- Detail panel now shows the API's **web summary** for records that have one — the
+  longer interpretive write-up Te Papa publishes for some objects (the `description`
+  field), shown under an *About* heading. Previously the short tombstone caption
+  always took priority and the summary never appeared; the caption is now shown as
+  its own line above it.
 - Relationship graph: the transient status toast (e.g. *Loading relationships…*) is
   now green instead of red, so loading/status messages no longer look like errors.
   Genuine failures keep the red.

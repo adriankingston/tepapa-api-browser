@@ -514,6 +514,14 @@ a { color: var(--accent); }
 .detail dd { margin: 0; font-size: 14px; }
 .detail dd p { margin: 0 0 8px; }
 
+/* Short tombstone caption under the gallery */
+.detail .caption { margin: 0 0 16px; font-size: 13px; color: var(--muted); line-height: 1.5; }
+.detail .caption a { color: var(--accent); }
+/* "About" web-summary body (record.description / narrative — HTML from the API) */
+.detail .about { font-size: 14px; line-height: 1.6; }
+.detail .about p { margin: 0 0 10px; }
+.detail .about a { color: var(--accent); }
+
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chips .badge { background: var(--panel-2); }
 .chip-link {

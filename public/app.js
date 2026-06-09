@@ -630,13 +630,22 @@ function productionHtml(record) {
   return lines.join('');
 }
 
-function description(record) {
-  // captionFormatted and narrative are trusted HTML from the API.
-  if (record.captionFormatted) return record.captionFormatted;
+// The short tombstone caption (title · date · maker · credit line).
+// captionFormatted is trusted HTML from the API; caption is plain text.
+function captionHtml(record) {
+  if (record.captionFormatted) return `<p class="caption">${record.captionFormatted}</p>`;
+  if (record.caption) return `<p class="caption">${esc(record.caption)}</p>`;
+  return '';
+}
+
+// The longer interpretive "web summary" shown under About. description and
+// narrative are trusted HTML from the API; the rest are plain text. The short
+// caption is handled separately (captionHtml) so it no longer masks these —
+// previously captionFormatted always won and record.description was never shown.
+function summaryHtml(record) {
+  if (record.description) return record.description;
   if (record.narrative) return record.narrative;
-  const text =
-    record.caption || record.summary || record.description ||
-    record.narrativeSummary || record.scopeNote;
+  const text = record.narrativeSummary || record.scopeNote || record.summary;
   return text ? `<p>${esc(text)}</p>` : '';
 }
 
@@ -906,7 +915,8 @@ function openDetail(record) {
     .join('');
 
   const external = extLinksHtml(record);
-  const desc = description(record);
+  const caption = captionHtml(record);
+  const summary = summaryHtml(record);
 
   el.detail.innerHTML = `
     <h2>${esc(title)}</h2>
@@ -916,7 +926,8 @@ function openDetail(record) {
       ${record.identifier ? `<span class="badge">${esc(record.identifier)}</span>` : ''}
     </div>
     ${gallery}
-    ${desc ? `<div class="section-title">About</div>${desc}` : ''}
+    ${caption}
+    ${summary ? `<div class="section-title">About</div><div class="about">${summary}</div>` : ''}
     ${WIKI_TYPES.has(record.type) ? `<div id="wiki-section" class="wiki-section" data-rec="${esc(record.type + ':' + record.id)}" hidden></div>` : ''}
     ${meta ? `<div class="section-title">Details</div><dl>${meta}</dl>` : ''}
     ${related ? `<div class="section-title">Related records</div><dl>${related}</dl>` : ''}
