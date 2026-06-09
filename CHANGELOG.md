@@ -7,8 +7,16 @@ follow [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 _Jot changes here as you make them. When you publish, rename this heading to the
-new version (e.g. `## [1.1.0] — YYYY-MM-DD`), bump `version` in `package.json`, and
+new version (e.g. `## [1.2.0] — YYYY-MM-DD`), bump `version` in `package.json`, and
 cut a matching GitHub release. Delete any subsections you don't use._
+
+### Added
+
+### Changed
+
+### Fixed
+
+## [1.1.0] — 2026-06-09
 
 ### Added
 - **Vercel deployment support** — the backend is now structured as zero-config
@@ -25,9 +33,10 @@ cut a matching GitHub release. Delete any subsections you don't use._
   for the collection filter, **elevated result cards**, a Material **data table** for the
   list view, and the detail panel as an **M3 side sheet** with filled/tonal/outlined
   buttons and chips. **Roboto** is now the app-wide typeface. All driven by the shared
-  `--md-*` tokens; no markup or behaviour changed (every JS-coupled class kept). A darker
-  teal (`--md-primary-text`, `#00696f`) is used for teal **text** on light backgrounds so
-  it meets **WCAG AA** contrast — the brand teal stays for fills, borders and indicators.
+  `--md-*` tokens; no markup or behaviour changed (every JS-coupled class kept). The
+  primary teal is `#00696f`, chosen to meet **WCAG AA** contrast for both teal **text**
+  and **white-on-teal filled buttons**; the bright Te Papa brand teal (`#008e96`) is kept
+  on the logo and the graph-canvas nodes.
 - **Knowledge-graph view restyled to Material Design 3.** A top app bar with pill
   text buttons and a round icon button; elevated cards for the node info panel and
   legend; an assist-chip hint; a Material snackbar (keeping the green-status /
@@ -95,5 +104,6 @@ earlier informally‑shared version.
 - The relationship‑graph view, grid/list toggle, and detail panel existed in the
   earlier shared version; the entries above are what changed since then.
 
-[Unreleased]: https://github.com/adriankingston/tepapa-api-browser/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/adriankingston/tepapa-api-browser/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/adriankingston/tepapa-api-browser/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/adriankingston/tepapa-api-browser/releases/tag/v1.0.0

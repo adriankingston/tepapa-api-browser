@@ -39,13 +39,12 @@
   --md-font: 'Roboto', system-ui, -apple-system, 'Segoe UI', Arial, sans-serif;
 
   /* Color roles (tonal palette from the Te Papa teal primary) */
-  --md-primary: var(--accent);            /* #008e96 — stays bound to the brand */
+  --md-primary: #00696f;                  /* AA-safe teal: white-on-teal 6.5:1 & teal-on-light ≥5:1 (WCAG AA). Bright brand #008e96 kept on the logo + graph canvas. */
   --md-primary-hover: #007b82;
   --md-on-primary: #ffffff;
   --md-primary-container: #bdeef1;
   --md-on-primary-container: #00363a;
   --md-primary-fixed-dim: #74d3da;        /* bundle hairline */
-  --md-primary-text: #00696f;             /* darker teal for TEXT on light (WCAG AA) */
 
   /* Neutral surfaces (M3 surface-container family) */
   --md-surface: #fbfcfd;
@@ -984,22 +983,10 @@ a { color: var(--md-primary); }
   .graph-btn, .graph-btn::before { transition: none; }
 }
 
-/* ---- WCAG AA: teal as TEXT needs a darker shade than the brand-fill teal ---- */
-a,
-.result-tabs .tab.active,
-.result-tabs .tab.active .tab-count,
-.list .col-type,
-.list tbody tr:hover .col-title,
-.badge.type,
-.gallery figcaption a,
-.detail .caption a,
-.detail .about a,
-.links a,
-.wiki-link,
-.chip-link:hover,
-.wiki-credit a:hover { color: var(--md-primary-text); }
-.result-tabs .tab.active { border-bottom-color: var(--md-primary); } /* keep the indicator brand teal */
+/* --md-primary is now the AA-safe teal, so all teal text/labels/buttons pass WCAG AA
+   without per-selector overrides. Two small carry-overs remain: */
 .list tbody tr:hover { background: var(--md-surface-container); } /* state tint via token, not a hardcoded rgba */
+.brand-mark { background: var(--accent); }                        /* keep the bright Te Papa brand teal on the logo */
 
 /* ---- Knowledge graph overlay — Material 3 ---- */
 .graph-overlay[hidden] { display: none; }
