@@ -15,6 +15,11 @@ cut a matching GitHub release. Delete any subsections you don't use._
 ### Changed
 
 ### Fixed
+- IIIF lightbox **opens instantly** instead of stalling on first view. Te Papa's IIIF
+  server generates full-image overview scales on demand (~3–5s on a cold cache, then
+  fast once warm), which OpenSeadragon requests for the fit-to-screen view. The lightbox
+  now shows the fast pre-generated preview as a placeholder while the deep-zoom tiles load
+  (region tiles are already sub-second), with `immediateRender` and a larger tile cache.
 
 ## [1.2.0] — 2026-06-09
 

@@ -905,7 +905,11 @@ function lbShow() {
     stage.style.backgroundImage = `url("${img.previewUrl || img.thumbnailUrl}")`;
     return;
   }
-  stage.style.backgroundImage = '';
+  // Instant placeholder: the pre-generated preview JPEG shows immediately while
+  // OpenSeadragon loads IIIF tiles. Te Papa's IIIF `full/{w},` overview scales are
+  // slow on a cold cache (~3-5s, full-image downscale); the preview (already cached
+  // from the gallery hero, else ~0.9s) hides that wait. Region tiles for zoom are fast.
+  stage.style.backgroundImage = `url("${img.previewUrl || img.thumbnailUrl}")`;
   const iiif = iiifInfo(img);
   const tileSources = iiif
     ? iiif
@@ -922,9 +926,12 @@ function lbShow() {
       showNavigationControl: false,
       showSequenceControl: false,
       crossOriginPolicy: 'Anonymous',
+      immediateRender: true,            // paint the sharpest available tile at once (no blur-up wait)
+      blendTime: 0,
+      maxImageCacheCount: 500,          // keep more tiles cached while panning/zooming
       gestureSettingsMouse: { clickToZoom: false, dblClickToZoom: true, scrollToZoom: true, flickEnabled: true },
       gestureSettingsTouch: { dblClickToZoom: true, pinchToZoom: true, flickEnabled: true },
-      visibilityRatio: 1, minZoomImageRatio: 0.8, maxZoomPixelRatio: 2.5,
+      visibilityRatio: 1, minZoomImageRatio: 0.8, maxZoomPixelRatio: 2,
       animationTime: 0.4, springStiffness: 7,
     });
   });
