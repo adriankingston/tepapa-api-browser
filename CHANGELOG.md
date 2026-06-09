@@ -20,6 +20,9 @@ cut a matching GitHub release. Delete any subsections you don't use._
   fast once warm), which OpenSeadragon requests for the fit-to-screen view. The lightbox
   now shows the fast pre-generated preview as a placeholder while the deep-zoom tiles load
   (region tiles are already sub-second), with `immediateRender` and a larger tile cache.
+- Lightbox **zoom works on every image**, not just the first one or two. The viewer is now
+  reused across images (OpenSeadragon `open()`) instead of being destroyed and recreated
+  per image — the recreate raced on the shared element and broke the zoom gestures.
 
 ## [1.2.0] — 2026-06-09
 

@@ -894,28 +894,31 @@ function lbShow() {
     `${esc(img.title || '')}${rights ? ` <span class="lb-rights">· ${esc(rights)}</span>` : ''}` +
     (dl ? ` · <a href="${esc(img.contentUrl)}" target="_blank" rel="noopener">download ↗</a>` : '');
 
-  if (lb.osd) { lb.osd.destroy(); lb.osd = null; }
   const stage = document.getElementById('osd');
-  stage.innerHTML = '';
   const blurred = lb.sensitive && !lb.revealed;
   stage.classList.toggle('sensitive', blurred);
   document.getElementById('lb-reveal').hidden = !blurred;
+  // Instant placeholder: the pre-generated preview JPEG shows immediately while
+  // OpenSeadragon loads IIIF tiles. Te Papa's IIIF `full/{w},` overview scales are slow
+  // on a cold cache (~3-5s); the preview (cached from the gallery hero, else ~0.9s) hides
+  // that wait. Region tiles for zoom are fast.
+  stage.style.backgroundImage = `url("${img.previewUrl || img.thumbnailUrl}")`;
   if (blurred) {
-    // show only a blurred preview; don't request hi-res tiles until revealed
-    stage.style.backgroundImage = `url("${img.previewUrl || img.thumbnailUrl}")`;
+    // don't request hi-res tiles until revealed
+    if (lb.osd) { lb.osd.destroy(); lb.osd = null; stage.innerHTML = ''; }
     return;
   }
-  // Instant placeholder: the pre-generated preview JPEG shows immediately while
-  // OpenSeadragon loads IIIF tiles. Te Papa's IIIF `full/{w},` overview scales are
-  // slow on a cold cache (~3-5s, full-image downscale); the preview (already cached
-  // from the gallery hero, else ~0.9s) hides that wait. Region tiles for zoom are fast.
-  stage.style.backgroundImage = `url("${img.previewUrl || img.thumbnailUrl}")`;
-  const iiif = iiifInfo(img);
-  const tileSources = iiif
-    ? iiif
-    : { type: 'image', url: (img.rights && img.rights.allowsDownload && img.contentUrl) ? img.contentUrl : (img.previewUrl || img.thumbnailUrl) };
-  // Defer one frame so the just-shown container is laid out before OpenSeadragon
-  // measures it — otherwise the canvas inits at ~0px and only the smallest tile loads.
+  const tileSources = iiifInfo(img) ||
+    { type: 'image', url: (img.rights && img.rights.allowsDownload && img.contentUrl) ? img.contentUrl : (img.previewUrl || img.thumbnailUrl) };
+  // Reuse ONE viewer across images — open() swaps the source while keeping the zoom/pan
+  // handlers alive. Destroying + recreating per image raced on the shared element and
+  // broke zoom after a couple of hops.
+  if (lb.osd) {
+    lb.osd.open(tileSources);
+    return;
+  }
+  // First image: create the viewer, deferred a frame so the just-shown container is laid
+  // out before OSD measures it (otherwise the canvas inits at ~0px).
   const token = ++lb.token;
   requestAnimationFrame(() => {
     if (token !== lb.token || document.getElementById('lightbox').hidden) return;
@@ -948,8 +951,10 @@ function lbReveal() { lb.revealed = true; lbShow(); }
 function closeLightbox() {
   lb.token++;                                  // cancel any pending deferred init
   if (lb.osd) { lb.osd.destroy(); lb.osd = null; }
+  const stage = document.getElementById('osd');
+  stage.innerHTML = '';                        // clean slate for the next open
+  stage.style.backgroundImage = '';
   document.getElementById('lightbox').hidden = true;
-  document.getElementById('osd').style.backgroundImage = '';
   document.removeEventListener('keydown', lbKey);
   // the detail dialog is still open underneath — only release scroll if it isn't
   if (el.overlay.hidden) document.body.style.overflow = '';
