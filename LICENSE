@@ -45,6 +45,12 @@ Roboto  (public/fonts/roboto-latin.woff2, public/fonts/roboto-latinext.woff2)
   Licensed under the Apache License, Version 2.0.
   https://fonts.google.com/specimen/Roboto
 
+OpenSeadragon  (public/vendor/openseadragon.min.js)
+  The image lightbox uses OpenSeadragon for IIIF deep-zoom viewing.
+  Copyright (c) 2009-2013 CodePlex Foundation and (c) 2010-2024 OpenSeadragon
+  contributors. Licensed under the New BSD License (3-clause).
+  https://openseadragon.github.io/
+
 
 ================================================================================
 DATA AND CONTENT RETRIEVED AT RUNTIME

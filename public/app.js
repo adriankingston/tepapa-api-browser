@@ -805,29 +805,143 @@ async function loadWikipedia(record) {
   host.hidden = false;
 }
 
+// ---- Image gallery (hero + thumbnails) + IIIF deep-zoom lightbox ------------
+
+// Te Papa runs a public, CORS-enabled IIIF Image API. The representation/media
+// id is the IIIF id; the iiifUrl field signals a IIIF service exists for it.
+function iiifInfo(img) {
+  return img && img.iiifUrl && img.id
+    ? `https://iiif.tepapa.govt.nz/iiif/2/${img.id}/info.json`
+    : null;
+}
+
+const GALLERY_THUMB_CAP = 11; // thumbnails beside the hero (hero + 11 = 12 shown)
+
+function renderGallery(images, sensitive, title) {
+  if (!images.length) return '';
+  const hero = images[0];
+  const heroImg = `<img loading="lazy" src="${esc(hero.previewUrl || hero.thumbnailUrl)}" alt="${esc(hero.title || title)}">`;
+  const heroBlock = sensitive
+    ? `<div class="g-hero media sensitive" data-lb="0">${heroImg}${sensitiveOverlay()}</div>`
+    : `<button class="g-hero" type="button" data-lb="0" aria-label="Zoom image"><span class="g-zoom">⤢ Zoom</span>${heroImg}</button>`;
+
+  let thumbs = '';
+  if (images.length > 1) {
+    const rest = images.slice(1);
+    const shown = rest.slice(0, GALLERY_THUMB_CAP);
+    const more = rest.length - shown.length;
+    thumbs = '<div class="g-thumbs">' +
+      shown.map((img, k) =>
+        `<button class="g-thumb${sensitive ? ' sensitive' : ''}" type="button" data-lb="${k + 1}" aria-label="View image ${k + 2}">` +
+        `<img loading="lazy" src="${esc(img.thumbnailUrl)}" alt="">${sensitive ? '<span class="lthumb-warn" title="Potentially sensitive">⚠</span>' : ''}</button>`
+      ).join('') +
+      (more > 0
+        ? `<button class="g-thumb g-more" type="button" data-lb="${GALLERY_THUMB_CAP + 1}" aria-label="View all ${images.length} images">+${more}</button>`
+        : '') +
+      '</div>';
+  }
+  const rights = (hero.rights && hero.rights.title) || '';
+  const note = images.length > 1
+    ? `<p class="g-count">${images.length} images · tap any to zoom</p>`
+    : `<p class="g-count">Tap to zoom${rights ? ' · ' + esc(rights) : ''}</p>`;
+  return `<div class="gallery" data-gallery>${heroBlock}${thumbs}${note}</div>`;
+}
+
+// Full-screen IIIF deep-zoom lightbox (OpenSeadragon).
+const lb = { images: [], i: 0, sensitive: false, revealed: false, osd: null, token: 0 };
+
+function openLightbox(images, index, sensitive) {
+  if (!images || !images.length) return;
+  lb.images = images;
+  lb.i = Math.max(0, Math.min(index, images.length - 1));
+  lb.sensitive = !!sensitive;
+  lb.revealed = false;
+  document.getElementById('lightbox').hidden = false;
+  document.body.style.overflow = 'hidden';
+  document.addEventListener('keydown', lbKey);
+  const multi = images.length > 1;
+  document.getElementById('lb-prev').hidden = !multi;
+  document.getElementById('lb-next').hidden = !multi;
+  lbShow();
+}
+
+function lbShow() {
+  const img = lb.images[lb.i];
+  document.getElementById('lb-counter').textContent =
+    lb.images.length > 1 ? `${lb.i + 1} / ${lb.images.length}` : '';
+  const rights = (img.rights && img.rights.title) || '';
+  const dl = img.rights && img.rights.allowsDownload && img.contentUrl;
+  document.getElementById('lb-caption').innerHTML =
+    `${esc(img.title || '')}${rights ? ` <span class="lb-rights">· ${esc(rights)}</span>` : ''}` +
+    (dl ? ` · <a href="${esc(img.contentUrl)}" target="_blank" rel="noopener">download ↗</a>` : '');
+
+  if (lb.osd) { lb.osd.destroy(); lb.osd = null; }
+  const stage = document.getElementById('osd');
+  stage.innerHTML = '';
+  const blurred = lb.sensitive && !lb.revealed;
+  stage.classList.toggle('sensitive', blurred);
+  document.getElementById('lb-reveal').hidden = !blurred;
+  if (blurred) {
+    // show only a blurred preview; don't request hi-res tiles until revealed
+    stage.style.backgroundImage = `url("${img.previewUrl || img.thumbnailUrl}")`;
+    return;
+  }
+  stage.style.backgroundImage = '';
+  const iiif = iiifInfo(img);
+  const tileSources = iiif
+    ? iiif
+    : { type: 'image', url: (img.rights && img.rights.allowsDownload && img.contentUrl) ? img.contentUrl : (img.previewUrl || img.thumbnailUrl) };
+  // Defer one frame so the just-shown container is laid out before OpenSeadragon
+  // measures it — otherwise the canvas inits at ~0px and only the smallest tile loads.
+  const token = ++lb.token;
+  requestAnimationFrame(() => {
+    if (token !== lb.token || document.getElementById('lightbox').hidden) return;
+    lb.osd = OpenSeadragon({
+      element: stage,
+      tileSources,
+      prefixUrl: '',
+      showNavigationControl: false,
+      showSequenceControl: false,
+      crossOriginPolicy: 'Anonymous',
+      gestureSettingsMouse: { clickToZoom: false, dblClickToZoom: true, scrollToZoom: true, flickEnabled: true },
+      gestureSettingsTouch: { dblClickToZoom: true, pinchToZoom: true, flickEnabled: true },
+      visibilityRatio: 1, minZoomImageRatio: 0.8, maxZoomPixelRatio: 2.5,
+      animationTime: 0.4, springStiffness: 7,
+    });
+  });
+}
+
+function lbNav(d) {
+  if (lb.images.length < 2) return;
+  lb.i = (lb.i + d + lb.images.length) % lb.images.length;
+  lbShow();
+}
+
+function lbReveal() { lb.revealed = true; lbShow(); }
+
+function closeLightbox() {
+  lb.token++;                                  // cancel any pending deferred init
+  if (lb.osd) { lb.osd.destroy(); lb.osd = null; }
+  document.getElementById('lightbox').hidden = true;
+  document.getElementById('osd').style.backgroundImage = '';
+  document.removeEventListener('keydown', lbKey);
+  // the detail dialog is still open underneath — only release scroll if it isn't
+  if (el.overlay.hidden) document.body.style.overflow = '';
+}
+
+function lbKey(e) {
+  if (e.key === 'Escape') { e.stopPropagation(); closeLightbox(); }
+  else if (e.key === 'ArrowLeft') lbNav(-1);
+  else if (e.key === 'ArrowRight') lbNav(1);
+}
+
 function openDetail(record) {
   if (!record) return;
   const title = record.title || record.prefLabel || '(untitled)';
   const images = imagesOf(record);
 
   const sensitive = isSensitive(record);
-  const gallery = images.length
-    ? `<div class="gallery">${images
-        .map((img) => {
-          const rights = (img.rights && img.rights.title) || '';
-          const canDownload = img.rights && img.rights.allowsDownload;
-          const link = canDownload && img.contentUrl ? img.contentUrl : img.previewUrl;
-          const imgTag = `<img loading="lazy" src="${esc(img.previewUrl || img.thumbnailUrl)}" alt="${esc(img.title || title)}">`;
-          const media = sensitive
-            ? `<div class="media sensitive">${imgTag}${sensitiveOverlay()}</div>`
-            : `<a href="${esc(link)}" target="_blank" rel="noopener">${imgTag}</a>`;
-          return `<figure>
-              ${media}
-              ${rights ? `<figcaption>${esc(rights)}${canDownload ? ' · <a href="' + esc(img.contentUrl) + '" target="_blank" rel="noopener">download full image ↗</a>' : ''}</figcaption>` : ''}
-            </figure>`;
-        })
-        .join('')}</div>`
-    : '';
+  const gallery = renderGallery(images, sensitive, title);
 
   // Outbound links — Collections Online mirrors the API href path for every
   // record type (object, agent, place, taxon, document…), so derive it from href.
@@ -947,6 +1061,15 @@ function openDetail(record) {
     b.addEventListener('click', () => openRecordByHref(b.dataset.href));
   });
   wireReveal(el.detail);
+  // gallery → open the IIIF deep-zoom lightbox (reveal-btn clicks stop propagation)
+  const galleryEl = el.detail.querySelector('[data-gallery]');
+  if (galleryEl) {
+    galleryEl.addEventListener('click', (e) => {
+      const t = e.target.closest('[data-lb]');
+      if (!t) return;
+      openLightbox(images, Number(t.dataset.lb), sensitive);
+    });
+  }
   if (WIKI_TYPES.has(record.type)) loadWikipedia(record);
 
   el.overlay.hidden = false;
@@ -964,6 +1087,15 @@ function closeDetail() {
 el.form.addEventListener('submit', (e) => {
   e.preventDefault();
   doSearch();
+});
+
+// Lightbox controls
+document.getElementById('lb-close').addEventListener('click', closeLightbox);
+document.getElementById('lb-prev').addEventListener('click', () => lbNav(-1));
+document.getElementById('lb-next').addEventListener('click', () => lbNav(1));
+document.getElementById('lb-reveal').addEventListener('click', lbReveal);
+document.getElementById('lightbox').addEventListener('click', (e) => {
+  if (e.target.id === 'lightbox') closeLightbox();   // click the backdrop to close
 });
 
 el.imagesOnly.addEventListener('change', renderResults);
