@@ -620,16 +620,30 @@ function chips(items, key = 'title') {
   return `<div class="chips">${list.map((t) => `<span class="badge">${esc(t)}</span>`).join('')}</div>`;
 }
 
+// One navigable chip-link for a single referenced record, used inline (e.g. the
+// maker/place in the production line). Falls back to plain text with no link.
+function recordLink(rec, text) {
+  const label = text || (rec && (rec.title || rec.prefLabel)) || '';
+  if (!label) return '';
+  if (rec && rec.href) {
+    return `<button class="badge chip-link" data-href="${esc(rec.href)}" title="Open ${esc(label)}">${esc(label)}</button>`;
+  }
+  return esc(label);
+}
+
 function productionHtml(record) {
   const prod = asArray(record.production);
   if (!prod.length) return '';
   const lines = prod.map((p) => {
-    const who = (p.contributor && p.contributor.title) || '';
-    const role = p.role ? `${esc(p.role)}` : 'maker';
-    const where = p.spatial && p.spatial.title ? ` · ${esc(p.spatial.title)}` : '';
-    const when = p.date ? ` · ${esc(p.date)}` : '';
-    const main = who ? `${esc(who)}` : esc(p.title || '');
-    return `<p>${main}<span style="color:var(--muted)"> — ${role}${where}${when}</span></p>`;
+    const c = p.contributor;
+    const who = (c && (c.title || c.prefLabel)) || '';
+    const main = who ? recordLink(c, who) : esc(p.title || '');
+    const role = p.role ? esc(p.role) : 'maker';
+    const sp = p.spatial;
+    const where = sp && (sp.title || sp.prefLabel) ? ` · ${recordLink(sp)}` : '';
+    const date = p.verbatimCreatedDate || p.createdDate || p.date || '';
+    const when = date ? ` · ${esc(date)}` : '';
+    return `<p>${main}<span style="color:var(--muted)"> — ${role}</span>${when}${where}</p>`;
   });
   return lines.join('');
 }
@@ -653,18 +667,31 @@ function summaryHtml(record) {
   return text ? `<p>${esc(text)}</p>` : '';
 }
 
+// Measurements. The API gives a ready-formatted `title` (e.g. "Overall: 92mm
+// (width), 315mm (height), 28mm (depth)") on almost every entry; fall back to
+// building one from the numeric size keys. We render every distinct measurement
+// (multi-component objects legitimately repeat an extent label for each part, as
+// Collections Online does), collapsing only exact-duplicate lines and skipping
+// value-less entries (e.g. a bare "Other:").
 function dimensionsHtml(record) {
   const dims = asArray(record.observedDimension);
   if (!dims.length) return '';
-  const parts = dims
-    .map((d) => {
-      const t = d.dimensionType || d.type || '';
-      const v = d.value != null ? d.value : '';
-      const u = d.unit || d.unitText || '';
-      return [t, [v, u].filter(Boolean).join(' ')].filter(Boolean).join(': ');
-    })
-    .filter(Boolean);
-  return parts.length ? `<p>${esc(parts.join(' · '))}</p>` : '';
+  const SIZE = ['height', 'width', 'length', 'depth', 'diameter'];
+  const seen = new Set();
+  const lines = [];
+  for (const d of dims) {
+    let text = d.title;
+    if (!text) {
+      const unit = d.sizeUnitText || d.unit || '';
+      const parts = SIZE.filter((k) => d[k] != null).map((k) => `${d[k]}${unit} (${k})`);
+      if (parts.length) text = `${d.extentType ? d.extentType + ': ' : ''}${parts.join(', ')}`;
+    }
+    text = text && text.trim();
+    if (!text || !/\d/.test(text) || seen.has(text)) continue; // need a value, no repeats
+    seen.add(text);
+    lines.push(text);
+  }
+  return lines.length ? lines.map((l) => `<p>${esc(l)}</p>`).join('') : '';
 }
 
 function vernacularHtml(record) {
@@ -1020,9 +1047,12 @@ function openDetail(record) {
 
     // Object
     row('Made by', productionHtml(record)),
-    row('Materials', esc(record.isMadeOfSummary)),
+    row('Classification', recordChips(record.isTypeOf)),
+    row('Materials', recordChips(record.isMadeOf)),
+    row('Materials summary', esc(record.isMadeOfSummary)),
     row('Techniques', recordChips(record.productionUsedTechnique)),
-    row('Classified as', recordChips(record.isTypeOf)),
+    row('Depicts', recordChips(record.depicts)),
+    row('Subjects', recordChips(record.isAbout)),
     row('Dimensions', dimensionsHtml(record)),
 
     // Person / Organisation
@@ -1056,10 +1086,10 @@ function openDetail(record) {
     row('Publication type', esc(joinText(record.publicationType))),
     row('Purpose', esc(joinText(record.purpose))),
 
-    // Term hierarchy (category / place) + provenance
-    row('Source vocabulary', esc(record.creditLine)),
+    // Provenance + term-hierarchy references
+    row('Credit line', esc(record.creditLine)),
     row('Reference', esc(record.exactMatch)),
-    row('Credit', esc(record.acknowledgement)),
+    row('Acknowledgement', esc(record.acknowledgement)),
     row('Rights holder', esc(record.rightsHolder)),
   ]
     .filter(Boolean)
@@ -1067,7 +1097,21 @@ function openDetail(record) {
 
   // Connections to other records — rendered as clickable chips.
   const related = [
+    // Object associations
+    row('Influenced by', recordChips(record.influencedBy)),
+    row('Intended for', recordChips(record.intendedFor)),
+    row('Former owner', recordChips(record.formerOwner)),
+    row('Refers to', recordChips(record.refersTo)),
+    row('Parts', recordChips(record.hasPart)),
+    row('Comprises', recordChips(record.comprisesOf)),
+    row('Related objects', recordChips(record.relatedObjects)),
+    row('Related', recordChips(record.relation)),
+    row('Referenced by', recordChips(record.isReferencedBy)),
+
+    // Person / Document
     row('Authors', recordChips(record.authors)),
+
+    // Term hierarchy (category / place / topic)
     row('Part of', record.isPartOf ? recordChips([record.isPartOf]) : ''),
     row('Parent', record.broaderRank ? recordChips([record.broaderRank]) : ''),
     row('Broader', recordChips(record.broaderTerms)),
@@ -1075,9 +1119,6 @@ function openDetail(record) {
     row('Related terms', recordChips(record.relatedTerms)),
     row('Associated', recordChips(record.associatedParties)),
     row('Associated with', recordChips(record.associatedWith)),
-    row('Refers to', recordChips(record.refersTo)),
-    row('Related objects', recordChips(record.relatedObjects)),
-    row('Referenced by', recordChips(record.isReferencedBy)),
   ]
     .filter(Boolean)
     .join('');

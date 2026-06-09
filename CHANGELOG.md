@@ -25,8 +25,21 @@ cut a matching GitHub release. Delete any subsections you don't use._
   pager and footer — while the top app bar stays full-bleed. Body prose (the home hero
   description) is further capped to a ~70-character reading measure. One `--content-max`
   variable tunes the whole app.
+- **Object detail pages now surface the full record, matching Collections Online.** The
+  **Materials** list (the catalogued material terms), **Depicts**/**Subjects**, and the
+  navigable associations — **Influenced by**, **Intended for**, **Former owner**, **Parts**,
+  **Comprises** and more — are now shown as clickable chips that open the linked record. The
+  **Made by** line gains the production date and links the maker and place. (The data was
+  always in the API; the detail view just wasn't reading it.)
 
 ### Fixed
+- **Object measurements were missing** — the Dimensions row showed the literal word
+  "Measurement" instead of the values. It now renders each observed dimension
+  (e.g. *Overall: 92mm (width), 315mm (height), 28mm (depth)*), including every distinct
+  measurement on multi-part objects (it no longer collapses a dress-and-coat's separate
+  component measurements into one).
+- **Credit line was mislabelled "Source vocabulary".** The acquisition credit (e.g. *Gift of
+  Andrea Hill, 2009*) now appears under the correct **Credit line** label.
 
 ## [1.3.0] — 2026-06-09
 
