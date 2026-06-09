@@ -40,6 +40,9 @@ cut a matching GitHub release. Delete any subsections you don't use._
   component measurements into one).
 - **Credit line was mislabelled "Source vocabulary".** The acquisition credit (e.g. *Gift of
   Andrea Hill, 2009*) now appears under the correct **Credit line** label.
+- **Relationship graph: the starting node no longer flashes in the top-left corner.** It now
+  opens centred (the viewport centres on the focus node immediately, instead of leaving it at
+  model origin until the first layout fitted it).
 
 ## [1.3.0] — 2026-06-09
 

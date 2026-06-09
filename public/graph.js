@@ -449,6 +449,10 @@
       position: { x: 0, y: 0 },
       classes: 'focus',
     });
+    // Centre the viewport on the focus node straight away — model (0,0) otherwise
+    // renders at the top-left corner, so the node would appear there until the
+    // first relayout fits it. Centring now means it starts centred.
+    cy.center(fn);
     updateCount();
     expandRecord(fn);
   }
