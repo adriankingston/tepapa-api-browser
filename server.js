@@ -36,6 +36,7 @@ const MIME = {
   '.svg': 'image/svg+xml',
   '.ico': 'image/x-icon',
   '.png': 'image/png',
+  '.woff2': 'font/woff2',
 };
 
 // The same serverless handlers Vercel runs, keyed by "METHOD /path".

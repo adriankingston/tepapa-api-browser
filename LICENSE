@@ -38,6 +38,13 @@ Cytoscape.js  (public/vendor/cytoscape.min.js)
   retained in the header of the bundled file.
   https://js.cytoscape.org/
 
+Roboto  (public/fonts/roboto-latin.woff2, public/fonts/roboto-latinext.woff2)
+  The knowledge-graph view's Material Design styling uses the Roboto typeface
+  (variable font; latin + latin-extended subsets, self-hosted).
+  Copyright Google LLC; designed by Christian Robertson.
+  Licensed under the Apache License, Version 2.0.
+  https://fonts.google.com/specimen/Roboto
+
 
 ================================================================================
 DATA AND CONTENT RETRIEVED AT RUNTIME

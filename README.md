@@ -201,6 +201,8 @@ This tool stands on data and software from others (see [LICENSE](LICENSE) for fu
   [Collections API](https://www.tepapa.govt.nz/api-terms-of-use) (metadata CC BY 4.0).
 - **Cytoscape.js** (© The Cytoscape Consortium, MIT) — the relationship-graph view,
   bundled in `public/vendor/`.
+- **Roboto** (© Google, Apache-2.0) — the typeface for the graph view's Material
+  styling, self-hosted in `public/fonts/`.
 - **Wikipedia / Wikimedia Foundation** — person & place previews (article text CC BY-SA,
   with a link back to the source; thumbnails from Wikimedia Commons).
 - **Wikidata** (CC0) — matching people/organisations to their Wikipedia article.

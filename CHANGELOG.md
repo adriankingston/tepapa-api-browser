@@ -27,7 +27,9 @@ cut a matching GitHub release. Delete any subsections you don't use._
   (replacing the old gold/grey), node **hover** state layers, filled-tonal **bundle
   chips**, and a harmonised type-colour palette (Object = brand teal). Driven by new
   `--md-*` design tokens bound to the app's existing accent/status colours; the rest
-  of the app is unchanged. Roboto loads from Google Fonts (system-ui fallback).
+  of the app is unchanged. Roboto is **self-hosted** (one variable `woff2` per subset,
+  latin + latin-ext so te reo Māori macrons render in Roboto, not a fallback),
+  preloaded with `font-display: swap` — no third-party font request.
 - `server.js` is now a thin **local-development** server: it serves `public/` and
   routes `/api/*` to the very same handler files Vercel runs, so `node server.js`
   behaves like the deployment. No change to behaviour, endpoints, or the UI.
