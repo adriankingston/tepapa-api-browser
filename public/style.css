@@ -12,6 +12,70 @@
   --shadow: 0 8px 24px rgba(20, 30, 50, 0.12);
 }
 
+/* ===== Material 3 design tokens — used by the knowledge-graph view =====
+   Teal-primary tonal palette on a light theme. Bound to the app's existing
+   --accent / --ok / --accent-2 so brand + status colours stay in sync. */
+:root {
+  --md-font: 'Roboto', system-ui, -apple-system, 'Segoe UI', Arial, sans-serif;
+
+  /* Color roles (tonal palette from the Te Papa teal primary) */
+  --md-primary: var(--accent);            /* #008e96 — stays bound to the brand */
+  --md-primary-hover: #007b82;
+  --md-on-primary: #ffffff;
+  --md-primary-container: #bdeef1;
+  --md-on-primary-container: #00363a;
+  --md-primary-fixed-dim: #74d3da;        /* bundle hairline */
+
+  /* Neutral surfaces (M3 surface-container family) */
+  --md-surface: #fbfcfd;
+  --md-surface-container-lowest: #ffffff;
+  --md-surface-container-low: #f4f6f7;
+  --md-surface-container: #eef0f2;
+  --md-surface-container-high: #e8eaec;
+  --md-surface-container-highest: #e1e4e6;
+  --md-on-surface: #191c1d;
+  --md-on-surface-variant: #3f484a;
+  --md-outline: #6f797b;
+  --md-outline-variant: #bfc8ca;
+
+  /* State-layer opacities (M3 spec) */
+  --md-state-hover: 0.08;
+  --md-state-focus: 0.10;
+  --md-state-press: 0.12;
+
+  /* Status semantics — reuse the app's existing green/red */
+  --md-status: var(--ok);                 /* green = status / loading */
+  --md-error: var(--accent-2);            /* red = error */
+  --md-snackbar-bg: #2f3132;
+  --md-snackbar-on: #f1f1f1;
+
+  /* Shape scale (M3) */
+  --md-shape-xs: 4px;
+  --md-shape-sm: 8px;
+  --md-shape-md: 12px;
+  --md-shape-lg: 16px;
+  --md-shape-xl: 28px;
+  --md-shape-full: 999px;
+
+  /* Elevation (M3 dp shadows, light) */
+  --md-elev-1: 0 1px 2px rgba(0,0,0,.30), 0 1px 3px 1px rgba(0,0,0,.15);
+  --md-elev-2: 0 1px 2px rgba(0,0,0,.30), 0 2px 6px 2px rgba(0,0,0,.15);
+  --md-elev-3: 0 4px 8px 3px rgba(0,0,0,.15), 0 1px 3px rgba(0,0,0,.30);
+  --md-elev-4: 0 6px 10px 4px rgba(0,0,0,.15), 0 2px 3px rgba(0,0,0,.30);
+
+  /* Motion (M3 standard easing) */
+  --md-ease: cubic-bezier(0.2, 0, 0, 1);
+  --md-dur: 200ms;
+
+  /* Type scale (M3) */
+  --md-title-lg: 500 22px/28px var(--md-font);
+  --md-title-md: 500 16px/24px var(--md-font);
+  --md-label-lg: 500 14px/20px var(--md-font);
+  --md-label-md: 500 12px/16px var(--md-font);
+  --md-body-md: 400 14px/20px var(--md-font);
+  --md-body-sm: 400 12px/16px var(--md-font);
+}
+
 * { box-sizing: border-box; }
 
 body {
@@ -589,123 +653,242 @@ a { color: var(--accent); }
 }
 .graph-btn:hover { background: rgba(0, 176, 185, 0.22); }
 
-/* ---- Knowledge graph overlay ---- */
+/* ---- Knowledge graph overlay — Material 3 ---- */
 .graph-overlay[hidden] { display: none; }
 .graph-overlay {
   position: fixed;
   inset: 0;
   z-index: 15;
-  background: var(--bg);
+  background: var(--md-surface);
   display: flex;
   flex-direction: column;
+  font-family: var(--md-font);
+  color: var(--md-on-surface);
+  -webkit-font-smoothing: antialiased;
 }
+
+/* Top app bar (M3 small top app bar) */
 .graph-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 12px 18px;
-  border-bottom: 1px solid var(--line);
-  background: var(--panel);
+  height: 64px;
+  padding: 0 12px 0 20px;
+  background: var(--md-surface-container);
+  border-bottom: 1px solid var(--md-outline-variant);
+  box-shadow: var(--md-elev-1);
   z-index: 2;
 }
 .graph-title { display: flex; align-items: baseline; gap: 12px; min-width: 0; }
-.graph-title strong { color: var(--text); }
-.graph-focus { color: var(--accent); font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.graph-actions { display: flex; align-items: center; gap: 8px; }
-.graph-count { color: var(--muted); font-size: 13px; margin-right: 4px; }
-.graph-actions button {
-  padding: 7px 13px;
-  border-radius: 9px;
-  border: 1px solid var(--line);
-  background: var(--panel-2);
-  color: var(--text);
-  font-size: 13px;
-  cursor: pointer;
+.graph-title strong { font: var(--md-title-lg); color: var(--md-on-surface); }
+.graph-focus {
+  font: var(--md-body-md);
+  color: var(--md-primary);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.graph-actions button:hover { border-color: var(--accent); }
-.graph-actions .close { width: 34px; padding: 0; font-size: 20px; line-height: 1; }
 
-.cy { flex: 1; min-height: 0; background: #ffffff; }
+.graph-actions { display: flex; align-items: center; gap: 8px; }
+.graph-count {
+  font: var(--md-label-md);
+  color: var(--md-on-surface-variant);
+  margin-right: 4px;
+  white-space: nowrap;
+}
 
+/* Text buttons (pill) with an M3 state-layer overlay */
+.graph-actions button {
+  position: relative;
+  appearance: none;
+  height: 40px;
+  padding: 0 16px;
+  border: none;
+  border-radius: var(--md-shape-full);
+  background: transparent;
+  color: var(--md-primary);
+  font: var(--md-label-lg);
+  letter-spacing: .01em;
+  cursor: pointer;
+  overflow: hidden;
+  transition: background-color var(--md-dur) var(--md-ease);
+}
+.graph-actions button::before {            /* state layer */
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--md-primary);
+  opacity: 0;
+  transition: opacity var(--md-dur) var(--md-ease);
+  pointer-events: none;
+}
+.graph-actions button:hover::before { opacity: var(--md-state-hover); }
+.graph-actions button:focus-visible { outline: none; }
+.graph-actions button:focus-visible::before { opacity: var(--md-state-focus); }
+.graph-actions button:active::before { opacity: var(--md-state-press); }
+
+/* Close = M3 round icon button (neutral state layer) */
+.graph-actions .close {
+  width: 40px; height: 40px;
+  padding: 0;
+  border-radius: var(--md-shape-full);
+  color: var(--md-on-surface-variant);
+  font-size: 22px;
+  line-height: 1;
+}
+.graph-actions .close::before { background: var(--md-on-surface); }
+
+/* Cytoscape canvas */
+.cy { flex: 1; min-height: 0; background: var(--md-surface-container-lowest); }
+
+/* Legend: elevated surface with assist-chip rows */
 .graph-legend {
   position: absolute;
   left: 16px;
   bottom: 16px;
   display: flex;
   flex-wrap: wrap;
-  gap: 6px 12px;
+  gap: 8px;
   max-width: 60%;
-  padding: 10px 12px;
-  background: rgba(255, 255, 255, 0.92);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  font-size: 12px;
+  padding: 12px;
+  background: var(--md-surface-container-low);
+  border: 1px solid var(--md-outline-variant);
+  border-radius: var(--md-shape-md);
+  box-shadow: var(--md-elev-2);
+  font: var(--md-label-md);
 }
-.graph-legend .lg { display: flex; align-items: center; gap: 6px; color: var(--muted); }
+.graph-legend .lg {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 10px 0 8px;
+  border-radius: var(--md-shape-sm);
+  background: var(--md-surface-container-highest);
+  color: var(--md-on-surface-variant);
+}
 .graph-legend .dot { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
 .graph-legend .lg-ic { width: 18px; height: 18px; display: inline-block; }
 
+/* Hint: M3 assist-chip pill */
 .graph-hint {
   position: absolute;
-  top: 70px;
+  top: 80px;
   left: 50%;
   transform: translateX(-50%);
-  color: var(--muted);
-  font-size: 12.5px;
-  background: rgba(255, 255, 255, 0.85);
-  padding: 6px 12px;
-  border-radius: 99px;
-  border: 1px solid var(--line);
+  font: var(--md-label-md);
+  color: var(--md-on-surface-variant);
+  background: var(--md-surface-container-low);
+  padding: 8px 16px;
+  border-radius: var(--md-shape-full);
+  border: 1px solid var(--md-outline-variant);
+  box-shadow: var(--md-elev-1);
   pointer-events: none;
 }
 
+/* Node info card: M3 elevated card (dp3) */
 .graph-info[hidden] { display: none; }
 .graph-info {
   position: absolute;
-  top: 70px;
+  top: 80px;
   right: 16px;
-  width: 270px;
-  max-height: calc(100% - 110px);
+  width: 280px;
+  max-height: calc(100% - 120px);
   overflow-y: auto;
-  background: rgba(255, 255, 255, 0.97);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  padding: 14px;
+  background: var(--md-surface-container-low);
+  border: none;
+  border-radius: var(--md-shape-lg);
+  box-shadow: var(--md-elev-3);
+  padding: 16px;
+  animation: gi-rise var(--md-dur) var(--md-ease);
 }
-.graph-info img { width: 100%; border-radius: 8px; margin-bottom: 10px; background: var(--panel-2); }
-.graph-info h3 { margin: 0 0 8px; font-size: 15px; }
-.graph-info .gi-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+@keyframes gi-rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+.graph-info img {
+  width: 100%;
+  border-radius: var(--md-shape-md);
+  margin-bottom: 12px;
+  background: var(--md-surface-container-high);
+}
+.graph-info h3 { margin: 0 0 10px; font: var(--md-title-md); color: var(--md-on-surface); }
+.graph-info .gi-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+
+/* Card actions: first = filled primary, rest = tonal, external = outlined */
 .graph-info button, .graph-info a.gi-link {
+  position: relative;
   display: block;
   width: 100%;
   text-align: center;
   text-decoration: none;
-  padding: 9px;
+  height: 40px;
+  line-height: 40px;
+  padding: 0 16px;
   margin-top: 8px;
-  border-radius: 9px;
-  border: 1px solid var(--line);
-  background: var(--panel-2);
-  color: var(--text);
-  font-size: 13px;
+  border: none;
+  border-radius: var(--md-shape-full);
+  background: var(--md-primary-container);
+  color: var(--md-on-primary-container);
+  font: var(--md-label-lg);
   cursor: pointer;
+  overflow: hidden;
+  box-sizing: border-box;
+  transition: box-shadow var(--md-dur) var(--md-ease);
 }
-.graph-info button:hover, .graph-info a.gi-link:hover { border-color: var(--accent); }
-.graph-info .gi-note { color: var(--muted); font-size: 12px; margin: 6px 0 0; }
+.graph-info button:first-of-type {         /* primary action = filled teal */
+  background: var(--md-primary);
+  color: var(--md-on-primary);
+  box-shadow: var(--md-elev-1);
+}
+.graph-info a.gi-link {                     /* external link = outlined */
+  background: transparent;
+  color: var(--md-primary);
+  box-shadow: inset 0 0 0 1px var(--md-outline-variant);
+}
+.graph-info button::before, .graph-info a.gi-link::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: currentColor;
+  opacity: 0;
+  transition: opacity var(--md-dur) var(--md-ease);
+  pointer-events: none;
+}
+.graph-info button:hover::before,
+.graph-info a.gi-link:hover::before { opacity: var(--md-state-hover); }
+.graph-info button:active::before,
+.graph-info a.gi-link:active::before { opacity: var(--md-state-press); }
+.graph-info button:first-of-type:hover { box-shadow: var(--md-elev-2); }
+.graph-info .gi-note { font: var(--md-body-sm); color: var(--md-on-surface-variant); margin: 10px 0 0; }
 
+/* Snackbar: classic M3 dark surface; green status / red error left-accent */
 .graph-toast[hidden] { display: none; }
 .graph-toast {
   position: absolute;
-  bottom: 22px;
+  bottom: 24px;
   left: 50%;
   transform: translateX(-50%);
-  background: var(--ok);
-  color: #fff;
-  padding: 9px 16px;
-  border-radius: 99px;
-  font-size: 13px;
-  box-shadow: var(--shadow);
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  background: var(--md-snackbar-bg);
+  color: var(--md-snackbar-on);
+  padding: 0 16px;
+  border-radius: var(--md-shape-xs);
+  font: var(--md-body-md);
+  box-shadow: var(--md-elev-3);
+  border-left: 4px solid var(--md-status);   /* green = status */
+  animation: snack-in var(--md-dur) var(--md-ease);
 }
-/* genuine failures keep the red so they still read as errors */
-.graph-toast.error { background: var(--accent-2); }
+@keyframes snack-in {
+  from { opacity: 0; transform: translate(-50%, 12px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
+}
+.graph-toast.error { border-left-color: var(--md-error); }  /* red = error */
+
+@media (prefers-reduced-motion: reduce) {
+  .graph-info, .graph-toast { animation: none; }
+  .graph-actions button, .graph-actions button::before,
+  .graph-info button, .graph-info a.gi-link,
+  .graph-info button::before, .graph-info a.gi-link::before { transition: none; }
+}

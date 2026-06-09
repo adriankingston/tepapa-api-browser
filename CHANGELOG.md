@@ -19,6 +19,15 @@ cut a matching GitHub release. Delete any subsections you don't use._
 - `.vercelignore` to keep `.env`, `.git` and local cruft out of any CLI deploy.
 
 ### Changed
+- **Knowledge-graph view restyled to Material Design 3.** A top app bar with pill
+  text buttons and a round icon button; elevated cards for the node info panel and
+  legend; an assist-chip hint; a Material snackbar (keeping the green-status /
+  red-error semantics as a left accent); and Roboto type. The graph canvas now uses
+  Material outline borders, a teal **primary state-layer** for focus and selection
+  (replacing the old gold/grey), node **hover** state layers, filled-tonal **bundle
+  chips**, and a harmonised type-colour palette (Object = brand teal). Driven by new
+  `--md-*` design tokens bound to the app's existing accent/status colours; the rest
+  of the app is unchanged. Roboto loads from Google Fonts (system-ui fallback).
 - `server.js` is now a thin **local-development** server: it serves `public/` and
   routes `/api/*` to the very same handler files Vercel runs, so `node server.js`
   behaves like the deployment. No change to behaviour, endpoints, or the UI.

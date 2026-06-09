@@ -7,11 +7,13 @@
    tap to page its members in — so a place with 250k relationships never tries
    to render 250k nodes. */
 (() => {
+  // Material 3-aligned, harmonised type palette. Object is the brand primary
+  // (teal #008e96) so focus, selection, bundles and Object icons share one hue.
   const TYPE_COLORS = {
-    Object: '#00a7b0', Person: '#f1763f', Organisation: '#f1763f',
-    Place: '#3fb866', Taxon: '#a766e8', Specimen: '#d9a400',
-    Category: '#7e93ab', Topic: '#e85b8a', Publication: '#e85b8a',
-    Document: '#e85b8a', Story: '#e85b8a',
+    Object: '#008e96', Person: '#ff7043', Organisation: '#ff7043',
+    Place: '#43a047', Taxon: '#8e5fd9', Specimen: '#c79100',
+    Category: '#5c7a99', Topic: '#d81b78', Publication: '#d81b78',
+    Document: '#d81b78', Story: '#d81b78',
   };
   const DEFAULT_COLOR = '#9aa3b2';
   const colorFor = (t) => TYPE_COLORS[t] || DEFAULT_COLOR;
@@ -106,7 +108,7 @@
     elLegend.innerHTML = items
       .map(([t, lbl]) => `<span class="lg"><img class="lg-ic" src="${legendIcon(t)}" alt="">${esc(lbl)}</span>`)
       .join('') +
-      `<span class="lg"><span class="dot" style="background:#e6f5f6;border:1.5px solid #008e96"></span>bundle (tap to expand)</span>`;
+      `<span class="lg"><span class="dot" style="background:#bdeef1;border:1px solid #74d3da"></span>bundle (tap to expand)</span>`;
   }
 
   // ---- cytoscape setup ----
@@ -128,43 +130,45 @@
             // without the crossorigin flag (we never read pixels back).
             'background-image-crossorigin': 'null',
             'background-fit': (e) => (e.data('thumb') ? 'cover' : 'contain'),
-            width: 46, height: 46,
-            'border-width': 2.5,
-            'border-color': '#c7cdd7',
-            label: 'data(label)', 'font-size': 9, color: '#2b2f36',
+            width: 48, height: 48,
+            'border-width': 2,
+            'border-color': '#bfc8ca',       // M3 outline-variant
+            label: 'data(label)', 'font-size': 10, color: '#191c1d',
             'text-wrap': 'wrap', 'text-max-width': 86,
-            'text-valign': 'bottom', 'text-margin-y': 4,
+            'text-valign': 'bottom', 'text-margin-y': 5,
             'min-zoomed-font-size': 6,
           },
         },
         {
-          selector: 'node.focus',
+          selector: 'node.focus',                // starting record — teal primary emphasis
           style: {
-            width: 72, height: 72, 'border-width': 4, 'border-color': '#e0a300',
-            'font-size': 11, 'font-weight': 'bold',
+            width: 76, height: 76, 'border-width': 4, 'border-color': '#008e96',
+            'overlay-color': '#008e96', 'overlay-opacity': 0.10, 'overlay-padding': 6,
+            'font-size': 12, 'font-weight': 'bold', color: '#00363a',
           },
         },
         {
-          selector: 'node[kind="bundle"]',
+          selector: 'node[kind="bundle"]',       // M3 filled-tonal chip
           style: {
-            'background-image': 'none', 'background-color': '#e6f5f6',
-            shape: 'round-rectangle', 'border-color': '#008e96', 'border-width': 1.5,
-            width: 'label', height: 'label', padding: '8px',
+            'background-image': 'none', 'background-color': '#bdeef1',
+            shape: 'round-rectangle', 'border-color': '#74d3da', 'border-width': 1,
+            width: 'label', height: 'label', padding: '10px',
             label: 'data(label)', 'text-wrap': 'wrap', 'text-max-width': 130,
-            'text-valign': 'center', 'text-margin-y': 0, color: '#0a6b71', 'font-size': 10,
+            'text-valign': 'center', 'text-margin-y': 0, color: '#00363a', 'font-size': 11,
           },
         },
-        { selector: 'node.bundle-done', style: { 'background-color': '#eef0f3', 'border-color': '#c3c9d2', color: '#7a8494' } },
-        { selector: 'node[kind="record"].expanded', style: { 'border-width': 5 } },
-        { selector: 'node:selected', style: { 'border-color': '#404040', 'border-width': 4 } },
+        { selector: 'node.bundle-done', style: { 'background-color': '#e1e4e6', 'border-color': '#bfc8ca', color: '#3f484a' } },
+        { selector: 'node[kind="record"].expanded', style: { 'border-width': 3, 'border-color': '#008e96' } },
+        { selector: 'node.hover', style: { 'overlay-color': '#191c1d', 'overlay-opacity': 0.08, 'overlay-padding': 4 } },
+        { selector: 'node:selected', style: { 'border-color': '#008e96', 'border-width': 3, 'overlay-color': '#008e96', 'overlay-opacity': 0.12, 'overlay-padding': 4 } },
         {
           selector: 'edge',
           style: {
-            width: 1.4, 'line-color': '#c2c8d2', 'curve-style': 'bezier',
-            'target-arrow-shape': 'triangle', 'target-arrow-color': '#c2c8d2', 'arrow-scale': 0.8,
-            label: 'data(label)', 'font-size': 7, color: '#6b7280',
+            width: 1.5, 'line-color': '#bfc8ca', 'curve-style': 'bezier',
+            'target-arrow-shape': 'triangle', 'target-arrow-color': '#bfc8ca', 'arrow-scale': 0.8,
+            label: 'data(label)', 'font-size': 8, color: '#3f484a',
             'text-rotation': 'autorotate',
-            'text-background-color': '#ffffff', 'text-background-opacity': 0.9,
+            'text-background-color': '#fbfcfd', 'text-background-opacity': 0.92,
             'text-background-padding': 1, 'min-zoomed-font-size': 7,
           },
         },
@@ -173,6 +177,8 @@
     });
     cy.on('tap', 'node', (evt) => onTapNode(evt.target));
     cy.on('cxttap', 'node', (evt) => collapse(evt.target)); // right-click / long-press
+    cy.on('mouseover', 'node', (evt) => evt.target.addClass('hover'));  // M3 hover state layer
+    cy.on('mouseout', 'node', (evt) => evt.target.removeClass('hover'));
     cyEl.addEventListener('contextmenu', (e) => e.preventDefault());
     cy.on('tap', (evt) => { if (evt.target === cy) elInfo.hidden = true; });
     window.__cy = cy; // debug/automation hook
