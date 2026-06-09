@@ -49,6 +49,9 @@ const el = {
   overlay: document.getElementById('overlay'),
   detail: document.getElementById('detail'),
   closeDetail: document.getElementById('close-detail'),
+  home: document.getElementById('home'),
+  toolbar: document.querySelector('.toolbar'),
+  brand: document.querySelector('.brand'),
 };
 
 // ---- Helpers ----------------------------------------------------------------
@@ -290,7 +293,8 @@ const sortOptionsFor = (type) =>
 // A new query: fetch per-type counts (for the tabs), then load the active tab.
 async function doSearch() {
   state.query = el.q.value;
-  if (!state.query.trim()) return;
+  if (!state.query.trim()) { showHome(); return; }
+  hideHome();
   el.results.innerHTML = '<div class="spinner"><div></div></div>';
   el.pager.hidden = true;
 
@@ -1116,6 +1120,189 @@ function closeDetail() {
 
 // ---- Events -----------------------------------------------------------------
 
+// ---- Home page (driven by /home.json — edit that file to curate) ------------
+// Section types: "recent" (auto, newest images), "pool" (hand-picked objects,
+// shuffled), "query" (random from a search/collection), "links" (search chips).
+
+const shuffle = (a) => {
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+};
+
+async function searchRecords(body) {
+  try {
+    const res = await fetch('/api/search', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+    });
+    const data = await res.json();
+    return Array.isArray(data.results) ? data.results : [];
+  } catch { return []; }
+}
+const hasImage = (r) => imagesOf(r).length > 0;
+
+// Recently added images: newest-MODIFIED records that have an image (adding an
+// image bumps a record's modified date), across the chosen types.
+async function homeRecent(section) {
+  const types = (section.types && section.types.length) ? section.types : ['Object'];
+  const want = section.count || 12;
+  const batches = await Promise.all(types.map((t) =>
+    searchRecords({ query: '*', size: want * 3, filters: [{ field: 'type', keyword: t }], sort: [{ field: '_meta.modified', order: 'desc' }] })
+  ));
+  const seen = new Set();
+  return batches.flat()
+    .filter(hasImage)
+    .filter((r) => { const k = `${r.type}:${r.id}`; if (seen.has(k)) return false; seen.add(k); return true; })
+    .sort((a, b) => String((b._meta || {}).modified || '').localeCompare(String((a._meta || {}).modified || '')))
+    .slice(0, want);
+}
+
+// Hand-picked pool: fetch each record, shuffled, up to count.
+async function homePool(section) {
+  const items = shuffle([...(section.items || [])]).slice(0, section.count || 8);
+  const recs = await Promise.all(items.map(async (it) => {
+    const href = /^https?:/.test(it) ? it : `https://data.tepapa.govt.nz/collection/${String(it).replace(/^\/+/, '')}`;
+    try {
+      const r = await (await fetch(`/api/record?href=${encodeURIComponent(href)}`)).json();
+      return (r && r.id) ? r : null;
+    } catch { return null; }
+  }));
+  return recs.filter(Boolean);
+}
+
+// Random selection from a query / collection.
+async function homeQuery(section) {
+  const want = section.count || 10;
+  const filters = section.recordType ? [{ field: 'type', keyword: section.recordType }] : undefined;
+  const random = section.shuffle !== false;
+  const from = random ? Math.floor(Math.random() * 150) : 0;
+  let recs = (await searchRecords({ query: section.query || '*', from, size: Math.max(want * 4, 30), filters })).filter(hasImage);
+  if (recs.length < want) {
+    // top up from the start — some queries (e.g. a whole collection) lead with
+    // image-less topics/publications, with the imaged records further in.
+    const seen = new Set(recs.map((r) => `${r.type}:${r.id}`));
+    for (const r of (await searchRecords({ query: section.query || '*', size: 120, filters })).filter(hasImage)) {
+      const k = `${r.type}:${r.id}`;
+      if (!seen.has(k)) { seen.add(k); recs.push(r); }
+    }
+  }
+  if (random) shuffle(recs);
+  return recs.slice(0, want);
+}
+
+function homeCardHtml(record, idx) {
+  const img = imagesOf(record)[0];
+  const title = titleOf(record);
+  const sensitive = img && isSensitive(record);
+  const thumb = img
+    ? `<div class="thumb${sensitive ? ' sensitive' : ''}"><img loading="lazy" src="${esc(img.thumbnailUrl)}" alt="${esc(title)}">${sensitive ? sensitiveOverlay() : ''}</div>`
+    : `<div class="thumb no-image"><span>No image</span></div>`;
+  return `<article class="hcard" data-h="${idx}" tabindex="0">
+      ${thumb}
+      <div class="hcard-body">
+        <div class="hcard-title">${esc(title)}</div>
+        <div class="hcard-sub">${esc(record.type || '')}${record.identifier ? ' · ' + esc(record.identifier) : ''}</div>
+      </div>
+    </article>`;
+}
+
+function renderShelf(title, records) {
+  return `<section class="home-shelf">
+      <h2 class="home-shelf-title">${esc(title || '')}</h2>
+      <div class="home-row" data-shelf>${records.map((r, i) => homeCardHtml(r, i)).join('')}</div>
+    </section>`;
+}
+
+// Substitute {token} placeholders (e.g. live counts) in editable hero text.
+function applyTokens(str, tokens) {
+  return String(str).replace(/\{(\w+)\}/g, (m, k) => (tokens[k] != null ? tokens[k] : '…'));
+}
+function heroInner(hero, tokens) {
+  const t = (s) => esc(applyTokens(s || '', tokens));
+  const descs = Array.isArray(hero.description) ? hero.description : (hero.description ? [hero.description] : []);
+  return `<h1>${t(hero.title)}</h1>` +
+    (hero.subtitle ? `<p class="home-hero-sub">${t(hero.subtitle)}</p>` : '') +
+    descs.map((d) => `<p class="home-hero-desc">${t(d)}</p>`).join('');
+}
+// A live record count from the API (a size:0 search → the resultset count).
+async function homeCount(spec) {
+  const body = { size: 0, query: (typeof spec === 'string' ? spec : (spec && spec.query) || '*') };
+  if (spec && typeof spec === 'object' && spec.recordType) body.filters = [{ field: 'type', keyword: spec.recordType }];
+  try {
+    const d = await (await fetch('/api/search', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })).json();
+    const n = (((d._metadata || {}).resultset || {}).count);
+    return typeof n === 'number' ? n.toLocaleString() : null;
+  } catch { return null; }
+}
+
+async function loadHome() {
+  let config = null;
+  try { config = await (await fetch('/home.json', { cache: 'no-store' })).json(); } catch { /* */ }
+  if (!config) { el.home.innerHTML = '<div class="message">Couldn’t load the home page (home.json).</div>'; return; }
+
+  let html = '';
+  if (config.hero) {
+    html += `<div class="home-hero" id="home-hero">${heroInner(config.hero, {})}</div>`;
+  }
+  const sections = Array.isArray(config.sections) ? config.sections : [];
+  html += sections.map((s, i) =>
+    `<div class="home-section" data-sec="${i}">${s.type === 'links' ? '' : '<div class="home-shelf"><div class="home-skeleton"></div></div>'}</div>`
+  ).join('');
+  el.home.innerHTML = html;
+
+  sections.forEach(async (s, i) => {
+    const host = el.home.querySelector(`[data-sec="${i}"]`);
+    if (!host) return;
+    if (s.type === 'links') {
+      const chips = (s.items || []).map((it) =>
+        `<button class="home-link" type="button" data-q="${esc(it.query || it.label)}">${esc(it.label)}</button>`).join('');
+      host.innerHTML = `<section class="home-shelf"><h2 class="home-shelf-title">${esc(s.title || 'Explore')}</h2><div class="home-links">${chips}</div></section>`;
+      host.querySelectorAll('.home-link').forEach((b) =>
+        b.addEventListener('click', () => { el.q.value = b.dataset.q; doSearch(); }));
+      return;
+    }
+    let records = [];
+    try {
+      if (s.type === 'recent') records = await homeRecent(s);
+      else if (s.type === 'pool') records = await homePool(s);
+      else if (s.type === 'query') records = await homeQuery(s);
+    } catch { records = []; }
+    if (!records.length) { host.innerHTML = ''; return; }
+    host.innerHTML = renderShelf(s.title, records);
+    host.querySelectorAll('[data-shelf] [data-h]').forEach((node) =>
+      node.addEventListener('click', () => openDetail(records[Number(node.dataset.h)])));
+    wireReveal(host);
+  });
+
+  // Live record counts → substitute {token}s in the hero text once they arrive.
+  if (config.hero && config.hero.counts) {
+    const tokens = {};
+    await Promise.all(Object.entries(config.hero.counts).map(async ([name, spec]) => {
+      const v = await homeCount(spec);
+      if (v != null) tokens[name] = v;
+    }));
+    const heroEl = document.getElementById('home-hero');
+    if (heroEl) heroEl.innerHTML = heroInner(config.hero, tokens);
+  }
+}
+
+function showHome() {
+  el.home.hidden = false;
+  el.results.hidden = true;
+  el.toolbar.hidden = true;
+  el.tabs.hidden = true;
+  el.collectionBar.hidden = true;
+  el.pager.hidden = true;
+  if (!el.home.dataset.loaded) { el.home.dataset.loaded = '1'; loadHome(); }
+}
+function hideHome() {
+  el.home.hidden = true;
+  el.results.hidden = false;
+  el.toolbar.hidden = false;
+}
+
 el.form.addEventListener('submit', (e) => {
   e.preventDefault();
   doSearch();
@@ -1170,3 +1357,12 @@ el.overlay.addEventListener('click', (e) => {
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && !el.overlay.hidden) closeDetail();
 });
+
+// Home: clicking the brand returns to the home page; show it on first load.
+el.brand.addEventListener('click', () => {
+  el.q.value = '';
+  state.query = '';
+  showHome();
+  window.scrollTo({ top: 0 });
+});
+showHome();

@@ -11,6 +11,14 @@ new version (e.g. `## [1.3.0] — YYYY-MM-DD`), bump `version` in `package.json`
 cut a matching GitHub release. Delete any subsections you don't use._
 
 ### Added
+- **Editable home page.** On load (and via the logo) the app opens to a curated landing
+  page driven by `public/home.json` — edit that one file to set the hero text (including a
+  **description with live API record counts**: drop a `{total}` / `{objects}` token into the
+  text and it's filled with the formatted number) and arrange
+  sections: **recently added images** (automated — newest-imaged objects & specimens),
+  a **hand-picked pool** shown shuffled, a **randomised selection from any search/collection**,
+  and **quick-search link chips**. Cards open straight into the detail / IIIF view; searching
+  (or any link chip) leaves the home page, and the logo returns to it.
 
 ### Changed
 

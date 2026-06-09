@@ -1,0 +1,64 @@
+{
+  "_comment": "Edit this file to curate the home page. No code needed. Sections render top to bottom.",
+  "_sectionTypes": {
+    "recent": "Automated. Newest-imaged records. Fields: title, types (e.g. ['Object','Specimen']), count.",
+    "pool":   "Your hand-picked objects, shown a random few each visit. Fields: title, items (object/specimen/... ids or hrefs), count, shuffle.",
+    "query":  "A random selection from a search or collection. Fields: title, query (a search string, e.g. 'collection:\"Photography\"' or 'hei tiki'), count, shuffle, type (optional, restrict to one record type).",
+    "links":  "Quick-search chips. Fields: title, items ([{label, query}])."
+  },
+
+  "hero": {
+    "title": "Explore Te Papa's collections",
+    "subtitle": "Aotearoa New Zealand's national collection — search above, or browse the selections below.",
+    "description": "A browser for the Museum of New Zealand Te Papa Tongarewa Collections API, currently spanning {total} records — including {objects} catalogued objects and {specimens} natural-history specimens. Edit this text, and the live counts it shows, in home.json.",
+    "_countsHelp": "Each {token} in title/subtitle/description is replaced with a live API count. Define them here: a value is either a query string, or { query, recordType }.",
+    "counts": {
+      "total": "*",
+      "objects": { "query": "*", "recordType": "Object" },
+      "specimens": { "query": "*", "recordType": "Specimen" }
+    }
+  },
+
+  "sections": [
+    {
+      "type": "recent",
+      "title": "Recently added images",
+      "types": ["Object", "Specimen"],
+      "count": 12
+    },
+    {
+      "type": "pool",
+      "title": "A few favourites",
+      "count": 8,
+      "shuffle": true,
+      "items": [
+        "object/65182",
+        "object/43207",
+        "object/130905",
+        "object/479521",
+        "object/1432646",
+        "object/132532"
+      ]
+    },
+    {
+      "type": "query",
+      "title": "From the Photography collection",
+      "query": "collection:\"Photography\"",
+      "recordType": "Object",
+      "count": 12,
+      "shuffle": true
+    },
+    {
+      "type": "links",
+      "title": "Start here",
+      "items": [
+        { "label": "Hei tiki", "query": "hei tiki" },
+        { "label": "Kākahu", "query": "kākahu" },
+        { "label": "Rita Angus", "query": "Rita Angus" },
+        { "label": "Colossal squid", "query": "colossal squid" },
+        { "label": "Lindauer portraits", "query": "Lindauer" },
+        { "label": "Waka", "query": "waka" }
+      ]
+    }
+  ]
+}
