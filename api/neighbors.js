@@ -6,7 +6,7 @@ module.exports = async (req, res) => {
   const payload = await readJson(req);
   if (payload === null) return sendJson(res, 400, { error: 'Invalid JSON' });
   try {
-    sendJson(res, 200, await buildNeighbors(payload.href, payload.autoThreshold));
+    sendJson(res, 200, await buildNeighbors(payload.href));
   } catch (e) {
     sendJson(res, 502, { error: 'Could not build neighbours', detail: String(e) });
   }

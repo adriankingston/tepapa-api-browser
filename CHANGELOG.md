@@ -25,6 +25,12 @@ cut a matching GitHub release. Delete any subsections you don't use._
   pager and footer — while the top app bar stays full-bleed. Body prose (the home hero
   description) is further capped to a ~70-character reading measure. One `--content-max`
   variable tunes the whole app.
+- **Relationship graph: every relationship type is now a bundle.** Each relationship — *made
+  of*, *technique*, *type*, *depicts*, *influenced by*, *referenced by*, … — is shown as one
+  labelled, counted node you tap to expand, instead of only bundling high-degree relationships
+  and drawing the rest as loose nodes. This gives a consistent, uncluttered overview of a
+  record's relationship structure at a glance, and the first expand is quicker (small
+  associations are no longer fetched up front — they page in lazily when you open the bundle).
 - **Object detail pages now surface the full record, matching Collections Online.** The
   **Materials** list (the catalogued material terms), **Depicts**/**Subjects**, and the
   navigable associations — **Influenced by**, **Intended for**, **Former owner**, **Parts**,

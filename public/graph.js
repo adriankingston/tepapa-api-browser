@@ -2,10 +2,9 @@
    Loaded after app.js; reuses its globals (esc, imagesOf, openDetail).
 
    Design for scale: a node's relationships are fetched from /api/neighbors,
-   which draws low-degree relationships as individual nodes and returns
-   high-degree ones as "bundles" (e.g. "made (53)"). A bundle is one node you
-   tap to page its members in — so a place with 250k relationships never tries
-   to render 250k nodes. */
+   which returns every relationship type as a labelled, counted "bundle" (e.g.
+   "made of (4)"). A bundle is one node you tap to page its members in — so a
+   place with 250k relationships never tries to render 250k nodes. */
 (() => {
   // Material 3-aligned, harmonised type palette. Object is the brand primary
   // (teal #008e96) so focus, selection, bundles and Object icons share one hue.
@@ -62,7 +61,6 @@
 
   const MAX_NODES = 300;
   const BUNDLE_PAGE = 10;
-  const AUTO_THRESHOLD = 8;
 
   const ov = document.getElementById('graph-overlay');
   const cyEl = document.getElementById('cy');
@@ -232,7 +230,7 @@
     try {
       const res = await fetch('/api/neighbors', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ href, autoThreshold: AUTO_THRESHOLD }),
+        body: JSON.stringify({ href }),
       });
       data = await res.json();
       if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
@@ -250,7 +248,9 @@
       addEdge(e.source, e.target, labelFor(e.predicate), e.direction === 'in', via);
     }
     for (const b of data.bundles || []) {
-      const bid = `bundle:${node.id()}|${b.predicate}`;
+      // mode in the id keeps a forward (inline) and reverse bundle of the same
+      // predicate from colliding on one node.
+      const bid = `bundle:${node.id()}|${b.predicate}|${b.mode}`;
       if (cy.getElementById(bid).empty() && !atCap()) {
         cy.add({
           group: 'nodes',
