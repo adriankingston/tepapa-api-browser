@@ -11,6 +11,15 @@ new version (e.g. `## [1.4.0] — YYYY-MM-DD`), bump `version` in `package.json`
 cut a matching GitHub release. Delete any subsections you don't use._
 
 ### Added
+- **Home page: a graphic intro panel and a live "collection at a glance" stat band.** The
+  intro text now sits in its own rounded, branded panel (an eyebrow kicker, a large title and a
+  subtle teal wash), and the collection numbers move into a separate band of big-number tiles —
+  **Total records, Objects, Specimens, Images** and **Downloadable images** — each a live count
+  from the API. All editable in `home.json`: the intro is the `hero` block, and each `stats`
+  item takes a `label` and a `count` (a query string, `{ query, recordType }`, or
+  `{ query, filters }`). *Images* counts records that have an image and *Downloadable images*
+  those whose image is free to download (media files aren't independently searchable, so these
+  are record counts).
 - **Side-scroll arrows on the home-page card rows.** Each home shelf now has the same
   centred horizontal scroller with clickable left/right chevrons as the detail-view image
   filmstrip: the arrows appear only when the row overflows, dim at the ends, page by ~80% of

@@ -1286,16 +1286,33 @@ function applyTokens(str, tokens) {
   return String(str).replace(/\{(\w+)\}/g, (m, k) => (tokens[k] != null ? tokens[k] : '…'));
 }
 function heroInner(hero, tokens) {
-  const t = (s) => esc(applyTokens(s || '', tokens));
+  const t = (s) => esc(applyTokens(s || '', tokens || {}));
   const descs = Array.isArray(hero.description) ? hero.description : (hero.description ? [hero.description] : []);
-  return `<h1>${t(hero.title)}</h1>` +
+  return (hero.eyebrow ? `<div class="home-intro-eyebrow">${t(hero.eyebrow)}</div>` : '') +
+    `<h1>${t(hero.title)}</h1>` +
     (hero.subtitle ? `<p class="home-hero-sub">${t(hero.subtitle)}</p>` : '') +
     descs.map((d) => `<p class="home-hero-desc">${t(d)}</p>`).join('');
+}
+
+// The hero number band — render placeholders, then fill each with a live count.
+function renderStats(stats) {
+  const items = stats && Array.isArray(stats.items) ? stats.items : [];
+  if (!items.length) return '';
+  return `<section class="home-stats" aria-label="Collection at a glance">` +
+    items.map((it, i) =>
+      `<div class="home-stat">` +
+        `<div class="home-stat-num" data-stat="${i}" data-loading>…</div>` +
+        `<div class="home-stat-label">${esc(it.label || '')}</div>` +
+      `</div>`).join('') +
+    `</section>`;
 }
 // A live record count from the API (a size:0 search → the resultset count).
 async function homeCount(spec) {
   const body = { size: 0, query: (typeof spec === 'string' ? spec : (spec && spec.query) || '*') };
-  if (spec && typeof spec === 'object' && spec.recordType) body.filters = [{ field: 'type', keyword: spec.recordType }];
+  if (spec && typeof spec === 'object') {
+    if (Array.isArray(spec.filters)) body.filters = spec.filters;
+    else if (spec.recordType) body.filters = [{ field: 'type', keyword: spec.recordType }];
+  }
   try {
     const d = await (await fetch('/api/search', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })).json();
     const n = (((d._metadata || {}).resultset || {}).count);
@@ -1310,8 +1327,9 @@ async function loadHome() {
 
   let html = '';
   if (config.hero) {
-    html += `<div class="home-hero" id="home-hero">${heroInner(config.hero, {})}</div>`;
+    html += `<div class="home-intro">${heroInner(config.hero, {})}</div>`;
   }
+  if (config.stats) html += renderStats(config.stats);
   const sections = Array.isArray(config.sections) ? config.sections : [];
   html += sections.map((s, i) =>
     `<div class="home-section" data-sec="${i}">${s.type === 'links' ? '' : '<div class="home-shelf"><div class="home-skeleton"></div></div>'}</div>`
@@ -1343,15 +1361,13 @@ async function loadHome() {
     wireShelfArrows(host);
   });
 
-  // Live record counts → substitute {token}s in the hero text once they arrive.
-  if (config.hero && config.hero.counts) {
-    const tokens = {};
-    await Promise.all(Object.entries(config.hero.counts).map(async ([name, spec]) => {
-      const v = await homeCount(spec);
-      if (v != null) tokens[name] = v;
-    }));
-    const heroEl = document.getElementById('home-hero');
-    if (heroEl) heroEl.innerHTML = heroInner(config.hero, tokens);
+  // Fill the stat band with live counts as each one returns.
+  if (config.stats && Array.isArray(config.stats.items)) {
+    config.stats.items.forEach(async (it, i) => {
+      const v = await homeCount(it.count);
+      const cell = el.home.querySelector(`.home-stat-num[data-stat="${i}"]`);
+      if (cell) { cell.textContent = v != null ? v : '—'; cell.removeAttribute('data-loading'); }
+    });
   }
 }
 

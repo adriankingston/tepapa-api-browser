@@ -8,15 +8,22 @@
   },
 
   "hero": {
+    "_help": "The intro text block. eyebrow/title/subtitle/description are all optional and editable; omit one to hide it.",
+    "eyebrow": "Te Papa Tongarewa · Collections API",
     "title": "Explore Te Papa's collections",
     "subtitle": "Aotearoa New Zealand's national collection — search above, or browse the selections below.",
-    "description": "A browser for the Museum of New Zealand Te Papa Tongarewa Collections API, currently spanning {total} records — including {objects} catalogued objects and {specimens} natural-history specimens. Edit this text, and the live counts it shows, in home.json.",
-    "_countsHelp": "Each {token} in title/subtitle/description is replaced with a live API count. Define them here: a value is either a query string, or { query, recordType }.",
-    "counts": {
-      "total": "*",
-      "objects": { "query": "*", "recordType": "Object" },
-      "specimens": { "query": "*", "recordType": "Specimen" }
-    }
+    "description": "An open browser for the Museum of New Zealand Te Papa Tongarewa Collections API. Edit this intro, the stat band below, and the sections — all in home.json."
+  },
+
+  "stats": {
+    "_help": "The hero number band — live counts pulled from the API. Each item is { label, count }, where count is a query string, { query, recordType }, or { query, filters: [{ field, keyword }] }.",
+    "items": [
+      { "label": "Total records", "count": "*" },
+      { "label": "Objects", "count": { "query": "*", "recordType": "Object" } },
+      { "label": "Specimens", "count": { "query": "*", "recordType": "Specimen" } },
+      { "label": "Images", "count": { "query": "*", "filters": [{ "field": "hasRepresentation.type", "keyword": "ImageObject" }] } },
+      { "label": "Downloadable images", "count": { "query": "*", "filters": [{ "field": "hasRepresentation.type", "keyword": "ImageObject" }, { "field": "hasRepresentation.rights.allowsDownload", "keyword": true }] } }
+    ]
   },
 
   "sections": [
