@@ -1307,18 +1307,63 @@ function renderStats(stats) {
     `</section>`;
 }
 
-// Clickable category links shown beside the intro text. Each runs its query.
+// One category link: label + a live count, or a hover arrow for curated lists.
+function catButtonHtml(label, query, count) {
+  return `<button class="home-cat" type="button" data-q="${esc(query)}">` +
+    `<span class="home-cat-label">${esc(label)}</span>` +
+    (count != null
+      ? `<span class="home-cat-count">${Number(count).toLocaleString()}</span>`
+      : `<span class="home-cat-arrow" aria-hidden="true">›</span>`) +
+  `</button>`;
+}
+
+// Category links beside the intro. Either a curated `items` list, or
+// `source: "collections"` to auto-list every collection (filled in async).
 function categoriesInner(cats) {
-  const items = cats && Array.isArray(cats.items) ? cats.items : [];
-  if (!items.length) return '';
+  if (!cats) return '';
+  const items = Array.isArray(cats.items) ? cats.items : null;
+  const auto = !items && cats.source === 'collections';
+  if (!items && !auto) return '';
   const title = cats.title || 'Browse';
+  const body = items ? items.map((c) => catButtonHtml(c.label, c.query || c.label)).join('') : '';
+  const autoAttrs = auto
+    ? ` data-cats-min="${Number(cats.min) || 0}"${cats.showCounts === false ? ' data-cats-nocount="1"' : ''}${cats.sort ? ` data-cats-sort="${esc(cats.sort)}"` : ''}`
+    : '';
   return `<div class="home-cats-title">${esc(title)}</div>` +
-    `<nav class="home-cats" aria-label="${esc(title)}">` +
-    items.map((c) =>
-      `<button class="home-cat" type="button" data-q="${esc(c.query || c.label)}">` +
-        `<span>${esc(c.label)}</span><span class="home-cat-arrow" aria-hidden="true">›</span>` +
-      `</button>`).join('') +
-    `</nav>`;
+    `<nav class="home-cats${auto ? ' home-cats-auto' : ''}"${autoAttrs} aria-label="${esc(title)}">${body}</nav>`;
+}
+
+// The full collection list, from the live `collection` facet (deduped by case).
+async function fetchCollectionFacet() {
+  try {
+    const d = await (await fetch('/api/search', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: '*', size: 0, facets: [{ field: 'collection', size: 80 }] }) })).json();
+    const facet = (d.facets && d.facets.collection) || {};
+    const pairs = Array.isArray(facet)
+      ? facet.map((x) => [x.key || x.value || x.label, x.count != null ? x.count : x.doc_count])
+      : Object.entries(facet);
+    const byLower = new Map();           // merge case-variant duplicates, keep the larger
+    for (const [token, count] of pairs) {
+      if (!token) continue;
+      const k = String(token).toLowerCase();
+      const prev = byLower.get(k);
+      if (!prev || count > prev.count) byLower.set(k, { token, count });
+    }
+    return [...byLower.values()];
+  } catch { return []; }
+}
+
+async function fillCollectionCats(navEl) {
+  const min = Number(navEl.dataset.catsMin) || 0;
+  const showCount = navEl.dataset.catsNocount !== '1';
+  const cols = (await fetchCollectionFacet()).filter((c) => c.count >= min);
+  if (navEl.dataset.catsSort === 'name') cols.sort((a, b) => collectionLabel(a.token).localeCompare(collectionLabel(b.token)));
+  else cols.sort((a, b) => b.count - a.count); // biggest collections first
+  if (!cols.length) { navEl.innerHTML = ''; return; }
+  navEl.innerHTML = cols.map((c) =>
+    catButtonHtml(collectionLabel(c.token), `collection:"${c.token}"`, showCount ? c.count : null)).join('');
+  navEl.querySelectorAll('.home-cat').forEach((b) =>
+    b.addEventListener('click', () => { el.q.value = b.dataset.q; doSearch(); }));
 }
 // A live record count from the API (a size:0 search → the resultset count).
 async function homeCount(spec) {
@@ -1340,7 +1385,9 @@ async function loadHome() {
   if (!config) { el.home.innerHTML = '<div class="message">Couldn’t load the home page (home.json).</div>'; return; }
 
   let html = '';
-  const hasCats = config.categories && Array.isArray(config.categories.items) && config.categories.items.length;
+  const hasCats = config.categories &&
+    ((Array.isArray(config.categories.items) && config.categories.items.length) ||
+     config.categories.source === 'collections');
   if (config.hero || hasCats) {
     html += `<div class="home-intro${hasCats ? ' has-cats' : ''}">` +
       `<div class="home-intro-text">${config.hero ? heroInner(config.hero, {}) : ''}</div>` +
@@ -1354,9 +1401,11 @@ async function loadHome() {
   ).join('');
   el.home.innerHTML = html;
 
-  // Intro category links → run the search.
+  // Intro category links → run the search. A "collections" rail fills in async.
   el.home.querySelectorAll('.home-cat').forEach((b) =>
     b.addEventListener('click', () => { el.q.value = b.dataset.q; doSearch(); }));
+  const autoCats = el.home.querySelector('.home-cats-auto');
+  if (autoCats) fillCollectionCats(autoCats);
 
   sections.forEach(async (s, i) => {
     const host = el.home.querySelector(`[data-sec="${i}"]`);

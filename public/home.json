@@ -16,20 +16,12 @@
   },
 
   "categories": {
-    "_help": "Clickable category links shown beside the intro text. title + items ([{ label, query }]). A query can be anything the search box accepts, e.g. collection:\"Art\". Aim for ~10 covering the breadth of the collection.",
+    "_help": "Collection links shown to the right of the intro text. Set source:\"collections\" to auto-list every collection from the API with live counts (options: showCounts true/false, sort \"count\"|\"name\", min to hide collections smaller than N), or instead give a curated items:[{ label, query }] where a query is anything the search box accepts, e.g. collection:\"Art\".",
     "title": "Browse the collections",
-    "items": [
-      { "label": "Art", "query": "collection:\"Art\"" },
-      { "label": "History", "query": "collection:\"History\"" },
-      { "label": "Taonga Māori", "query": "collection:\"TaongaMāori\"" },
-      { "label": "Pacific Cultures", "query": "collection:\"PacificCultures\"" },
-      { "label": "Photography", "query": "collection:\"Photography\"" },
-      { "label": "Plants", "query": "collection:\"Plants\"" },
-      { "label": "Birds", "query": "collection:\"Birds\"" },
-      { "label": "Insects", "query": "collection:\"Insects\"" },
-      { "label": "Molluscs", "query": "collection:\"Molluscs\"" },
-      { "label": "Fossils", "query": "collection:\"FossilVertebrates\"" }
-    ]
+    "source": "collections",
+    "showCounts": true,
+    "sort": "count",
+    "min": 1
   },
 
   "stats": {
