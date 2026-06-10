@@ -1306,6 +1306,20 @@ function renderStats(stats) {
       `</div>`).join('') +
     `</section>`;
 }
+
+// Clickable category links shown beside the intro text. Each runs its query.
+function categoriesInner(cats) {
+  const items = cats && Array.isArray(cats.items) ? cats.items : [];
+  if (!items.length) return '';
+  const title = cats.title || 'Browse';
+  return `<div class="home-cats-title">${esc(title)}</div>` +
+    `<nav class="home-cats" aria-label="${esc(title)}">` +
+    items.map((c) =>
+      `<button class="home-cat" type="button" data-q="${esc(c.query || c.label)}">` +
+        `<span>${esc(c.label)}</span><span class="home-cat-arrow" aria-hidden="true">›</span>` +
+      `</button>`).join('') +
+    `</nav>`;
+}
 // A live record count from the API (a size:0 search → the resultset count).
 async function homeCount(spec) {
   const body = { size: 0, query: (typeof spec === 'string' ? spec : (spec && spec.query) || '*') };
@@ -1326,8 +1340,12 @@ async function loadHome() {
   if (!config) { el.home.innerHTML = '<div class="message">Couldn’t load the home page (home.json).</div>'; return; }
 
   let html = '';
-  if (config.hero) {
-    html += `<div class="home-intro">${heroInner(config.hero, {})}</div>`;
+  const hasCats = config.categories && Array.isArray(config.categories.items) && config.categories.items.length;
+  if (config.hero || hasCats) {
+    html += `<div class="home-intro${hasCats ? ' has-cats' : ''}">` +
+      `<div class="home-intro-text">${config.hero ? heroInner(config.hero, {}) : ''}</div>` +
+      (hasCats ? `<div class="home-intro-cats">${categoriesInner(config.categories)}</div>` : '') +
+      `</div>`;
   }
   if (config.stats) html += renderStats(config.stats);
   const sections = Array.isArray(config.sections) ? config.sections : [];
@@ -1335,6 +1353,10 @@ async function loadHome() {
     `<div class="home-section" data-sec="${i}">${s.type === 'links' ? '' : '<div class="home-shelf"><div class="home-skeleton"></div></div>'}</div>`
   ).join('');
   el.home.innerHTML = html;
+
+  // Intro category links → run the search.
+  el.home.querySelectorAll('.home-cat').forEach((b) =>
+    b.addEventListener('click', () => { el.q.value = b.dataset.q; doSearch(); }));
 
   sections.forEach(async (s, i) => {
     const host = el.home.querySelector(`[data-sec="${i}"]`);

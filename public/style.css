@@ -952,6 +952,45 @@ a { color: var(--md-primary); }
 .home-hero-sub { margin: 0 0 12px; max-width: 62ch; font-size: 17px; line-height: 1.5; color: var(--md-on-surface); }
 .home-hero-desc { margin: 0 0 6px; max-width: 72ch; font-size: 14px; line-height: 1.6; color: var(--md-on-surface-variant); }
 
+/* Two-column intro: a category rail to the left of the text */
+.home-intro.has-cats {
+  display: grid;
+  grid-template-columns: 248px 1fr;
+  align-items: start;
+}
+.home-intro.has-cats .home-intro-cats {
+  grid-column: 1; grid-row: 1;
+  padding-right: 28px; border-right: 1px solid var(--md-outline-variant);
+}
+.home-intro.has-cats .home-intro-text { grid-column: 2; grid-row: 1; min-width: 0; padding-left: 32px; }
+
+.home-cats-title {
+  margin: 2px 0 10px; font: 600 12px/1 var(--md-font);
+  letter-spacing: 0.1em; text-transform: uppercase; color: var(--md-primary);
+}
+.home-cats { display: flex; flex-direction: column; gap: 2px; }
+.home-cat {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  width: 100%; padding: 9px 12px; border: none; border-radius: var(--md-shape-sm);
+  background: transparent; cursor: pointer; text-align: left;
+  font: 500 14.5px/1.25 var(--md-font); color: var(--md-on-surface);
+  transition: background-color var(--md-dur) var(--md-ease);
+}
+.home-cat:hover, .home-cat:focus-visible { background: var(--md-surface-container-high); outline: none; }
+.home-cat-arrow { color: var(--md-on-surface-variant); opacity: 0; transition: opacity var(--md-dur) var(--md-ease); }
+.home-cat:hover .home-cat-arrow, .home-cat:focus-visible .home-cat-arrow { opacity: 1; }
+
+@media (max-width: 760px) {
+  .home-intro.has-cats { grid-template-columns: 1fr; }
+  .home-intro.has-cats .home-intro-text { grid-column: 1; grid-row: auto; padding-left: 0; }
+  .home-intro.has-cats .home-intro-cats {
+    grid-column: 1; grid-row: auto;
+    padding-right: 0; border-right: none;
+    margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--md-outline-variant);
+  }
+  .home-cats { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+}
+
 /* Stat band — live collection numbers */
 .home-stats {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));

@@ -15,6 +15,23 @@
     "description": "An open browser for the Museum of New Zealand Te Papa Tongarewa Collections API. Edit this intro, the stat band below, and the sections — all in home.json."
   },
 
+  "categories": {
+    "_help": "Clickable category links shown beside the intro text. title + items ([{ label, query }]). A query can be anything the search box accepts, e.g. collection:\"Art\". Aim for ~10 covering the breadth of the collection.",
+    "title": "Browse the collections",
+    "items": [
+      { "label": "Art", "query": "collection:\"Art\"" },
+      { "label": "History", "query": "collection:\"History\"" },
+      { "label": "Taonga Māori", "query": "collection:\"TaongaMāori\"" },
+      { "label": "Pacific Cultures", "query": "collection:\"PacificCultures\"" },
+      { "label": "Photography", "query": "collection:\"Photography\"" },
+      { "label": "Plants", "query": "collection:\"Plants\"" },
+      { "label": "Birds", "query": "collection:\"Birds\"" },
+      { "label": "Insects", "query": "collection:\"Insects\"" },
+      { "label": "Molluscs", "query": "collection:\"Molluscs\"" },
+      { "label": "Fossils", "query": "collection:\"FossilVertebrates\"" }
+    ]
+  },
+
   "stats": {
     "_help": "The hero number band — live counts pulled from the API. Each item is { label, count }, where count is a query string, { query, recordType }, or { query, filters: [{ field, keyword }] }.",
     "items": [
@@ -54,18 +71,6 @@
       "recordType": "Object",
       "count": 12,
       "shuffle": true
-    },
-    {
-      "type": "links",
-      "title": "Start here",
-      "items": [
-        { "label": "Hei tiki", "query": "hei tiki" },
-        { "label": "Kākahu", "query": "kākahu" },
-        { "label": "Rita Angus", "query": "Rita Angus" },
-        { "label": "Colossal squid", "query": "colossal squid" },
-        { "label": "Lindauer portraits", "query": "Lindauer" },
-        { "label": "Waka", "query": "waka" }
-      ]
     }
   ]
 }

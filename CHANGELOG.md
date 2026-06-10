@@ -19,7 +19,11 @@ cut a matching GitHub release. Delete any subsections you don't use._
   item takes a `label` and a `count` (a query string, `{ query, recordType }`, or
   `{ query, filters }`). *Images* counts records that have an image and *Downloadable images*
   those whose image is free to download (media files aren't independently searchable, so these
-  are record counts).
+  are record counts). Alongside the intro, a **"Browse the collections" rail** of **10
+  categories spanning the collection's breadth** — Art, History, Taonga Māori, Pacific Cultures,
+  Photography, Plants, Birds, Insects, Molluscs and Fossils — sits to the left of the text on
+  wide screens (and stacks below it on narrow ones); each is an editable `collection:"…"` search
+  in the `categories` block of `home.json`.
 - **Side-scroll arrows on the home-page card rows.** Each home shelf now has the same
   centred horizontal scroller with clickable left/right chevrons as the detail-view image
   filmstrip: the arrows appear only when the row overflows, dim at the ends, page by ~80% of
