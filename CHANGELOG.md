@@ -11,6 +11,9 @@ new version (e.g. `## [1.4.0] — YYYY-MM-DD`), bump `version` in `package.json`
 cut a matching GitHub release. Delete any subsections you don't use._
 
 ### Added
+- **Favicon.** A simplified version of the app's hub/relationship logo — a scalable SVG that
+  adapts to light/dark tab bars (`prefers-color-scheme`), with a 64×64 PNG fallback for older
+  browsers.
 - **Home page: a graphic intro panel and a live "collection at a glance" stat band.** The
   intro text now sits in its own rounded, branded panel (an eyebrow kicker, a large title and a
   subtle teal wash), and the collection numbers move into a separate band of big-number tiles —
