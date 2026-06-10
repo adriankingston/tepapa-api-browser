@@ -16,12 +16,16 @@
   },
 
   "categories": {
-    "_help": "Collection links shown to the right of the intro text. Set source:\"collections\" to auto-list every collection from the API with live counts (options: showCounts true/false, sort \"count\"|\"name\", min to hide collections smaller than N), or instead give a curated items:[{ label, query }] where a query is anything the search box accepts, e.g. collection:\"Art\".",
+    "_help": "Collection links shown to the right of the intro. source:\"collections\" auto-lists every collection from the API with live counts (options: showCounts, sort \"count\"|\"name\", min). Add groups:[{ title, collections:[tokens] }] to split them into labelled columns — tokens are the API's collection values, e.g. TaongaMāori, FossilVertebrates. Any collection not listed in a group joins the last one. Or give a curated items:[{ label, query }] instead.",
     "title": "Browse the collections",
     "source": "collections",
     "showCounts": true,
     "sort": "count",
-    "min": 1
+    "min": 1,
+    "groups": [
+      { "title": "Humanities", "collections": ["Photography", "History", "CollectedArchives", "MuseumArchives", "TaongaMāori", "Philatelic", "Art", "PacificCultures", "RareBooks", "Archaeozoology"] },
+      { "title": "Natural history", "collections": ["Plants", "Molluscs", "Insects", "Birds", "FossilVertebrates", "Crustacea", "MarineInvertebrates", "LandMammals", "ReptilesAndAmphibians", "MarineMammals", "Fish", "Geology"] }
+    ]
   },
 
   "stats": {

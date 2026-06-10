@@ -20,10 +20,11 @@ cut a matching GitHub release. Delete any subsections you don't use._
   `{ query, filters }`). *Images* counts records that have an image and *Downloadable images*
   those whose image is free to download (media files aren't independently searchable, so these
   are record counts). To the **right** of the intro text, a **"Browse the collections" rail**
-  lists **every collection** (auto-populated from the live `collection` facet, with counts) —
-  sorted by size, two columns on wide screens, stacking below the text on narrow ones. Driven by
-  the `categories` block in `home.json`: `source: "collections"` auto-lists them all (with
-  `showCounts`, `sort` and `min` options), or supply a curated `items` list instead.
+  lists **every collection** (auto-populated from the live `collection` facet, with counts),
+  split into two labelled type-columns — **Humanities** and **Natural history** — sorted by size
+  within each. Driven by the `categories` block in `home.json`: `source: "collections"`
+  auto-lists them all (with `showCounts`, `sort`, `min`, and `groups: [{ title, collections }]`
+  to define the columns), or supply a curated `items` list instead.
 - **Side-scroll arrows on the home-page card rows.** Each home shelf now has the same
   centred horizontal scroller with clickable left/right chevrons as the detail-view image
   filmstrip: the arrows appear only when the row overflows, dim at the ends, page by ~80% of

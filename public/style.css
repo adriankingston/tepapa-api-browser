@@ -965,11 +965,22 @@ a { color: var(--md-primary); }
 }
 
 .home-cats-title {
-  margin: 2px 0 10px; font: 600 12px/1 var(--md-font);
+  margin: 2px 0 12px; font: 600 12px/1 var(--md-font);
   letter-spacing: 0.1em; text-transform: uppercase; color: var(--md-primary);
 }
 .home-cats { display: flex; flex-direction: column; gap: 2px; }
 .home-cats-auto { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 8px; align-content: start; }
+.home-cats-grouped { display: block; }   /* the groups manage their own columns */
+
+/* split into labelled type-columns (Humanities / Natural history) */
+.home-cat-groups { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 24px; align-items: start; }
+.home-cat-group-title {
+  margin: 0 0 6px; padding: 0 12px 7px;
+  font: 600 13px/1.2 var(--md-font); color: var(--md-on-surface);
+  border-bottom: 1px solid var(--md-outline-variant);
+}
+.home-cat-list { display: flex; flex-direction: column; gap: 2px; }
+
 .home-cat {
   display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
   width: 100%; padding: 8px 12px; border: none; border-radius: var(--md-shape-sm);
@@ -983,7 +994,9 @@ a { color: var(--md-primary); }
 .home-cat-arrow { flex: 0 0 auto; color: var(--md-on-surface-variant); opacity: 0; transition: opacity var(--md-dur) var(--md-ease); }
 .home-cat:hover .home-cat-arrow, .home-cat:focus-visible .home-cat-arrow { opacity: 1; }
 
-@media (max-width: 860px) {
+/* below this the rail drops beneath the intro text (full width), so the two
+   type-columns keep room for the longest labels instead of wrapping */
+@media (max-width: 1200px) {
   .home-intro.has-cats { grid-template-columns: 1fr; }
   .home-intro.has-cats .home-intro-text { grid-column: 1; grid-row: auto; }
   .home-intro.has-cats .home-intro-cats {
@@ -991,8 +1004,11 @@ a { color: var(--md-primary); }
     padding-left: 0; border-left: none;
     margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--md-outline-variant);
   }
-  .home-cats { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 8px; }
-  .home-cats-auto { grid-template-columns: 1fr; } /* counts + long labels need full width */
+}
+/* on phones the two sub-columns collapse to one so counts don't clip */
+@media (max-width: 520px) {
+  .home-cats-auto { grid-template-columns: 1fr; }
+  .home-cat-groups { grid-template-columns: 1fr; gap: 18px; }
 }
 
 /* Stat band — live collection numbers */

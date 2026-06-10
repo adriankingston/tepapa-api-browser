@@ -1316,6 +1316,11 @@ function catButtonHtml(label, query, count) {
       : `<span class="home-cat-arrow" aria-hidden="true">›</span>`) +
   `</button>`;
 }
+// A list of collection buttons from {token, count} entries.
+function catListHtml(cols, showCount) {
+  return cols.map((c) =>
+    catButtonHtml(collectionLabel(c.token), `collection:"${c.token}"`, showCount ? c.count : null)).join('');
+}
 
 // Category links beside the intro. Either a curated `items` list, or
 // `source: "collections"` to auto-list every collection (filled in async).
@@ -1325,12 +1330,10 @@ function categoriesInner(cats) {
   const auto = !items && cats.source === 'collections';
   if (!items && !auto) return '';
   const title = cats.title || 'Browse';
+  const grouped = auto && Array.isArray(cats.groups) && cats.groups.length;
   const body = items ? items.map((c) => catButtonHtml(c.label, c.query || c.label)).join('') : '';
-  const autoAttrs = auto
-    ? ` data-cats-min="${Number(cats.min) || 0}"${cats.showCounts === false ? ' data-cats-nocount="1"' : ''}${cats.sort ? ` data-cats-sort="${esc(cats.sort)}"` : ''}`
-    : '';
   return `<div class="home-cats-title">${esc(title)}</div>` +
-    `<nav class="home-cats${auto ? ' home-cats-auto' : ''}"${autoAttrs} aria-label="${esc(title)}">${body}</nav>`;
+    `<nav class="home-cats${auto ? ' home-cats-auto' : ''}${grouped ? ' home-cats-grouped' : ''}" aria-label="${esc(title)}">${body}</nav>`;
 }
 
 // The full collection list, from the live `collection` facet (deduped by case).
@@ -1353,15 +1356,42 @@ async function fetchCollectionFacet() {
   } catch { return []; }
 }
 
-async function fillCollectionCats(navEl) {
-  const min = Number(navEl.dataset.catsMin) || 0;
-  const showCount = navEl.dataset.catsNocount !== '1';
+async function fillCollectionCats(navEl, cats) {
+  cats = cats || {};
+  const min = Number(cats.min) || 0;
+  const showCount = cats.showCounts !== false;
+  const byName = cats.sort === 'name';
+  const sortCols = (arr) => arr.sort((a, b) =>
+    byName ? collectionLabel(a.token).localeCompare(collectionLabel(b.token)) : b.count - a.count);
+
   const cols = (await fetchCollectionFacet()).filter((c) => c.count >= min);
-  if (navEl.dataset.catsSort === 'name') cols.sort((a, b) => collectionLabel(a.token).localeCompare(collectionLabel(b.token)));
-  else cols.sort((a, b) => b.count - a.count); // biggest collections first
   if (!cols.length) { navEl.innerHTML = ''; return; }
-  navEl.innerHTML = cols.map((c) =>
-    catButtonHtml(collectionLabel(c.token), `collection:"${c.token}"`, showCount ? c.count : null)).join('');
+
+  if (Array.isArray(cats.groups) && cats.groups.length) {
+    // Split into the configured type-columns; any collection not listed in a
+    // group joins the last one, so nothing silently disappears.
+    const byToken = new Map(cols.map((c) => [String(c.token).toLowerCase(), c]));
+    const used = new Set();
+    const groups = cats.groups.map((g) => {
+      const list = [];
+      for (const t of (g.collections || [])) {
+        const c = byToken.get(String(t).toLowerCase());
+        if (c && !used.has(c.token)) { used.add(c.token); list.push(c); }
+      }
+      return { title: g.title || '', cols: list };
+    });
+    const leftover = cols.filter((c) => !used.has(c.token));
+    if (leftover.length && groups.length) groups[groups.length - 1].cols.push(...leftover);
+    navEl.innerHTML = `<div class="home-cat-groups">` +
+      groups.filter((g) => g.cols.length).map((g) =>
+        `<div class="home-cat-group">` +
+          (g.title ? `<div class="home-cat-group-title">${esc(g.title)}</div>` : '') +
+          `<div class="home-cat-list">${catListHtml(sortCols(g.cols), showCount)}</div>` +
+        `</div>`).join('') +
+      `</div>`;
+  } else {
+    navEl.innerHTML = catListHtml(sortCols(cols), showCount);
+  }
   navEl.querySelectorAll('.home-cat').forEach((b) =>
     b.addEventListener('click', () => { el.q.value = b.dataset.q; doSearch(); }));
 }
@@ -1405,7 +1435,7 @@ async function loadHome() {
   el.home.querySelectorAll('.home-cat').forEach((b) =>
     b.addEventListener('click', () => { el.q.value = b.dataset.q; doSearch(); }));
   const autoCats = el.home.querySelector('.home-cats-auto');
-  if (autoCats) fillCollectionCats(autoCats);
+  if (autoCats) fillCollectionCats(autoCats, config.categories);
 
   sections.forEach(async (s, i) => {
     const host = el.home.querySelector(`[data-sec="${i}"]`);
