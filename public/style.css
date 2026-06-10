@@ -1291,6 +1291,7 @@ a { color: var(--md-primary); }
   box-shadow: var(--md-elev-1);
   z-index: 2;
 }
+.graph-head-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .graph-title { display: flex; align-items: baseline; gap: 12px; min-width: 0; }
 .graph-title strong { font: var(--md-title-lg); color: var(--md-on-surface); }
 .graph-focus {

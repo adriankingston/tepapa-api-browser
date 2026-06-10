@@ -460,6 +460,11 @@
   function closeGraph() { ov.hidden = true; }
 
   document.getElementById('graph-close').addEventListener('click', closeGraph);
+  // The logo doubles as a home button, like the main top bar.
+  document.getElementById('graph-home').addEventListener('click', () => {
+    closeGraph();
+    if (window.goHome) window.goHome();
+  });
   document.getElementById('graph-collapse-all').addEventListener('click', () => cy && collapseAll());
   document.getElementById('graph-fit').addEventListener('click', () => cy && cy.fit(undefined, 50));
   document.getElementById('graph-relayout').addEventListener('click', () => cy && relayout());

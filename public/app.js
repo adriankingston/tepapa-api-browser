@@ -1542,11 +1542,14 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && !el.overlay.hidden) closeDetail();
 });
 
-// Home: clicking the brand returns to the home page; show it on first load.
-el.brand.addEventListener('click', () => {
+// Home: clicking the brand (top bar, or the logo in the graph view) returns to
+// the home page; show it on first load.
+function goHome() {
   el.q.value = '';
   state.query = '';
   showHome();
   window.scrollTo({ top: 0 });
-});
+}
+window.goHome = goHome;
+el.brand.addEventListener('click', goHome);
 showHome();
