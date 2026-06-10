@@ -12,7 +12,10 @@
     "eyebrow": "Te Papa Tongarewa · Collections API",
     "title": "Explore Te Papa's collections",
     "subtitle": "Aotearoa New Zealand's national collection — search above, or browse the selections below.",
-    "description": "An open browser for the Museum of New Zealand Te Papa Tongarewa Collections API. Edit this intro, the stat band below, and the sections — all in home.json."
+    "description": [
+      "An alternate view on Te Papa's Collections via the API.To visually browse relationships, select an object to go into detail view, then click \"Explore relationship graph\"",
+      "This site is an experiment built with Claude Code with Opus 4.8"
+    ]
   },
 
   "categories": {
