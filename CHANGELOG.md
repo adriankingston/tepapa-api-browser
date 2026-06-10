@@ -34,6 +34,10 @@ cut a matching GitHub release. Delete any subsections you don't use._
   and a keyboard focus ring.
 
 ### Changed
+- **New header home button: a network logo + wordmark, replacing the green pill.** The
+  brand is now an inline-SVG hub/relationship mark next to "Te Papa Collection Browser",
+  rendered as a proper `<button>` (clears the search and returns to the home page) with an
+  aria-label and a keyboard focus state. The colour is themeable via the SVG's `currentColor`.
 - **Content width constrained for readability.** On wide screens the content now sits in a
   centred column capped at `--content-max` (1280px) — toolbar, tabs, home page, results grid,
   pager and footer — while the top app bar stays full-bleed. Body prose (the home hero

@@ -143,27 +143,18 @@ a { color: var(--md-primary); }
   margin-inline: auto;
 }
 
-/* ===== Brand ===== */
+/* ===== Brand / home button ===== */
 .brand {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.1;
+  display: inline-flex; align-items: center; gap: 11px;
+  margin: 0; padding: 5px 8px;
+  border: none; background: none; cursor: pointer;
+  border-radius: var(--md-shape-md); color: var(--md-on-surface);
+  font: inherit; text-align: left;
+  transition: background-color var(--md-dur) var(--md-ease);
 }
-.brand-mark {
-  width: max-content;
-  padding: 4px 10px;
-  border-radius: var(--md-shape-sm);
-  background: var(--md-primary);
-  color: var(--md-on-primary);
-  font: var(--md-title-md);
-  font-weight: 700;
-  letter-spacing: .3px;
-}
-.brand-sub {
-  margin-top: 4px;
-  color: var(--md-on-surface-variant);
-  font: var(--md-label-md);
-}
+.brand:hover, .brand:focus-visible { background: var(--md-surface-container-high); outline: none; }
+.brand-logo { flex: 0 0 auto; width: 30px; height: 30px; color: var(--md-on-surface); }
+.brand-text { font: 600 16px/1.15 var(--md-font); color: var(--md-on-surface); letter-spacing: 0.1px; }
 
 /* ===== Search ===== */
 .search {
@@ -922,7 +913,6 @@ a { color: var(--md-primary); }
 }
 
 /* ---- Home page ---- */
-.brand { cursor: pointer; }
 .home[hidden] { display: none; }
 .toolbar[hidden] { display: none; }
 #results[hidden] { display: none; }
@@ -1273,7 +1263,6 @@ a { color: var(--md-primary); }
 /* --md-primary is now the AA-safe teal, so all teal text/labels/buttons pass WCAG AA
    without per-selector overrides. Two small carry-overs remain: */
 .list tbody tr:hover { background: var(--md-surface-container); } /* state tint via token, not a hardcoded rgba */
-.brand-mark { background: var(--accent); }                        /* keep the bright Te Papa brand teal on the logo */
 
 /* ---- Knowledge graph overlay — Material 3 ---- */
 .graph-overlay[hidden] { display: none; }
