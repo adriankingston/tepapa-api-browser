@@ -7,8 +7,16 @@ follow [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 _Jot changes here as you make them. When you publish, rename this heading to the
-new version (e.g. `## [1.4.0] — YYYY-MM-DD`), bump `version` in `package.json`, and
+new version (e.g. `## [1.5.0] — YYYY-MM-DD`), bump `version` in `package.json`, and
 cut a matching GitHub release. Delete any subsections you don't use._
+
+### Added
+
+### Changed
+
+### Fixed
+
+## [1.4.0] — 2026-06-10
 
 ### Added
 - **Favicon.** A simplified version of the app's hub/relationship logo — a scalable SVG that
@@ -204,7 +212,8 @@ earlier informally‑shared version.
 - The relationship‑graph view, grid/list toggle, and detail panel existed in the
   earlier shared version; the entries above are what changed since then.
 
-[Unreleased]: https://github.com/adriankingston/tepapa-api-browser/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/adriankingston/tepapa-api-browser/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/adriankingston/tepapa-api-browser/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/adriankingston/tepapa-api-browser/compare/v1.2.1...v1.3.0
 [1.2.1]: https://github.com/adriankingston/tepapa-api-browser/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/adriankingston/tepapa-api-browser/compare/v1.1.0...v1.2.0
