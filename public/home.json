@@ -45,23 +45,17 @@
   "sections": [
     {
       "type": "recent",
-      "title": "Recently added images",
+      "title": "Recently updated records",
       "types": ["Object", "Specimen"],
       "count": 12
     },
     {
-      "type": "pool",
-      "title": "A few favourites",
-      "count": 8,
-      "shuffle": true,
-      "items": [
-        "object/65182",
-        "object/43207",
-        "object/130905",
-        "object/479521",
-        "object/1432646",
-        "object/132532"
-      ]
+      "type": "query",
+      "title": "A random selection",
+      "query": "*",
+      "recordType": "Object",
+      "count": 12,
+      "shuffle": true
     },
     {
       "type": "query",

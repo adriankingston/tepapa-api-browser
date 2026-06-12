@@ -67,6 +67,23 @@ function imagesOf(record) {
   return reps.filter((r) => r && r.type === 'ImageObject' && r.thumbnailUrl);
 }
 
+// A rights-restricted image (allowsDownload === false) may only ever be shown at
+// thumb size — no preview/full/IIIF, no zoom. Only an explicit false locks an
+// image down; images with no rights flag stay zoomable.
+function isZoomable(img) {
+  return !(img && img.rights && img.rights.allowsDownload === false);
+}
+
+// Cards show each image at its true aspect ratio (never cropped), clamped to a
+// sensible range so an extreme panorama/column doesn't make an absurdly short or
+// tall card. Dimensions come from the rep's width/height metadata; falls back to
+// square when they're missing. Returns a unitless string for `aspect-ratio`.
+function thumbAspect(img, min = 0.6, max = 3.0) {
+  const w = +(img && img.width), h = +(img && img.height);
+  const ar = (w > 0 && h > 0) ? w / h : 1;
+  return Math.min(max, Math.max(min, ar));
+}
+
 // ---- Culturally sensitive imagery -------------------------------------------
 // The API has no sensitivity flag, so this is a best-effort, deliberately
 // cautious heuristic over the record's materials, classification and text.
@@ -295,6 +312,7 @@ async function doSearch() {
   state.query = el.q.value;
   if (!state.query.trim()) { showHome(); return; }
   hideHome();
+  el.results.className = 'grid';
   el.results.innerHTML = '<div class="spinner"><div></div></div>';
   el.pager.hidden = true;
 
@@ -429,6 +447,7 @@ async function runSearch(reset = true) {
   if (reset) state.from = 0;
   if (!state.query.trim()) return;
 
+  el.results.className = 'grid';
   el.results.innerHTML = '<div class="spinner"><div></div></div>';
   el.pager.hidden = true;
 
@@ -495,9 +514,11 @@ function renderResults() {
     el.results.innerHTML = listHtml(items);
     wireRowClicks();
   } else {
-    el.results.className = 'grid';
+    el.results.className = 'grid masonry';
     el.results.innerHTML = items.map(cardHtml).join('');
     wireRowClicks();
+    wireMasonryResize();
+    requestAnimationFrame(layoutGridMasonry);
   }
 
   // Pager
@@ -509,13 +530,40 @@ function renderResults() {
   el.pager.hidden = false;
 }
 
+// The image grid is masonry: each card keeps its image's aspect ratio, so card
+// heights vary. Assign every card a grid row-span from its measured height to
+// pack the columns gap-free while preserving result (relevance) order. Thumb
+// heights come from CSS aspect-ratio, so this needn't wait on image loads;
+// recomputed on resize. Only the card grid (`.grid.masonry`) is packed — not the
+// list view or message/spinner states.
+function layoutGridMasonry() {
+  const grid = el.results;
+  if (!grid || !grid.classList.contains('masonry')) return;
+  const unit = parseFloat(getComputedStyle(grid).gridAutoRows) || 4;
+  grid.querySelectorAll('.card').forEach((card) => {
+    const h = card.getBoundingClientRect().height;
+    card.style.gridRowEnd = 'span ' + Math.max(1, Math.ceil((h + 16) / unit));
+  });
+}
+
+let masonryResizeWired = false;
+function wireMasonryResize() {
+  if (masonryResizeWired) return;
+  masonryResizeWired = true;
+  let raf = 0;
+  window.addEventListener('resize', () => {
+    cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(layoutGridMasonry);
+  });
+}
+
 function cardHtml(record) {
   const i = state.results.indexOf(record);
   const img = imagesOf(record)[0];
   const title = titleOf(record);
   const sensitive = img && isSensitive(record);
   const thumb = img
-    ? `<div class="thumb${sensitive ? ' sensitive' : ''}"><img loading="lazy" src="${esc(img.thumbnailUrl)}" alt="${esc(title)}">${sensitive ? sensitiveOverlay() : ''}</div>`
+    ? `<div class="thumb${sensitive ? ' sensitive' : ''}" style="aspect-ratio:${thumbAspect(img)}"><img loading="lazy" src="${esc(img.thumbnailUrl)}" alt="${esc(title)}">${sensitive ? sensitiveOverlay() : ''}</div>`
     : `<div class="thumb no-image"><span>No image</span></div>`;
   const sub = summaryOf(record); // type-appropriate secondary line
   return `
@@ -846,20 +894,55 @@ function iiifInfo(img) {
     : null;
 }
 
+// The hero's licence/rights label for the gallery caption. When the API marks it
+// as a Creative Commons licence (rights.type 'Licence' with a canonical
+// creativecommons.org iri), link to that deed; otherwise plain text. Non-CC
+// statements (All Rights Reserved, No Known Copyright Restrictions) carry no iri
+// and stay as text. Returns pre-escaped HTML.
+function rightsLabel(img) {
+  const r = img && img.rights;
+  if (!r || !r.title) return '';
+  const cc = r.type === 'Licence' && typeof r.iri === 'string' &&
+    /^https?:\/\/creativecommons\.org\//.test(r.iri);
+  return cc
+    ? `<a href="${esc(r.iri)}" target="_blank" rel="license noopener">${esc(r.title)} ↗</a>`
+    : esc(r.title);
+}
+
 function renderGallery(images, sensitive, title) {
   if (!images.length) return '';
+  // Rights-restricted images (allowsDownload === false) show at thumb size only
+  // and aren't zoomable. data-lb indexes into the zoomable subset, which
+  // openDetail passes to the lightbox (images.filter(isZoomable)) — restricted
+  // images carry no data-lb and so never open the viewer.
+  let zoomIdx = -1;
+  const lbIndex = images.map((img) => (isZoomable(img) ? ++zoomIdx : null));
   const hero = images[0];
-  const heroImg = `<img loading="lazy" src="${esc(hero.previewUrl || hero.thumbnailUrl)}" alt="${esc(hero.title || title)}">`;
-  const heroBlock = sensitive
-    ? `<div class="g-hero media sensitive" data-lb="0">${heroImg}${sensitiveOverlay()}</div>`
-    : `<button class="g-hero" type="button" data-lb="0" aria-label="Zoom image"><span class="g-zoom">⤢ Zoom</span>${heroImg}</button>`;
+
+  let heroBlock;
+  if (lbIndex[0] === null) {
+    // Restricted hero: thumbnail at natural size, no zoom. Reveals in place if sensitive.
+    const heroImg = `<img loading="lazy" src="${esc(hero.thumbnailUrl)}" alt="${esc(hero.title || title)}">`;
+    heroBlock = `<div class="g-hero g-hero-static media${sensitive ? ' sensitive' : ''}">${heroImg}${sensitive ? sensitiveOverlay() : ''}</div>`;
+  } else {
+    const heroImg = `<img loading="lazy" src="${esc(hero.previewUrl || hero.thumbnailUrl)}" alt="${esc(hero.title || title)}">`;
+    heroBlock = sensitive
+      ? `<div class="g-hero media sensitive" data-lb="${lbIndex[0]}">${heroImg}${sensitiveOverlay()}</div>`
+      : `<button class="g-hero" type="button" data-lb="${lbIndex[0]}" aria-label="Zoom image"><span class="g-zoom">⤢ Zoom</span>${heroImg}</button>`;
+  }
 
   let thumbs = '';
   if (images.length > 1) {
-    const strip = images.slice(1).map((img, k) =>
-      `<button class="g-thumb${sensitive ? ' sensitive' : ''}" type="button" data-lb="${k + 1}" aria-label="View image ${k + 2}">` +
-      `<img loading="lazy" src="${esc(img.thumbnailUrl)}" alt="">${sensitive ? '<span class="lthumb-warn" title="Potentially sensitive">⚠</span>' : ''}</button>`
-    ).join('');
+    const strip = images.slice(1).map((img, k) => {
+      const idx = lbIndex[k + 1];
+      const inner =
+        `<img loading="lazy" src="${esc(img.thumbnailUrl)}" alt="">` +
+        (sensitive ? '<span class="lthumb-warn" title="Potentially sensitive">⚠</span>' : '');
+      // Restricted thumbs aren't zoomable — render as a static, non-clickable thumb.
+      return idx === null
+        ? `<span class="g-thumb g-thumb-static${sensitive ? ' sensitive' : ''}">${inner}</span>`
+        : `<button class="g-thumb${sensitive ? ' sensitive' : ''}" type="button" data-lb="${idx}" aria-label="View image ${k + 2}">${inner}</button>`;
+    }).join('');
     thumbs =
       '<div class="g-strip-wrap">' +
       '<button class="g-arrow g-arrow-l" type="button" aria-label="Scroll thumbnails left" hidden>‹</button>' +
@@ -867,10 +950,12 @@ function renderGallery(images, sensitive, title) {
       '<button class="g-arrow g-arrow-r" type="button" aria-label="Scroll thumbnails right" hidden>›</button>' +
       '</div>';
   }
-  const rights = (hero.rights && hero.rights.title) || '';
-  const note = images.length > 1
-    ? `<p class="g-count">${images.length} images · tap any to zoom</p>`
-    : `<p class="g-count">Tap to zoom${rights ? ' · ' + esc(rights) : ''}</p>`;
+  const rights = rightsLabel(hero);   // pre-escaped; a CC deed link when applicable
+  const note = zoomIdx < 0
+    ? (rights ? `<p class="g-count">${rights}</p>` : '')
+    : images.length > 1
+      ? `<p class="g-count">${images.length} images · tap any to zoom${rights ? ' · ' + rights : ''}</p>`
+      : `<p class="g-count">Tap to zoom${rights ? ' · ' + rights : ''}</p>`;
   return `<div class="gallery" data-gallery>${heroBlock}${thumbs}${note}</div>`;
 }
 
@@ -1159,10 +1244,12 @@ function openDetail(record) {
   // gallery → open the IIIF deep-zoom lightbox (reveal-btn clicks stop propagation)
   const galleryEl = el.detail.querySelector('[data-gallery]');
   if (galleryEl) {
+    // Only downloadable images are zoomable; data-lb indexes into this subset.
+    const zoomImages = images.filter(isZoomable);
     galleryEl.addEventListener('click', (e) => {
       const t = e.target.closest('[data-lb]');
       if (!t) return;
-      openLightbox(images, Number(t.dataset.lb), sensitive);
+      openLightbox(zoomImages, Number(t.dataset.lb), sensitive);
     });
   }
   wireGalleryStrip(el.detail);
@@ -1237,8 +1324,12 @@ async function homeQuery(section) {
   const want = section.count || 10;
   const filters = section.recordType ? [{ field: 'type', keyword: section.recordType }] : undefined;
   const random = section.shuffle !== false;
-  const from = random ? Math.floor(Math.random() * 150) : 0;
-  let recs = (await searchRecords({ query: section.query || '*', from, size: Math.max(want * 4, 30), filters })).filter(hasImage);
+  // Sample a random window from across the result set (the API caps deep paging at
+  // from + size <= 10000) so the selection genuinely varies between visits instead
+  // of always drawing from the first page.
+  const size = Math.max(want * 4, 30);
+  const from = random ? Math.floor(Math.random() * Math.max(0, 10000 - size)) : 0;
+  let recs = (await searchRecords({ query: section.query || '*', from, size, filters })).filter(hasImage);
   if (recs.length < want) {
     // top up from the start — some queries (e.g. a whole collection) lead with
     // image-less topics/publications, with the imaged records further in.
@@ -1256,10 +1347,14 @@ function homeCardHtml(record, idx) {
   const img = imagesOf(record)[0];
   const title = titleOf(record);
   const sensitive = img && isSensitive(record);
+  // Width tracks the (clamped) image aspect at the fixed 176px thumb height and
+  // goes on the CARD, so the thumb fills it and the title wraps to the card width
+  // instead of stretching it. The 176 must match `.hcard .thumb` height in CSS.
+  const w = img ? Math.round(thumbAspect(img, 0.75, 3.0) * 176) : 176;
   const thumb = img
     ? `<div class="thumb${sensitive ? ' sensitive' : ''}"><img loading="lazy" src="${esc(img.thumbnailUrl)}" alt="${esc(title)}">${sensitive ? sensitiveOverlay() : ''}</div>`
     : `<div class="thumb no-image"><span>No image</span></div>`;
-  return `<article class="hcard" data-h="${idx}" tabindex="0">
+  return `<article class="hcard" data-h="${idx}" tabindex="0" style="width:${w}px">
       ${thumb}
       <div class="hcard-body">
         <div class="hcard-title">${esc(title)}</div>

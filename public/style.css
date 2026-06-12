@@ -540,6 +540,9 @@ a { color: var(--md-primary); }
 }
 
 .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:16px; padding:16px 20px 40px; }
+/* Image cards keep each image's aspect ratio (set inline, never cropped); in the
+   results grid they're packed gap-free via per-card row-spans (layoutGridMasonry). */
+.grid.masonry { row-gap:0; grid-auto-rows:4px; align-items:start; }
 
 .card { background:var(--md-surface-container-low); border:none; border-radius:var(--md-shape-md); overflow:hidden; cursor:pointer; display:flex; flex-direction:column; position:relative; box-shadow:var(--md-elev-1); transition:box-shadow var(--md-dur) var(--md-ease); }
 .card::before { content:''; position:absolute; inset:0; background:var(--md-on-surface); opacity:0; transition:opacity var(--md-dur) var(--md-ease); pointer-events:none; z-index:1; }
@@ -561,7 +564,7 @@ a { color: var(--md-primary); }
 .list .col-act .result-graph { width:32px; height:32px; font-size:18px; }
 
 .thumb { aspect-ratio:1/1; background:var(--md-surface-container-high); display:flex; align-items:center; justify-content:center; overflow:hidden; position:relative; }
-.thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+.thumb img { width:100%; height:100%; object-fit:contain; display:block; }
 .thumb.no-image { color:var(--md-on-surface-variant); font:var(--md-body-sm); text-align:center; padding:12px; }
 .thumb.no-image span { opacity:.7; }
 
@@ -624,7 +627,7 @@ a { color: var(--md-primary); }
 .list .col-thumb { width: 48px; padding-right: 0; }
 .list .col-thumb img {
   width: 40px; height: 40px;
-  object-fit: cover;
+  object-fit: contain;
   border-radius: var(--md-shape-xs);
   background: var(--md-surface-container-highest);
   display: block;
@@ -830,6 +833,9 @@ a { color: var(--md-primary); }
   background: rgba(0, 0, 0, 0.55); padding: 4px 10px;
   border-radius: var(--md-shape-full); pointer-events: none;
 }
+/* Rights-restricted hero (allowsDownload:false): thumbnail at natural size, no zoom */
+.g-hero-static { cursor: default; display: flex; align-items: center; justify-content: center; }
+.g-hero-static img { width: auto; max-width: 100%; height: auto; }
 /* Thumbnail filmstrip — horizontal scroll; centres when few, scrolls when many */
 .g-strip-wrap { display: flex; align-items: center; gap: 4px; margin-top: 12px; }
 .g-strip {
@@ -845,8 +851,9 @@ a { color: var(--md-primary); }
   border-radius: var(--md-shape-sm); overflow: hidden;
   background: var(--md-surface-container-high);
 }
-.g-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.g-thumb img { width: 100%; height: 100%; object-fit: contain; display: block; }
 .g-thumb.sensitive img { filter: blur(6px); }
+.g-thumb-static { cursor: default; }
 .g-arrow {
   flex: 0 0 auto; width: 36px; height: 68px;
   border: none; border-radius: var(--md-shape-sm);
@@ -1052,7 +1059,7 @@ a { color: var(--md-primary); }
 }
 
 .hcard {
-  flex: 0 0 auto; width: 180px; cursor: pointer; text-align: left;
+  flex: 0 0 auto; width: auto; cursor: pointer; text-align: left;
   display: flex; flex-direction: column; overflow: hidden;
   background: var(--md-surface-container-low); border: none;
   border-radius: var(--md-shape-md); box-shadow: var(--md-elev-1);
@@ -1060,7 +1067,7 @@ a { color: var(--md-primary); }
   position: relative;
 }
 .hcard:hover, .hcard:focus-visible { box-shadow: var(--md-elev-2); outline: none; }
-.hcard .thumb { aspect-ratio: 1; }
+.hcard .thumb { height: 176px; width: 100%; }   /* 176px tall, fills the card; card width (set inline = 176 x clamped aspect) drives it. Keep the 176 in sync with homeCardHtml */
 .hcard-body { padding: 10px 12px 12px; }
 .hcard-title {
   font: var(--md-label-lg); color: var(--md-on-surface);

@@ -127,7 +127,7 @@
             // Te Papa media redirects to S3 without CORS headers, so load images
             // without the crossorigin flag (we never read pixels back).
             'background-image-crossorigin': 'null',
-            'background-fit': (e) => (e.data('thumb') ? 'cover' : 'contain'),
+            'background-fit': 'contain',   // never crop — show the whole image, fit inside the node
             width: 48, height: 48,
             'border-width': 2,
             'border-color': '#bfc8ca',       // M3 outline-variant
