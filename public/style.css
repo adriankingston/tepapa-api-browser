@@ -1075,6 +1075,36 @@ a { color: var(--md-primary); }
 }
 .hcard-sub { margin-top: 4px; font: var(--md-body-sm); color: var(--md-on-surface-variant); }
 
+/* ---- Related-records explorer (detail view): chips + one swappable carousel ---- */
+#rel-explorer { margin: 0 0 18px; }
+.rel-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; }
+
+/* Image-rights filter chips in the results toolbar */
+.rights-filter { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.rel-row-wrap { display: flex; align-items: center; gap: 6px; }
+.rel-row {
+  display: flex; gap: 12px; flex: 1; min-width: 0;
+  overflow-x: auto; padding: 4px 2px 8px;
+  scroll-behavior: smooth; scrollbar-width: none;
+}
+.rel-row::-webkit-scrollbar { display: none; }
+.rel-row .spinner { padding: 24px; }
+.rcard .thumb { height: 120px; }            /* smaller cards than the home shelves */
+.rcard .hcard-body { padding: 8px 10px 10px; }
+.rel-row-wrap .home-arrow { height: 64px; width: 36px; font-size: 22px; }
+.rcard-more {
+  flex: 0 0 auto; align-self: flex-start;
+  height: 120px; width: 104px; margin-top: 4px;
+  border: 1px solid var(--md-outline-variant); border-radius: var(--md-shape-md);
+  background: var(--md-surface-container-low); color: var(--md-primary);
+  font: var(--md-label-lg); cursor: pointer;
+  transition: background-color var(--md-dur) var(--md-ease);
+}
+.rcard-more span { display: block; margin-top: 6px; font: var(--md-label-md); color: var(--md-on-surface-variant); }
+.rcard-more:hover { background: var(--md-surface-container); }
+.rcard-more:disabled { opacity: 0.5; cursor: default; }
+@media (prefers-reduced-motion: reduce) { .rel-row { scroll-behavior: auto; } }
+
 .home-links { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 20px; }
 .home-link {
   height: 36px; padding: 0 16px; border-radius: var(--md-shape-full);

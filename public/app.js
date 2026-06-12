@@ -22,6 +22,7 @@ const state = {
   totalAll: 0,    // unfiltered total (the "All" tab)
   collections: [],       // selected collection filters (Objects/Specimens only)
   collectionFacet: {},   // available collections + counts for current query+type
+  rights: null,          // image-rights filter: 'downloadable' | 'cc' | 'nkc' | null
   sort: { field: null, order: null }, // active sort (null = relevance)
   view: localStorage.getItem('tepapa.view') === 'list' ? 'list' : 'grid',
 };
@@ -82,6 +83,23 @@ function thumbAspect(img, min = 0.6, max = 3.0) {
   const w = +(img && img.width), h = +(img && img.height);
   const ar = (w > 0 && h > 0) ? w / h : 1;
   return Math.min(max, Math.max(min, ar));
+}
+
+// Readable labels for the native Collections Online relationship fields.
+// Shared by the detail view's related-records explorer and the graph (graph.js).
+const PREDICATE_LABELS = {
+  'production.contributor': 'made', 'production.spatial': 'made in',
+  isMadeOf: 'made of', productionUsedTechnique: 'technique', isTypeOf: 'type',
+  influencedBy: 'influenced by', depicts: 'depicts', refersTo: 'refers to',
+  isReferencedBy: 'referenced by', associatedParties: 'associated',
+  associatedWith: 'associated with', broaderRank: 'parent taxon',
+  'identification.toTaxon': 'identified as', 'identification.identifiedBy': 'identified by',
+  'evidenceFor.atEvent': 'collected', 'evidenceFor.atEvent.recordedBy': 'recorded by',
+  isAbout: 'about', aggregatedAgents: 'aggregates', relatedObjects: 'related',
+};
+function predicateLabel(p) {
+  return PREDICATE_LABELS[p] ||
+    (p || '').replace(/([a-z])([A-Z])/g, '$1 $2').replace(/\./g, ' · ').toLowerCase();
 }
 
 // ---- Culturally sensitive imagery -------------------------------------------
@@ -375,13 +393,26 @@ function selectTab(type) {
 
 // ---- Collection filter (multiselect, Objects & Specimens) -------------------
 
-// Fold the selected collections into the query as an OR clause.
+// Image-rights filters fold into the query string (the filters array can't OR,
+// and `rights.title` only matches via query-string field syntax — all three
+// clauses verified against the live API). Each means "has ≥1 image with that rights".
+const RIGHTS_CLAUSES = {
+  downloadable: 'hasRepresentation.rights.allowsDownload:true',
+  cc: 'hasRepresentation.rights.type:"Licence"',                              // Te Papa's Licence rights are the CC ones
+  nkc: 'hasRepresentation.rights.title:"No Known Copyright Restrictions"',
+};
+
+// Fold the selected collections and image-rights filter into the query.
 function effectiveQuery() {
+  let q = state.query;
   if (state.collections.length && COLLECTION_TYPES.has(state.type)) {
     const clause = state.collections.map((c) => `collection:"${c}"`).join(' OR ');
-    return `(${state.query}) AND (${clause})`;
+    q = `(${q}) AND (${clause})`;
   }
-  return state.query;
+  if (state.rights && RIGHTS_CLAUSES[state.rights]) {
+    q = `(${q}) AND ${RIGHTS_CLAUSES[state.rights]}`;
+  }
+  return q;
 }
 
 async function updateCollectionFilter() {
@@ -521,6 +552,8 @@ function renderResults() {
     requestAnimationFrame(layoutGridMasonry);
   }
 
+  enhanceAgentThumbs();   // people/orgs: borrow an image from a related object that depicts them
+
   // Pager
   const start = state.from + 1;
   const end = Math.min(state.from + PAGE_SIZE, state.total);
@@ -554,6 +587,63 @@ function wireMasonryResize() {
   window.addEventListener('resize', () => {
     cancelAnimationFrame(raf);
     raf = requestAnimationFrame(layoutGridMasonry);
+  });
+}
+
+// People & organisations rarely have their own image. After rendering, find a
+// related object that depicts each agent (reverse `depicts.id` lookup, limited to
+// imaged objects) and swap its thumbnail into the card/row. Progressive: the
+// placeholder shows first, images fill in as the lookups resolve.
+const AGENT_TYPES = new Set(['Person', 'Organisation']);
+
+// Memoised per record: a Promise of {thumbnailUrl,width,height,sensitive} | null.
+function agentDepictImage(record) {
+  if (!record._depictImg) {
+    record._depictImg = searchRecords({
+      filters: [
+        { field: 'depicts.id', keyword: String(record.id) },
+        { field: 'hasRepresentation.type', keyword: 'ImageObject' },
+      ],
+      size: 1,
+    }).then((objs) => {
+      const obj = objs[0];
+      const rep = obj && imagesOf(obj)[0];   // full ImageObject (thumb/preview/full/iiif/rights)
+      return rep ? { rep, sensitive: isSensitive(obj) } : null;
+    }).catch(() => null);
+  }
+  return record._depictImg;
+}
+
+function applyAgentThumb(node, d) {
+  const rep = d.rep;
+  const gridThumb = node.querySelector('.thumb.no-image');
+  if (gridThumb) {
+    gridThumb.className = 'thumb' + (d.sensitive ? ' sensitive' : '');
+    gridThumb.style.aspectRatio = thumbAspect(rep);
+    gridThumb.innerHTML = `<img loading="lazy" src="${esc(rep.thumbnailUrl)}" alt="">` + (d.sensitive ? sensitiveOverlay() : '');
+    if (d.sensitive) wireReveal(gridThumb);
+    requestAnimationFrame(layoutGridMasonry);   // card height changed
+    return;
+  }
+  const cell = node.querySelector('.col-thumb');
+  if (cell) {
+    const warn = d.sensitive ? '<span class="lthumb-warn" title="Potentially sensitive image">⚠</span>' : '';
+    cell.innerHTML = `<span class="lthumb${d.sensitive ? ' sensitive' : ''}"><img loading="lazy" src="${esc(rep.thumbnailUrl)}" alt="">${warn}</span>`;
+    if (d.sensitive) wireReveal(cell);
+  }
+}
+
+// Fill in depicting-object images for the person/org cards/rows currently on screen.
+function enhanceAgentThumbs() {
+  el.results.querySelectorAll('[data-i]').forEach((node) => {
+    const i = Number(node.dataset.i);
+    const rec = state.results[i];
+    if (!rec || !AGENT_TYPES.has(rec.type) || imagesOf(rec).length) return;
+    agentDepictImage(rec).then((d) => {
+      if (!d || state.results[i] !== rec) return;   // results changed under us — don't cross-wire
+      const cur = el.results.querySelector(`[data-i="${i}"]`);
+      if (cur) applyAgentThumb(cur, d);
+    });
   });
 }
 
@@ -991,6 +1081,22 @@ function wireGalleryStrip(container) {
   attachScrollArrows(strip, wrap.querySelector('.g-arrow-l'), wrap.querySelector('.g-arrow-r'));
 }
 
+// Wire the detail-view gallery: clicking a zoomable thumb/hero opens the lightbox
+// over the downloadable subset, plus the filmstrip arrows. Shared by the initial
+// render and the async agent (depicts) image injection.
+function wireDetailGallery(galleryImages, gallerySensitive) {
+  const galleryEl = el.detail.querySelector('[data-gallery]');
+  if (galleryEl) {
+    const zoomImages = galleryImages.filter(isZoomable);
+    galleryEl.addEventListener('click', (e) => {
+      const t = e.target.closest('[data-lb]');
+      if (!t) return;
+      openLightbox(zoomImages, Number(t.dataset.lb), gallerySensitive);
+    });
+  }
+  wireGalleryStrip(el.detail);
+}
+
 // Home-page card rows — the same arrows, one independent instance per shelf.
 function wireShelfArrows(host) {
   host.querySelectorAll('.home-row-wrap').forEach((wrap) =>
@@ -1101,6 +1207,131 @@ function lbKey(e) {
   else if (e.key === 'ArrowRight') lbNav(1);
 }
 
+// ---- Related-records explorer (detail view) ---------------------------------
+// One chip per relationship type (from /api/neighbors bundles, same data as the
+// graph), and ONE carousel below showing that relationship's records — swapped
+// when a chip is selected. Forward bundles carry members inline; reverse ones
+// page via a `<predicate>.id` search. Members cache on the bundle per detail open.
+const REL_PAGE = 12;
+
+function relMembers(b, from, size) {
+  if (b.mode === 'inline') {
+    return Promise.resolve((b.members || []).slice(from, from + size).map((m) => ({
+      type: m.type, title: m.title || '(untitled)', href: m.href,
+      thumb: m.thumb || null, w: 0, h: 0, sensitive: false,   // server nulls sensitive thumbs
+    })));
+  }
+  return searchRecords({
+    query: '*', from, size,
+    filters: [{ field: `${b.predicate}.id`, keyword: b.focusId }],
+  }).then((recs) => recs.map((r) => {
+    const img = imagesOf(r)[0];
+    return {
+      type: r.type, title: r.title || r.prefLabel || '(untitled)', href: r.href,
+      thumb: img ? img.thumbnailUrl : null,
+      w: img ? +img.width || 0 : 0, h: img ? +img.height || 0 : 0,
+      sensitive: img ? isSensitive(r) : false,
+    };
+  }));
+}
+
+function relCardHtml(m) {
+  const w = m.thumb ? Math.round(thumbAspect({ width: m.w, height: m.h }, 0.75, 3.0) * 120) : 120;
+  const thumb = m.thumb
+    ? `<div class="thumb${m.sensitive ? ' sensitive' : ''}"><img loading="lazy" src="${esc(m.thumb)}" alt="">${m.sensitive ? sensitiveOverlay() : ''}</div>`
+    : `<div class="thumb no-image"><span>No image</span></div>`;
+  return `<article class="hcard rcard" data-relhref="${esc(m.href || '')}" tabindex="0" style="width:${w}px">
+      ${thumb}
+      <div class="hcard-body">
+        <div class="hcard-title">${esc(m.title)}</div>
+        <div class="hcard-sub">${esc(m.type || '')}</div>
+      </div>
+    </article>`;
+}
+
+function renderRelRow(b, row, recKey) {
+  const more = b._members.length < b.count;
+  row.innerHTML = b._members.map(relCardHtml).join('') +
+    (more
+      ? `<button class="rcard-more" type="button" data-relmore>Show more<span>${b._members.length} of ${b.count.toLocaleString()}</span></button>`
+      : '');
+  wireReveal(row);   // reveal-btn clicks stop propagation, so they don't open the record
+  row.querySelectorAll('[data-relhref]').forEach((card) => {
+    card.addEventListener('click', () => { if (card.dataset.relhref) openRecordByHref(card.dataset.relhref); });
+  });
+  const moreBtn = row.querySelector('[data-relmore]');
+  if (moreBtn) {
+    moreBtn.addEventListener('click', async () => {
+      moreBtn.disabled = true;
+      const key = row.dataset.pred;
+      const next = await relMembers(b, b._members.length, REL_PAGE);
+      if (el.detail.dataset.rec !== recKey || row.dataset.pred !== key || !row.isConnected) return;
+      b._members = b._members.concat(next);
+      renderRelRow(b, row, recKey);
+    });
+  }
+  row.dispatchEvent(new Event('scroll'));   // refresh the chevron-arrow state
+}
+
+async function showRelBundle(b, row, recKey) {
+  const key = `${b.predicate}|${b.mode}`;
+  row.dataset.pred = key;
+  if (!b._members) {
+    row.innerHTML = '<div class="spinner"><div></div></div>';
+    const first = await relMembers(b, 0, REL_PAGE);
+    // bail if another chip or another record's detail took over while loading
+    if (el.detail.dataset.rec !== recKey || row.dataset.pred !== key || !row.isConnected) return;
+    b._members = first;
+  }
+  renderRelRow(b, row, recKey);
+}
+
+async function loadRelExplorer(record) {
+  const host = document.getElementById('rel-explorer');
+  if (!host || !record.href) return;
+  const recKey = record.type + ':' + record.id;
+  let data;
+  try {
+    const res = await fetch('/api/neighbors', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ href: record.href }),
+    });
+    data = await res.json();
+  } catch { return; }
+  if (el.detail.dataset.rec !== recKey || !host.isConnected) return;
+  const bundles = (data && Array.isArray(data.bundles) ? data.bundles : []).filter((b) => b.count > 0);
+  if (!bundles.length) return;
+
+  const title = document.getElementById('rel-title');
+  if (title) title.hidden = false;
+  host.hidden = false;
+  // Chips keep the record's field order; default-select the largest bundle —
+  // usually the visual one (a person's works, a material's objects, an album's parts).
+  const def = bundles.reduce((m, b, i) => (b.count > bundles[m].count ? i : m), 0);
+  host.innerHTML =
+    `<div class="rel-chips">` +
+    bundles.map((b, i) =>
+      `<button type="button" class="cchip rel-chip${i === def ? ' active' : ''}" data-b="${i}">` +
+      `${esc(predicateLabel(b.predicate))}<span class="cchip-count">${b.count.toLocaleString()}</span></button>`
+    ).join('') +
+    `</div>` +
+    `<div class="rel-row-wrap">` +
+    `<button class="home-arrow rel-arrow-l" type="button" aria-label="Scroll related records left" hidden>‹</button>` +
+    `<div class="rel-row" data-relrow></div>` +
+    `<button class="home-arrow rel-arrow-r" type="button" aria-label="Scroll related records right" hidden>›</button>` +
+    `</div>`;
+  const row = host.querySelector('[data-relrow]');
+  attachScrollArrows(row, host.querySelector('.rel-arrow-l'), host.querySelector('.rel-arrow-r'));
+  const chips = [...host.querySelectorAll('.rel-chip')];
+  chips.forEach((chip) => {
+    chip.addEventListener('click', () => {
+      chips.forEach((c) => c.classList.toggle('active', c === chip));
+      showRelBundle(bundles[Number(chip.dataset.b)], row, recKey);
+    });
+  });
+  showRelBundle(bundles[def], row, recKey);
+}
+
 function openDetail(record) {
   if (!record) return;
   const title = record.title || record.prefLabel || '(untitled)';
@@ -1108,6 +1339,9 @@ function openDetail(record) {
 
   const sensitive = isSensitive(record);
   const gallery = renderGallery(images, sensitive, title);
+  // People/orgs have no own image — leave a slot to inject one from a related
+  // object that depicts them (resolved below; same lookup as the grid/list cards).
+  const agentNoImage = AGENT_TYPES.has(record.type) && !images.length;
 
   // Outbound links — Collections Online mirrors the API href path for every
   // record type (object, agent, place, taxon, document…), so derive it from href.
@@ -1212,6 +1446,10 @@ function openDetail(record) {
   const caption = captionHtml(record);
   const summary = summaryHtml(record);
 
+  // Key the open record on the panel itself — async fills (agent hero, related
+  // explorer, Wikipedia) check it so a late response can't land on the wrong record.
+  el.detail.dataset.rec = record.type + ':' + record.id;
+
   el.detail.innerHTML = `
     <h2>${esc(title)}</h2>
     <div class="sub">
@@ -1219,12 +1457,14 @@ function openDetail(record) {
       ${record.scientificName ? `<span class="badge"><em>${esc(record.scientificName)}</em></span>` : ''}
       ${record.identifier ? `<span class="badge">${esc(record.identifier)}</span>` : ''}
     </div>
-    ${gallery}
+    ${gallery}${agentNoImage ? '<div data-agent-gallery></div>' : ''}
     ${caption}
     ${summary ? `<div class="section-title">About</div><div class="about">${summary}</div>` : ''}
     ${WIKI_TYPES.has(record.type) ? `<div id="wiki-section" class="wiki-section" data-rec="${esc(record.type + ':' + record.id)}" hidden></div>` : ''}
     ${meta ? `<div class="section-title">Details</div><dl>${meta}</dl>` : ''}
-    ${related ? `<div class="section-title">Related records</div><dl>${related}</dl>` : ''}
+    <div class="section-title" id="rel-title"${related ? '' : ' hidden'}>Related records</div>
+    <div id="rel-explorer" hidden></div>
+    ${related ? `<dl>${related}</dl>` : ''}
     ${external ? `<div class="section-title">External links</div>${external}` : ''}
     ${links.length ? `<div class="links">${links.join('')}</div>` : ''}
     ${record.href ? `<button class="graph-btn" id="detail-graph-btn">🕸 Explore relationship graph</button>` : ''}
@@ -1242,17 +1482,20 @@ function openDetail(record) {
   });
   wireReveal(el.detail);
   // gallery → open the IIIF deep-zoom lightbox (reveal-btn clicks stop propagation)
-  const galleryEl = el.detail.querySelector('[data-gallery]');
-  if (galleryEl) {
-    // Only downloadable images are zoomable; data-lb indexes into this subset.
-    const zoomImages = images.filter(isZoomable);
-    galleryEl.addEventListener('click', (e) => {
-      const t = e.target.closest('[data-lb]');
-      if (!t) return;
-      openLightbox(zoomImages, Number(t.dataset.lb), sensitive);
+  wireDetailGallery(images, sensitive);
+  loadRelExplorer(record);   // relationship chips + carousel (async, race-guarded)
+  // People/orgs: borrow the hero from a related object that depicts them.
+  if (agentNoImage) {
+    const recKey = el.detail.dataset.rec;
+    agentDepictImage(record).then((d) => {
+      if (!d || el.detail.dataset.rec !== recKey) return;   // detail changed under us
+      const slot = el.detail.querySelector('[data-agent-gallery]');
+      if (!slot || slot.firstChild) return;
+      slot.innerHTML = renderGallery([d.rep], d.sensitive, title);
+      wireReveal(slot);
+      wireDetailGallery([d.rep], d.sensitive);
     });
   }
-  wireGalleryStrip(el.detail);
   if (WIKI_TYPES.has(record.type)) loadWikipedia(record);
 
   el.overlay.hidden = false;
@@ -1597,6 +1840,20 @@ document.getElementById('lightbox').addEventListener('click', (e) => {
 });
 
 el.imagesOnly.addEventListener('change', renderResults);
+
+// Image-rights chips: single-select (the categories overlap — downloadable
+// includes both CC and no-known-copyright); clicking the active chip clears it.
+document.querySelectorAll('#rights-filter .cchip').forEach((chip) => {
+  chip.addEventListener('click', () => {
+    state.rights = state.rights === chip.dataset.rights ? null : chip.dataset.rights;
+    document.querySelectorAll('#rights-filter .cchip').forEach((c) => {
+      const on = c.dataset.rights === state.rights;
+      c.classList.toggle('active', on);
+      c.setAttribute('aria-pressed', String(on));
+    });
+    if (state.query.trim()) runSearch(true);
+  });
+});
 
 el.sortSelect.addEventListener('change', () => {
   const opt = sortOptionsFor(state.type)[Number(el.sortSelect.value)] || [];

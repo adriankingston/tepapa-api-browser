@@ -60,20 +60,9 @@
   const iconFor = (type) => iconUri(type, 9);     // graph nodes (fits the circle)
   const legendIcon = (type) => iconUri(type, 1);  // legend swatch (fills it)
 
-  // Readable labels for the native Collections Online relationship fields.
-  const PREDICATE_LABELS = {
-    'production.contributor': 'made', 'production.spatial': 'made in',
-    isMadeOf: 'made of', productionUsedTechnique: 'technique', isTypeOf: 'type',
-    influencedBy: 'influenced by', depicts: 'depicts', refersTo: 'refers to',
-    isReferencedBy: 'referenced by', associatedParties: 'associated',
-    associatedWith: 'associated with', broaderRank: 'parent taxon',
-    'identification.toTaxon': 'identified as', 'identification.identifiedBy': 'identified by',
-    'evidenceFor.atEvent': 'collected', 'evidenceFor.atEvent.recordedBy': 'recorded by',
-    isAbout: 'about', aggregatedAgents: 'aggregates', relatedObjects: 'related',
-  };
-  const labelFor = (p) =>
-    PREDICATE_LABELS[p] ||
-    (p || '').replace(/([a-z])([A-Z])/g, '$1 $2').replace(/\./g, ' · ').toLowerCase();
+  // Readable labels for the relationship fields live in app.js (predicateLabel),
+  // shared with the detail view's related-records explorer.
+  const labelFor = (p) => predicateLabel(p);
 
   const MAX_NODES = 300;
   const BUNDLE_PAGE = 10;
