@@ -2,7 +2,8 @@ MIT License
 
 Copyright (c) 2026 
 
-Developed by Adrian Kington, using Claude Code Opus 4.7 and 4.8, so built on the work of many people, over decades. Thanks to all of them. 
+Developed by Adrian Kington, using Claude Code Opus 4.7 and 4.8, so built on
+the work of many people, over decades. Thanks to all of them. 
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -47,7 +48,7 @@ Roboto  (public/fonts/roboto-latin.woff2, public/fonts/roboto-latinext.woff2)
 
 OpenSeadragon  (public/vendor/openseadragon.min.js)
   The image lightbox uses OpenSeadragon for IIIF deep-zoom viewing.
-  Copyright (c) 2009-2013 CodePlex Foundation and (c) 2010-2024 OpenSeadragon
+  Copyright (c) 2009 CodePlex Foundation and (c) 2010-2025 OpenSeadragon
   contributors. Licensed under the New BSD License (3-clause).
   https://openseadragon.github.io/
 
