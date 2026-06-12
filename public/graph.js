@@ -17,6 +17,22 @@
   const DEFAULT_COLOR = '#9aa3b2';
   const colorFor = (t) => TYPE_COLORS[t] || DEFAULT_COLOR;
 
+  // Long record titles (esp. Rare Books / publications) wrap into many lines and
+  // overlap neighbouring nodes. Cap the on-graph label at a sensible length on a
+  // word boundary with an ellipsis; the full title stays in the node data, the
+  // header focus line, and the detail panel.
+  const truncateLabel = (s, max = 48) => {
+    s = String(s == null ? '' : s).trim();
+    if (s.length <= max) return s;
+    const cut = s.slice(0, max);
+    const sp = cut.lastIndexOf(' ');
+    return (sp > max * 0.6 ? cut.slice(0, sp) : cut).replace(/[\s.,:;–—-]+$/, '') + '…';
+  };
+
+  // Touch devices have no right-click; the collapse gesture there is a long-press
+  // (the same cxttap handler). Used to word the panel tip per device.
+  const noHover = () => !!(window.matchMedia && window.matchMedia('(hover: none)').matches);
+
   // Simple type icons (24×24 SVG paths), drawn in the type colour.
   const ICONS = {
     Person: "<circle cx='12' cy='8' r='3.8'/><path d='M5 20c0-4 3.2-6.5 7-6.5s7 2.5 7 6.5v.6H5z'/>",
@@ -131,7 +147,7 @@
             width: 48, height: 48,
             'border-width': 2,
             'border-color': '#bfc8ca',       // M3 outline-variant
-            label: 'data(label)', 'font-size': 10, color: '#191c1d',
+            label: (e) => truncateLabel(e.data('label')), 'font-size': 10, color: '#191c1d',
             'text-wrap': 'wrap', 'text-max-width': 86,
             'text-valign': 'bottom', 'text-margin-y': 5,
             'min-zoomed-font-size': 6,
@@ -380,7 +396,7 @@
         ? `<button id="gi-collapse">Collapse branches</button>`
         : `<button id="gi-expand">Expand relationships</button>`) +
       `<button id="gi-detail">Open full details</button>` +
-      `<p class="gi-note">Tip: right-click a node to collapse its branches.</p>`;
+      `<p class="gi-note">Tip: ${noHover() ? 'long-press' : 'right-click'} a node to collapse its branches.</p>`;
     elInfo.hidden = false;
     const exp = document.getElementById('gi-expand');
     if (exp) exp.onclick = () => { expandRecord(node); showRecordInfo(node); };

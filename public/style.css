@@ -1299,15 +1299,15 @@ a { color: var(--md-primary); }
   z-index: 2;
 }
 .graph-head-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
-.graph-title { display: flex; align-items: baseline; gap: 12px; min-width: 0; }
-.graph-title strong { font: var(--md-title-lg); color: var(--md-on-surface); }
+.graph-title { display: flex; align-items: baseline; gap: 12px; min-width: 0; overflow: hidden; }
+.graph-title strong { font: var(--md-title-lg); color: var(--md-on-surface); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .graph-focus {
   font: var(--md-body-md);
   color: var(--md-primary);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
-.graph-actions { display: flex; align-items: center; gap: 8px; }
+.graph-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 .graph-count {
   font: var(--md-label-md);
   color: var(--md-on-surface-variant);
@@ -1327,6 +1327,7 @@ a { color: var(--md-primary); }
   color: var(--md-primary);
   font: var(--md-label-lg);
   letter-spacing: .01em;
+  white-space: nowrap;
   cursor: pointer;
   overflow: hidden;
   transition: background-color var(--md-dur) var(--md-ease);
@@ -1348,6 +1349,7 @@ a { color: var(--md-primary); }
 /* Close = M3 round icon button (neutral state layer) */
 .graph-actions .close {
   width: 40px; height: 40px;
+  margin: 0; top: 0; float: none;   /* reset the detail-dialog .close corner styles (sticky top:10px, float, margin) — here it's a flex-row item */
   padding: 0;
   border-radius: var(--md-shape-full);
   color: var(--md-on-surface-variant);
@@ -1355,6 +1357,18 @@ a { color: var(--md-primary); }
   line-height: 1;
 }
 .graph-actions .close::before { background: var(--md-on-surface); }
+
+/* Graph header on small screens: drop the record count, then the title, and
+   compact the action buttons so they stay on one row instead of wrapping/overlapping. */
+@media (max-width: 768px) {
+  .graph-count { display: none; }
+}
+@media (max-width: 600px) {
+  .graph-title { display: none; }
+  .graph-head { padding: 0 8px 0 12px; gap: 8px; }
+  .graph-actions { gap: 4px; }
+  .graph-actions button { padding: 0 10px; font: var(--md-label-md); }
+}
 
 /* Cytoscape canvas */
 .cy { flex: 1; min-height: 0; background: var(--md-surface-container-lowest); }
@@ -1394,14 +1408,28 @@ a { color: var(--md-primary); }
   top: 80px;
   left: 50%;
   transform: translateX(-50%);
+  width: max-content;                /* otherwise left:50% caps the auto width at ~half the screen */
+  max-width: calc(100% - 32px);
+  box-sizing: border-box;
   font: var(--md-label-md);
+  line-height: 1.45;
+  text-align: center;
   color: var(--md-on-surface-variant);
   background: var(--md-surface-container-low);
-  padding: 8px 16px;
-  border-radius: var(--md-shape-full);
+  padding: 10px 18px;
+  /* xl (28px), not full: a clean pill on one line (desktop) but a tidy rounded
+     card when the text wraps on narrow screens, rather than an awkward stadium. */
+  border-radius: var(--md-shape-xl);
   border: 1px solid var(--md-outline-variant);
   box-shadow: var(--md-elev-1);
   pointer-events: none;
+}
+/* Touch devices have no right-click: swap in the long-press wording (and drop the
+   verbose parenthetical to save space) on no-hover pointers. */
+.graph-hint .hint-touch { display: none; }
+@media (hover: none) {
+  .graph-hint .hint-mouse { display: none; }
+  .graph-hint .hint-touch { display: inline; }
 }
 
 /* Node info card: M3 elevated card (dp3) */
