@@ -1189,6 +1189,7 @@ a { color: var(--md-primary); }
   margin: 0 0 12px;
   flex-wrap: wrap;
 }
+.rel-actions[hidden] { display: none; }
 .rel-actions-label { font: var(--md-body-sm); color: var(--md-on-surface-variant); }
 .rel-view-btn {
   display: inline-flex;
