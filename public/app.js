@@ -2371,7 +2371,7 @@ function buildHash(params) {
   if (params.q) p.set('q', params.q);
   if (params.type && params.type !== 'all') p.set('type', params.type);
   if (params.from) p.set('from', String(params.from));
-  if (params.view && params.view !== 'grid') p.set('view', params.view);
+  if (params.view) p.set('view', params.view);
   if (params.relField) {
     p.set('relfield', params.relField);
     if (params.relKw != null) p.set('relkw', String(params.relKw));
