@@ -23,6 +23,7 @@ const state = {
   collections: [],       // selected collection filters (Objects/Specimens only)
   collectionFacet: {},   // available collections + counts for current query+type
   rights: null,          // image-rights filter: 'downloadable' | 'cc' | 'nkc' | null
+  relFilter: null,       // {field, keyword, label} — set when launching related records as results
   sort: { field: null, order: null }, // active sort (null = relevance)
   view: localStorage.getItem('tepapa.view') === 'list' ? 'list' : 'grid',
 };
@@ -454,9 +455,10 @@ const sortOptionsFor = (type) =>
 // ---- Search -----------------------------------------------------------------
 
 // A new query: fetch per-type counts (for the tabs), then load the active tab.
-async function doSearch() {
+async function doSearch(clearRelFilter = true) {
   state.query = el.q.value;
   if (!state.query.trim()) { showHome(); return; }
+  if (clearRelFilter) state.relFilter = null;
   hideHome();
   el.results.className = 'grid';
   el.results.innerHTML = '<div class="spinner"><div></div></div>';
@@ -482,7 +484,7 @@ async function doSearch() {
   if (state.type !== 'all' && !(counts[state.type] > 0)) state.type = 'all';
   renderTabs();
   renderSortOptions();
-  runSearch(true);
+  await runSearch(false);
   updateCollectionFilter();
 }
 
@@ -507,16 +509,7 @@ function renderTabs() {
 
 function selectTab(type) {
   if (type === state.type) return;
-  state.type = type;
-  state.collections = []; // collection filter is per-type
-  el.tabs.querySelectorAll('.tab').forEach((b) => {
-    const on = b.dataset.type === type;
-    b.classList.toggle('active', on);
-    b.setAttribute('aria-selected', String(on));
-  });
-  renderSortOptions();
-  runSearch(true);
-  updateCollectionFilter();
+  navigateTo({ type, from: 0 });
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -603,10 +596,12 @@ function renderSortOptions() {
   el.sortCtl.hidden = false;
 }
 
+let _searchSeq = 0;
+
 async function runSearch(reset = true) {
   if (reset) state.from = 0;
   if (!state.query.trim()) return;
-
+  const seq = ++_searchSeq;
   el.results.className = 'grid';
   el.results.innerHTML = '<div class="spinner"><div></div></div>';
   el.pager.hidden = true;
@@ -616,9 +611,10 @@ async function runSearch(reset = true) {
     from: state.from,
     size: PAGE_SIZE,
   };
-  if (state.type !== 'all') {
-    body.filters = [{ field: 'type', keyword: state.type }];
-  }
+  const filters = [];
+  if (state.type !== 'all') filters.push({ field: 'type', keyword: state.type });
+  if (state.relFilter) filters.push({ field: state.relFilter.field, keyword: state.relFilter.keyword });
+  if (filters.length) body.filters = filters;
   if (state.sort.field) {
     body.sort = [{ field: state.sort.field, order: state.sort.order }];
   }
@@ -630,16 +626,19 @@ async function runSearch(reset = true) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
+    if (seq !== _searchSeq) return;
     data = await res.json();
     if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
   } catch (err) {
-    el.results.innerHTML = `<div class="message error">Couldn’t reach the collection.<br><small>${esc(
+    if (seq !== _searchSeq) return;
+    el.results.innerHTML = `<div class="message error">Couldn't reach the collection.<br><small>${esc(
       err.message
     )}</small></div>`;
     el.status.textContent = '';
     return;
   }
 
+  if (seq !== _searchSeq) return;
   state.results = data.results || [];
   state.total = (data._metadata && data._metadata.resultset && data._metadata.resultset.count) || 0;
 
@@ -657,7 +656,7 @@ function renderResults() {
 
   if (state.total === 0) {
     el.results.className = 'grid';
-    el.results.innerHTML = `<div class="message">No results for “${esc(state.query)}”. Try another term.</div>`;
+    el.results.innerHTML = `<div class="message">No results for "${esc(state.query)}". Try another term.</div>`;
     el.status.innerHTML = `0 results`;
     el.pager.hidden = true;
     return;
@@ -665,8 +664,14 @@ function renderResults() {
 
   el.status.innerHTML =
     `<strong>${state.total.toLocaleString()}</strong> result${state.total === 1 ? '' : 's'} for ` +
-    `“${esc(state.query)}”` +
-    (state.type !== 'all' ? ` · ${esc(typeLabel(state.type))}` : '');
+    `"${esc(state.query)}"` +
+    (state.type !== 'all' ? ` · ${esc(typeLabel(state.type))}` : '') +
+    (state.relFilter ? ` <button class="cchip rel-filter-chip" id="rel-filter-chip">${esc(state.relFilter.label)} ✕</button>` : '');
+  if (state.relFilter) {
+    document.getElementById('rel-filter-chip').addEventListener('click', () => {
+      navigateTo({ relField: null, relKw: null, relLabel: null, from: 0 });
+    });
+  }
 
   if (state.view === 'map') {
     // The map does its own size:100 fetch and ignores the per-page / images-only
@@ -690,7 +695,7 @@ function renderResults() {
 
   if (items.length === 0) {
     el.results.className = 'grid';
-    el.results.innerHTML = `<div class="message">None of the items on this page have images. Untick “Images only” or go to the next page.</div>`;
+    el.results.innerHTML = `<div class="message">None of the items on this page have images. Untick "Images only" or go to the next page.</div>`;
   } else if (state.view === 'list') {
     el.results.className = 'list-wrap';
     el.results.innerHTML = listHtml(items);
@@ -1654,6 +1659,21 @@ async function showRelBundle(b, row, recKey) {
   renderRelRow(b, row, recKey);
 }
 
+function openRelInResults(b, record, view) {
+  if (b.mode !== 'reverse') return;
+  const q = state.query.trim() || '*';
+  navigateTo({
+    q,
+    type: 'all',
+    from: 0,
+    view,
+    relField: `${b.predicate}.id`,
+    relKw: String(b.focusId),
+    relLabel: `${predicateLabel(b.predicate)}: ${record.title || record.prefLabel || ''}`,
+    detail: null,
+  });
+}
+
 async function loadRelExplorer(record) {
   const host = document.getElementById('rel-explorer');
   if (!host || !record.href) return;
@@ -1683,25 +1703,48 @@ async function loadRelExplorer(record) {
       `${esc(predicateLabel(b.predicate))}<span class="cchip-count">${b.count.toLocaleString()}</span></button>`
     ).join('') +
     `</div>` +
+    `<div class="rel-actions" id="rel-actions">` +
+    `<span class="rel-actions-label">View in results:</span>` +
+    `<button class="rel-view-btn" type="button" data-view="grid" title="Open in grid view">⊞ Grid</button>` +
+    `<button class="rel-view-btn" type="button" data-view="list" title="Open in list view">☰ List</button>` +
+    `</div>` +
     `<div class="rel-row-wrap">` +
     `<button class="home-arrow rel-arrow-l" type="button" aria-label="Scroll related records left" hidden>‹</button>` +
     `<div class="rel-row" data-relrow></div>` +
     `<button class="home-arrow rel-arrow-r" type="button" aria-label="Scroll related records right" hidden>›</button>` +
     `</div>`;
   const row = host.querySelector('[data-relrow]');
+  const relActions = host.querySelector('#rel-actions');
+  const updateRelActions = (b) => { if (relActions) relActions.hidden = b.mode !== 'reverse'; };
   attachScrollArrows(row, host.querySelector('.rel-arrow-l'), host.querySelector('.rel-arrow-r'));
   const chips = [...host.querySelectorAll('.rel-chip')];
   chips.forEach((chip) => {
     chip.addEventListener('click', () => {
       chips.forEach((c) => c.classList.toggle('active', c === chip));
-      showRelBundle(bundles[Number(chip.dataset.b)], row, recKey);
+      const b = bundles[Number(chip.dataset.b)];
+      showRelBundle(b, row, recKey);
+      updateRelActions(b);
     });
   });
+  host.querySelectorAll('.rel-view-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const activeChip = host.querySelector('.rel-chip.active');
+      const b = activeChip ? bundles[Number(activeChip.dataset.b)] : null;
+      if (b) openRelInResults(b, record, btn.dataset.view);
+    });
+  });
+  updateRelActions(bundles[def]);
   showRelBundle(bundles[def], row, recKey);
 }
 
-function openDetail(record) {
+function openDetail(record, _skipHash = false) {
   if (!record) return;
+  if (!_skipHash) {
+    _detailPushed = true;
+    const p = new URLSearchParams(location.hash.replace(/^#/, ''));
+    p.set('detail', record.type + ':' + record.id);
+    history.pushState(null, '', '#' + p.toString());
+  }
   const title = record.title || record.prefLabel || '(untitled)';
   const images = imagesOf(record);
 
@@ -1879,6 +1922,16 @@ function openDetail(record) {
 function closeDetail() {
   el.overlay.hidden = true;
   document.body.style.overflow = '';
+  if (_detailPushed) {
+    _detailPushed = false;
+    history.back();
+  } else {
+    const p = new URLSearchParams(location.hash.replace(/^#/, ''));
+    if (p.has('detail')) {
+      p.delete('detail');
+      history.replaceState(null, '', p.toString() ? '#' + p.toString() : location.pathname);
+    }
+  }
 }
 
 // ---- Events -----------------------------------------------------------------
@@ -2104,7 +2157,7 @@ async function fillCollectionCats(navEl, cats) {
     navEl.innerHTML = catListHtml(sortCols(cols), showCount);
   }
   navEl.querySelectorAll('.home-cat').forEach((b) =>
-    b.addEventListener('click', () => { el.q.value = b.dataset.q; doSearch(); }));
+    b.addEventListener('click', () => navigateTo({ q: b.dataset.q, type: 'all', from: 0, relField: null, relKw: null, relLabel: null, detail: null })));
 }
 // A live record count from the API (a size:0 search → the resultset count).
 async function homeCount(spec) {
@@ -2123,7 +2176,7 @@ async function homeCount(spec) {
 async function loadHome() {
   let config = null;
   try { config = await (await fetch('/home.json', { cache: 'no-store' })).json(); } catch { /* */ }
-  if (!config) { el.home.innerHTML = '<div class="message">Couldn’t load the home page (home.json).</div>'; return; }
+  if (!config) { el.home.innerHTML = '<div class="message">Couldn\'t load the home page (home.json).</div>'; return; }
 
   let html = '';
   const hasCats = config.categories &&
@@ -2144,7 +2197,7 @@ async function loadHome() {
 
   // Intro category links → run the search. A "collections" rail fills in async.
   el.home.querySelectorAll('.home-cat').forEach((b) =>
-    b.addEventListener('click', () => { el.q.value = b.dataset.q; doSearch(); }));
+    b.addEventListener('click', () => navigateTo({ q: b.dataset.q, type: 'all', from: 0, relField: null, relKw: null, relLabel: null, detail: null })));
   const autoCats = el.home.querySelector('.home-cats-auto');
   if (autoCats) fillCollectionCats(autoCats, config.categories);
 
@@ -2156,7 +2209,7 @@ async function loadHome() {
         `<button class="home-link" type="button" data-q="${esc(it.query || it.label)}">${esc(it.label)}</button>`).join('');
       host.innerHTML = `<section class="home-shelf"><h2 class="home-shelf-title">${esc(s.title || 'Explore')}</h2><div class="home-links">${chips}</div></section>`;
       host.querySelectorAll('.home-link').forEach((b) =>
-        b.addEventListener('click', () => { el.q.value = b.dataset.q; doSearch(); }));
+        b.addEventListener('click', () => navigateTo({ q: b.dataset.q, type: 'all', from: 0, relField: null, relKw: null, relLabel: null, detail: null })));
       return;
     }
     let records = [];
@@ -2200,7 +2253,9 @@ function hideHome() {
 
 el.form.addEventListener('submit', (e) => {
   e.preventDefault();
-  doSearch();
+  const q = el.q.value.trim();
+  if (!q) { navigateTo({ q: '', type: 'all', from: 0, relField: null, relKw: null, relLabel: null, detail: null }); return; }
+  navigateTo({ q, type: 'all', from: 0, relField: null, relKw: null, relLabel: null, detail: null });
 });
 
 // Lightbox controls
@@ -2261,27 +2316,29 @@ function setView(view) {
     btn.setAttribute('aria-pressed', String(on));
   }
   applyMapMode();
-  // Entering the map on a non-mappable tab → move to a mappable one (this reloads
-  // the map for that type via selectTab → runSearch → renderResults).
-  if (view === 'map' && state.results.length && !MAP_TYPES.has(state.type)) {
-    selectTab(['Object', 'Specimen', 'Place'].find((t) => state.counts[t] > 0) || 'all');
-    return;
-  }
-  if (state.results.length) renderResults();
 }
-el.viewGrid.addEventListener('click', () => setView('grid'));
-el.viewList.addEventListener('click', () => setView('list'));
-el.viewMap.addEventListener('click', () => setView('map'));
+el.viewGrid.addEventListener('click', () => {
+  if (state.results.length) navigateTo({ view: 'grid' });
+});
+el.viewList.addEventListener('click', () => {
+  if (state.results.length) navigateTo({ view: 'list' });
+});
+el.viewMap.addEventListener('click', () => {
+  if (!state.results.length) return;
+  if (!MAP_TYPES.has(state.type)) {
+    navigateTo({ view: 'map', type: ['Object', 'Specimen', 'Place'].find((t) => state.counts[t] > 0) || 'all', from: 0 });
+  } else {
+    navigateTo({ view: 'map' });
+  }
+});
 setView(state.view); // reflect persisted choice in the toggle on load
 
 el.prev.addEventListener('click', () => {
-  state.from = Math.max(0, state.from - PAGE_SIZE);
-  runSearch(false);
+  navigateTo({ from: Math.max(0, state.from - PAGE_SIZE) });
   window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 el.next.addEventListener('click', () => {
-  state.from += PAGE_SIZE;
-  runSearch(false);
+  navigateTo({ from: state.from + PAGE_SIZE });
   window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
@@ -2293,14 +2350,116 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && !el.overlay.hidden) closeDetail();
 });
 
+// ── Hash routing ──────────────────────────────────────────────────────────
+
+function readHashParams() {
+  const p = new URLSearchParams(location.hash.replace(/^#/, ''));
+  return {
+    q:        p.get('q') ?? '',
+    type:     p.get('type') ?? 'all',
+    from:     Math.max(0, +(p.get('from') ?? 0)),
+    view:     p.get('view') ?? null,
+    relField: p.get('relfield') ?? null,
+    relKw:    p.get('relkw') ?? null,
+    relLabel: p.get('rellabel') ?? null,
+    detail:   p.get('detail') ?? null,
+  };
+}
+
+function buildHash(params) {
+  const p = new URLSearchParams();
+  if (params.q) p.set('q', params.q);
+  if (params.type && params.type !== 'all') p.set('type', params.type);
+  if (params.from) p.set('from', String(params.from));
+  if (params.view && params.view !== 'grid') p.set('view', params.view);
+  if (params.relField) {
+    p.set('relfield', params.relField);
+    if (params.relKw != null) p.set('relkw', String(params.relKw));
+    if (params.relLabel) p.set('rellabel', params.relLabel);
+  }
+  if (params.detail) p.set('detail', params.detail);
+  const s = p.toString();
+  return s ? '#' + s : location.pathname;
+}
+
+let _applySeq = 0;
+let _detailPushed = false;
+
+function navigateTo(overrides = {}, replace = false) {
+  const cur = readHashParams();
+  const next = { ...cur, ...overrides };
+  const h = buildHash(next);
+  if (replace) history.replaceState(null, '', h);
+  else history.pushState(null, '', h);
+  applyHash();
+}
+
+async function applyHash() {
+  const seq = ++_applySeq;
+  const h = readHashParams();
+
+  if (!h.q) { showHome(); return; }
+  hideHome();
+
+  const relFilter = h.relField
+    ? { field: h.relField, keyword: h.relKw, label: h.relLabel || h.relField }
+    : null;
+
+  const queryChanged =
+    h.q !== state.query ||
+    h.type !== state.type ||
+    (h.relField ?? null) !== (state.relFilter?.field ?? null) ||
+    String(h.relKw ?? '') !== String(state.relFilter?.keyword ?? '');
+
+  const pageChanged = !queryChanged && h.from !== state.from;
+
+  state.query = h.q;
+  el.q.value = h.q;
+  state.type = h.type;
+  state.from = h.from;
+  state.relFilter = relFilter;
+  setView(h.view || localStorage.getItem('tepapa.view') || 'grid');
+
+  if (queryChanged || !state.results.length) {
+    await doSearch(false);
+    if (seq !== _applySeq) return;
+  } else if (pageChanged) {
+    await runSearch(false);
+    if (seq !== _applySeq) return;
+  }
+
+  if (h.detail) {
+    if (el.overlay.hidden) {
+      const colonIdx = h.detail.indexOf(':');
+      const dtype = h.detail.slice(0, colonIdx);
+      const did = h.detail.slice(colonIdx + 1);
+      let rec = state.results.find(r => r.type === dtype && String(r.id) === did);
+      if (!rec) {
+        try {
+          const res = await fetch(`/api/record?href=/collection/${dtype.toLowerCase()}/${did}`);
+          if (seq !== _applySeq) return;
+          const d = await res.json();
+          rec = d.result || d;
+        } catch {}
+      }
+      if (rec && seq === _applySeq) openDetail(rec, true);
+    }
+    return;
+  }
+
+  if (!el.overlay.hidden) { el.overlay.hidden = true; document.body.style.overflow = ''; }
+  if (!queryChanged && !pageChanged) renderResults();
+}
+
+window.addEventListener('popstate', applyHash);
+
 // Home: clicking the brand (top bar, or the logo in the graph view) returns to
 // the home page; show it on first load.
 function goHome() {
-  el.q.value = '';
-  state.query = '';
-  showHome();
+  history.pushState(null, '', location.pathname);
+  applyHash();
   window.scrollTo({ top: 0 });
 }
 window.goHome = goHome;
 el.brand.addEventListener('click', goHome);
-showHome();
+applyHash();

@@ -1181,7 +1181,43 @@ a { color: var(--md-primary); }
 
 /* ---- Related-records explorer (detail view): chips + one swappable carousel ---- */
 #rel-explorer { margin: 0 0 18px; }
-.rel-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; }
+.rel-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 10px; }
+.rel-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px;
+  flex-wrap: wrap;
+}
+.rel-actions-label { font: var(--md-body-sm); color: var(--md-on-surface-variant); }
+.rel-view-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 12px;
+  border: 1px solid var(--md-outline-variant);
+  border-radius: 16px;
+  background: var(--md-surface);
+  color: var(--md-on-surface-variant);
+  font: var(--md-body-sm);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.rel-view-btn:hover { background: var(--md-surface-container); color: var(--md-on-surface); }
+/* Active relation filter chip shown in the result status bar */
+.rel-filter-chip {
+  margin-left: 6px;
+  padding: 2px 10px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--accent) 14%, var(--md-surface));
+  color: var(--md-primary);
+  font: var(--md-body-sm);
+  font-weight: 500;
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  cursor: pointer;
+  vertical-align: middle;
+}
+.rel-filter-chip:hover { background: color-mix(in srgb, var(--accent) 22%, var(--md-surface)); }
 
 /* Image-rights filter chips in the results toolbar */
 .rights-filter { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
