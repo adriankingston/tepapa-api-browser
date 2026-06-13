@@ -169,6 +169,66 @@ function noImageThumbHtml(type, size = 64) {
   return `<div class="thumb no-image"><img class="type-icon-ph" src="${typeIconUri(type || '_default', 2)}" width="${size}" height="${size}" alt="No image"></div>`;
 }
 
+// ---- List-thumb edge extension --------------------------------------------------
+// List thumbs are contain-fitted into a square, leaving letterbox bands. Compose
+// a square version on a canvas where the bands are the image's own outermost
+// pixel row/column stretched outward — every band pixel exactly continues the
+// adjacent image pixel, so flat, gradient and vignetted backdrops all blend
+// seamlessly. Te Papa media has no CORS headers (canvas would taint), so bytes
+// come via our /api/imgproxy. Composites cache per URL as data URLs.
+const edgeThumbCache = new Map();   // thumbnailUrl → Promise<dataURL | null>
+
+function edgeExtendedThumb(url) {
+  if (!url || !/^https:\/\/media\.tepapa\.govt\.nz\//.test(url)) return Promise.resolve(null);
+  if (edgeThumbCache.has(url)) return edgeThumbCache.get(url);
+  const p = (async () => {
+    const res = await fetch('/api/imgproxy?url=' + encodeURIComponent(url));
+    if (!res.ok) return null;
+    const bmp = await createImageBitmap(await res.blob());
+    const S = 80;   // 2× the 40px box for retina
+    const cv = document.createElement('canvas');
+    cv.width = S; cv.height = S;
+    const cx = cv.getContext('2d');
+    if (bmp.width >= bmp.height) {
+      // landscape: fills the width; stretch the top/bottom pixel rows into the bands
+      const dh = Math.max(1, Math.round((S * bmp.height) / bmp.width));
+      const oy = Math.round((S - dh) / 2);
+      if (oy > 0) {
+        cx.drawImage(bmp, 0, 0, bmp.width, 1, 0, 0, S, oy);
+        cx.drawImage(bmp, 0, bmp.height - 1, bmp.width, 1, 0, oy + dh, S, S - oy - dh);
+      }
+      cx.drawImage(bmp, 0, oy, S, dh);
+    } else {
+      // portrait: fills the height; stretch the left/right pixel columns
+      const dw = Math.max(1, Math.round((S * bmp.width) / bmp.height));
+      const ox = Math.round((S - dw) / 2);
+      if (ox > 0) {
+        cx.drawImage(bmp, 0, 0, 1, bmp.height, 0, 0, ox, S);
+        cx.drawImage(bmp, bmp.width - 1, 0, 1, bmp.height, ox + dw, 0, S - ox - dw, S);
+      }
+      cx.drawImage(bmp, ox, 0, dw, S);
+    }
+    return cv.toDataURL('image/jpeg', 0.92);
+  })().catch(() => null);
+  edgeThumbCache.set(url, p);
+  return p;
+}
+
+function listThumbHtml(url, sensitive) {
+  const warn = sensitive ? '<span class="lthumb-warn" title="Potentially sensitive image">⚠</span>' : '';
+  return `<span class="lthumb${sensitive ? ' sensitive' : ''}">` +
+    `<img loading="lazy" src="${esc(url)}" data-thumb alt="">${warn}</span>`;
+}
+
+// Swap freshly rendered list thumbs for their edge-extended composites.
+function extendListThumbEdges() {
+  el.results.querySelectorAll('.list .col-thumb img[data-thumb]').forEach((img) => {
+    const url = img.getAttribute('src');
+    img.removeAttribute('data-thumb');
+    edgeExtendedThumb(url).then((d) => { if (d && img.isConnected) img.src = d; });
+  });
+}
+
 // ---- Culturally sensitive imagery -------------------------------------------
 // The API has no sensitivity flag, so this is a best-effort, deliberately
 // cautious heuristic over the record's materials, classification and text.
@@ -611,6 +671,7 @@ function renderResults() {
     el.results.className = 'list-wrap';
     el.results.innerHTML = listHtml(items);
     wireRowClicks();
+    extendListThumbEdges();   // fill letterbox bands with each image's own edge pixels
   } else {
     el.results.className = 'grid masonry';
     el.results.innerHTML = items.map(cardHtml).join('');
@@ -694,9 +755,9 @@ function applyAgentThumb(node, d) {
   }
   const cell = node.querySelector('.col-thumb');
   if (cell) {
-    const warn = d.sensitive ? '<span class="lthumb-warn" title="Potentially sensitive image">⚠</span>' : '';
-    cell.innerHTML = `<span class="lthumb${d.sensitive ? ' sensitive' : ''}"><img loading="lazy" src="${esc(rep.thumbnailUrl)}" alt="">${warn}</span>`;
+    cell.innerHTML = listThumbHtml(rep.thumbnailUrl, d.sensitive);
     if (d.sensitive) wireReveal(cell);
+    extendListThumbEdges();
   }
 }
 
@@ -778,7 +839,7 @@ function listHtml(items) {
       const i = state.results.indexOf(record);
       const img = imagesOf(record)[0];
       const thumb = img
-        ? `<span class="lthumb${isSensitive(record) ? ' sensitive' : ''}"><img loading="lazy" src="${esc(img.thumbnailUrl)}" alt="">${isSensitive(record) ? '<span class="lthumb-warn" title="Potentially sensitive image">⚠</span>' : ''}</span>`
+        ? listThumbHtml(img.thumbnailUrl, isSensitive(record))
         : `<span class="ph"></span>`;
       const cells = cols
         .map((c) => {

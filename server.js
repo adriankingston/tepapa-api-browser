@@ -47,6 +47,7 @@ const routes = {
   'POST /api/neighbors': require('./api/neighbors'),
   'GET /api/record': require('./api/record'),
   'GET /api/wikipedia': require('./api/wikipedia'),
+  'GET /api/imgproxy': require('./api/imgproxy'),
 };
 
 const server = http.createServer((req, res) => {

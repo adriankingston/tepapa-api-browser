@@ -584,7 +584,7 @@ a { color: var(--md-primary); }
 .media { position:relative; display:block; }
 .media.sensitive > img { border-radius:var(--md-shape-sm); }
 
-.list .col-thumb .lthumb { position:relative; display:block; width:40px; height:40px; }
+.list .col-thumb .lthumb { position:relative; display:block; width:40px; height:40px; overflow:hidden; border-radius:var(--md-shape-xs); background:var(--md-surface-container-highest); }
 .list .col-thumb .lthumb.sensitive img { filter:blur(6px); }
 .lthumb-warn { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:14px; color:#fff; text-shadow:0 1px 3px rgba(0,0,0,.8); }
 
@@ -638,7 +638,6 @@ a { color: var(--md-primary); }
   width: 40px; height: 40px;
   object-fit: contain;
   border-radius: var(--md-shape-xs);
-  background: var(--md-surface-container-highest);
   display: block;
 }
 .list .col-thumb .ph {
