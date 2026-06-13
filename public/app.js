@@ -672,7 +672,17 @@ function renderResults() {
     // The map does its own size:100 fetch and ignores the per-page / images-only
     // filtering, so it branches before the items logic below.
     el.results.className = 'map-view';
-    el.results.innerHTML = '<div id="map"></div><div class="map-status" id="map-status">Loading map…</div>';
+    el.results.innerHTML =
+      '<div class="map-wrap">' +
+        '<div id="map"></div>' +
+        '<div class="map-overlay" id="map-overlay">' +
+          '<div class="map-overlay-card">' +
+            '<span class="map-overlay-spinner"></span>' +
+            '<p class="map-overlay-msg" id="map-overlay-msg">Fetching records…</p>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="map-status" id="map-status" data-state="loading"></div>';
     el.pager.hidden = true;
     loadMapResults();
     return;
@@ -776,7 +786,7 @@ function mapPopupHtml(r, place) {
     `<button type="button" class="map-pop-btn">View details →</button></div>`;
 }
 
-const MAP_MAX = 1000, MAP_PAGE = 200;   // the API silently caps scored `size` ~250 and is flaky on deep parallel paging, so page sequentially
+const MAP_MAX = 1500, MAP_PAGE = 200;   // the API silently caps scored `size` ~250 and is flaky on deep parallel paging, so page sequentially
 
 async function loadMapResults() {
   const mapEl = document.getElementById('map');
@@ -791,6 +801,8 @@ async function loadMapResults() {
   requestAnimationFrame(() => lmap && lmap.invalidateSize());
 
   const status = document.getElementById('map-status');
+  const overlay = document.getElementById('map-overlay');
+  const overlayMsg = document.getElementById('map-overlay-msg');
   const live = () => token === mapSeq && state.view === 'map' && mapEl.isConnected && lmap;
   const pts = [], mapped = new Set();
   const addMarker = (r, lat, lon, place) => {
@@ -835,7 +847,9 @@ async function loadMapResults() {
       }
     }
     if (!fitted && pts.length) { fit(); fitted = true; }
-    if (status) status.textContent = `Loading… ${seen.size} of ${MAP_MAX}`;
+    const loadingTxt = `Fetching records… ${seen.size.toLocaleString()} of ${MAP_MAX.toLocaleString()}`;
+    if (status) { status.dataset.state = 'loading'; status.textContent = loadingTxt; }
+    if (overlayMsg) overlayMsg.textContent = loadingTxt;
     if (page.length < MAP_PAGE) break;   // reached the end of the result set
   }
   if (!live()) return;
@@ -843,10 +857,21 @@ async function loadMapResults() {
 
   let remaining = deferred.length;
   const setStatus = (resolving) => {
-    if (!status) return;
-    const base = `Mapped ${mapped.size} of ${seen.size}`;
-    status.textContent = resolving > 0 ? `${base} · resolving ${resolving} place${resolving === 1 ? '' : 's'}…`
-      : mapped.size ? base : `No coordinates found for these ${seen.size} results.`;
+    if (resolving > 0) {
+      const txt = `Mapped ${mapped.size.toLocaleString()} of ${seen.size.toLocaleString()} · looking up ${resolving.toLocaleString()} place${resolving === 1 ? '' : 's'}…`;
+      if (status) { status.dataset.state = 'resolving'; status.textContent = txt; }
+      if (overlayMsg) overlayMsg.textContent = txt;
+    } else {
+      if (overlay) overlay.classList.add('hidden');
+      if (!status) return;
+      if (mapped.size) {
+        status.dataset.state = 'done';
+        status.textContent = `Mapped ${mapped.size.toLocaleString()} of ${seen.size.toLocaleString()} records`;
+      } else {
+        status.dataset.state = 'empty';
+        status.textContent = `No mappable coordinates found in these ${seen.size.toLocaleString()} results`;
+      }
+    }
   };
   setStatus(remaining);
 

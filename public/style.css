@@ -615,14 +615,84 @@ a { color: var(--md-primary); }
 
 /* ---- Map view ---- */
 .map-view { padding: 16px 20px 40px; }
-.map-view #map {
+.map-wrap { position: relative; }
+.map-wrap #map {
   height: min(70vh, 680px);
   border-radius: var(--md-shape-lg);
   border: 1px solid var(--md-outline-variant);
   background: var(--md-surface-container);
-  z-index: 0;                                  /* keep Leaflet panes under the app's overlays */
+  z-index: 0;
 }
-.map-view .map-status { margin: 12px 2px 0; font: var(--md-body-sm); color: var(--md-on-surface-variant); }
+/* Loading overlay — covers the map while fetching/resolving */
+.map-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--md-surface) 72%, transparent);
+  backdrop-filter: blur(3px);
+  border-radius: var(--md-shape-lg);
+  z-index: 500;
+  transition: opacity 0.4s, visibility 0.4s;
+}
+.map-overlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+.map-overlay-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 28px 40px;
+  background: var(--md-surface);
+  border: 1px solid var(--md-outline-variant);
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+  max-width: 300px;
+  text-align: center;
+}
+.map-overlay-spinner {
+  width: 36px; height: 36px;
+  border: 3.5px solid var(--md-outline-variant);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: map-spin 0.75s linear infinite;
+}
+@keyframes map-spin { to { transform: rotate(360deg); } }
+.map-overlay-msg {
+  margin: 0;
+  font: var(--md-body-md);
+  font-weight: 500;
+  color: var(--md-on-surface);
+}
+/* Status pill — only appears after loading completes */
+.map-view .map-status {
+  margin: 14px 0 0;
+  padding: 10px 16px;
+  display: none;
+  align-items: center;
+  gap: 10px;
+  border-radius: 20px;
+  font: var(--md-body-md);
+  font-weight: 500;
+}
+.map-view .map-status[data-state="done"],
+.map-view .map-status[data-state="empty"] { display: inline-flex; }
+.map-view .map-status[data-state="done"] {
+  background: color-mix(in srgb, var(--accent) 12%, var(--md-surface));
+  color: var(--md-on-surface);
+  font-weight: 600;
+}
+.map-view .map-status[data-state="done"]::before {
+  content: '✓';
+  color: var(--accent);
+  font-size: 1.1em;
+  font-weight: 700;
+}
+.map-view .map-status[data-state="empty"] {
+  background: color-mix(in srgb, #e65100 10%, var(--md-surface));
+  color: var(--md-on-surface-variant);
+}
+.map-view .map-status[data-state="empty"]::before { content: '⚠'; color: #e65100; }
 .map-pop { min-width: 150px; }
 .map-pop strong { display: block; font: var(--md-body-md); font-weight: 600; color: var(--md-on-surface); }
 .map-pop-meta { margin: 4px 0 6px; font: var(--md-body-sm); color: var(--md-on-surface-variant); }
