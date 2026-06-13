@@ -853,7 +853,8 @@ a { color: var(--md-primary); }
 }
 .g-thumb img { width: 100%; height: 100%; object-fit: contain; display: block; }
 .g-thumb.sensitive img { filter: blur(6px); }
-.g-thumb-static { cursor: default; }
+/* Swap-mode strips mark the image currently shown in the hero slot */
+.g-thumb.current { outline: 2px solid var(--md-primary); outline-offset: 2px; }
 .g-arrow {
   flex: 0 0 auto; width: 36px; height: 68px;
   border: none; border-radius: var(--md-shape-sm);

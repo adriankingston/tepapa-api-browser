@@ -999,39 +999,60 @@ function rightsLabel(img) {
     : esc(r.title);
 }
 
+// The lightbox shows only the zoomable (downloadable) subset; data-lb indexes
+// into it. Restricted images never get a data-lb, so they never open the viewer.
+function lbIndexOf(images, i) {
+  return isZoomable(images[i]) ? images.slice(0, i).filter(isZoomable).length : null;
+}
+
+// Hero block for images[i]. Restricted: thumbnail at natural size, no zoom.
+// Zoomable: preview image with the zoom affordance (data-lb → lightbox).
+// Reveals in place when the record is sensitive.
+function heroBlockHtml(images, i, sensitive, title) {
+  const img = images[i];
+  const lb = lbIndexOf(images, i);
+  if (lb === null) {
+    const heroImg = `<img loading="lazy" src="${esc(img.thumbnailUrl)}" alt="${esc(img.title || title)}">`;
+    return `<div class="g-hero g-hero-static media${sensitive ? ' sensitive' : ''}">${heroImg}${sensitive ? sensitiveOverlay() : ''}</div>`;
+  }
+  const heroImg = `<img loading="lazy" src="${esc(img.previewUrl || img.thumbnailUrl)}" alt="${esc(img.title || title)}">`;
+  return sensitive
+    ? `<div class="g-hero media sensitive" data-lb="${lb}">${heroImg}${sensitiveOverlay()}</div>`
+    : `<button class="g-hero" type="button" data-lb="${lb}" aria-label="Zoom image"><span class="g-zoom">⤢ Zoom</span>${heroImg}</button>`;
+}
+
+// Caption line under the gallery, for the image currently shown as the hero.
+function galleryNoteHtml(images, heroI) {
+  const rights = rightsLabel(images[heroI]);   // pre-escaped; a CC deed link when applicable
+  const heroZoom = isZoomable(images[heroI]);
+  const swapMode = images.length > 1 && images.some((im) => !isZoomable(im));
+  const parts = [];
+  if (images.length > 1) parts.push(`${images.length} images`);
+  if (heroZoom) parts.push(images.length > 1 && !swapMode ? 'tap any to zoom' : 'tap to zoom');
+  if (rights) parts.push(rights);
+  return parts.length ? `<p class="g-count">${parts.join(' · ')}</p>` : '';
+}
+
 function renderGallery(images, sensitive, title) {
   if (!images.length) return '';
-  // Rights-restricted images (allowsDownload === false) show at thumb size only
-  // and aren't zoomable. data-lb indexes into the zoomable subset, which
-  // openDetail passes to the lightbox (images.filter(isZoomable)) — restricted
-  // images carry no data-lb and so never open the viewer.
-  let zoomIdx = -1;
-  const lbIndex = images.map((img) => (isZoomable(img) ? ++zoomIdx : null));
-  const hero = images[0];
-
-  let heroBlock;
-  if (lbIndex[0] === null) {
-    // Restricted hero: thumbnail at natural size, no zoom. Reveals in place if sensitive.
-    const heroImg = `<img loading="lazy" src="${esc(hero.thumbnailUrl)}" alt="${esc(hero.title || title)}">`;
-    heroBlock = `<div class="g-hero g-hero-static media${sensitive ? ' sensitive' : ''}">${heroImg}${sensitive ? sensitiveOverlay() : ''}</div>`;
-  } else {
-    const heroImg = `<img loading="lazy" src="${esc(hero.previewUrl || hero.thumbnailUrl)}" alt="${esc(hero.title || title)}">`;
-    heroBlock = sensitive
-      ? `<div class="g-hero media sensitive" data-lb="${lbIndex[0]}">${heroImg}${sensitiveOverlay()}</div>`
-      : `<button class="g-hero" type="button" data-lb="${lbIndex[0]}" aria-label="Zoom image"><span class="g-zoom">⤢ Zoom</span>${heroImg}</button>`;
-  }
+  // Records with any rights-restricted image use "swap mode": every image gets a
+  // filmstrip thumb (including the first) and tapping one swaps it into the hero
+  // slot — so restricted images stay viewable (at thumb size, no zoom) instead of
+  // being unselectable. Fully-zoomable records keep the classic behaviour:
+  // strip = the rest of the images, any tap opens the deep-zoom lightbox.
+  const swapMode = images.length > 1 && images.some((im) => !isZoomable(im));
+  const heroBlock = heroBlockHtml(images, 0, sensitive, title);
 
   let thumbs = '';
   if (images.length > 1) {
-    const strip = images.slice(1).map((img, k) => {
-      const idx = lbIndex[k + 1];
+    const strip = images.map((img, i) => {
+      if (!swapMode && i === 0) return '';   // classic mode: hero isn't repeated in the strip
       const inner =
         `<img loading="lazy" src="${esc(img.thumbnailUrl)}" alt="">` +
         (sensitive ? '<span class="lthumb-warn" title="Potentially sensitive">⚠</span>' : '');
-      // Restricted thumbs aren't zoomable — render as a static, non-clickable thumb.
-      return idx === null
-        ? `<span class="g-thumb g-thumb-static${sensitive ? ' sensitive' : ''}">${inner}</span>`
-        : `<button class="g-thumb${sensitive ? ' sensitive' : ''}" type="button" data-lb="${idx}" aria-label="View image ${k + 2}">${inner}</button>`;
+      return swapMode
+        ? `<button class="g-thumb${i === 0 ? ' current' : ''}${sensitive ? ' sensitive' : ''}" type="button" data-hero="${i}"${i === 0 ? ' aria-current="true"' : ''} aria-label="Show image ${i + 1}">${inner}</button>`
+        : `<button class="g-thumb${sensitive ? ' sensitive' : ''}" type="button" data-lb="${lbIndexOf(images, i)}" aria-label="View image ${i + 1}">${inner}</button>`;
     }).join('');
     thumbs =
       '<div class="g-strip-wrap">' +
@@ -1040,13 +1061,30 @@ function renderGallery(images, sensitive, title) {
       '<button class="g-arrow g-arrow-r" type="button" aria-label="Scroll thumbnails right" hidden>›</button>' +
       '</div>';
   }
-  const rights = rightsLabel(hero);   // pre-escaped; a CC deed link when applicable
-  const note = zoomIdx < 0
-    ? (rights ? `<p class="g-count">${rights}</p>` : '')
-    : images.length > 1
-      ? `<p class="g-count">${images.length} images · tap any to zoom${rights ? ' · ' + rights : ''}</p>`
-      : `<p class="g-count">Tap to zoom${rights ? ' · ' + rights : ''}</p>`;
-  return `<div class="gallery" data-gallery>${heroBlock}${thumbs}${note}</div>`;
+  return `<div class="gallery" data-gallery>${heroBlock}${thumbs}${galleryNoteHtml(images, 0)}</div>`;
+}
+
+// Swap images[i] into the hero slot (swap-mode strips). Keeps the sensitive
+// reveal state, refreshes the caption, and moves the current-thumb marker.
+function swapGalleryHero(galleryEl, images, i, sensitive, title) {
+  const hero = galleryEl.querySelector('.g-hero');
+  if (!hero || !images[i]) return;
+  const revealed = hero.classList.contains('revealed');
+  hero.outerHTML = heroBlockHtml(images, i, sensitive, title);
+  const fresh = galleryEl.querySelector('.g-hero');
+  if (revealed) fresh.classList.add('revealed');
+  const note = galleryEl.querySelector('.g-count');
+  const newNote = galleryNoteHtml(images, i);
+  if (note && newNote) note.outerHTML = newNote;
+  else if (note) note.remove();
+  else if (newNote) galleryEl.insertAdjacentHTML('beforeend', newNote);
+  galleryEl.querySelectorAll('[data-hero]').forEach((b) => {
+    const on = Number(b.dataset.hero) === i;
+    b.classList.toggle('current', on);
+    if (on) b.setAttribute('aria-current', 'true');
+    else b.removeAttribute('aria-current');
+  });
+  wireReveal(fresh);   // the rebuilt overlay's reveal button
 }
 
 // Show the chevron arrows only while a scroller overflows, disable them at the
@@ -1081,14 +1119,20 @@ function wireGalleryStrip(container) {
   attachScrollArrows(strip, wrap.querySelector('.g-arrow-l'), wrap.querySelector('.g-arrow-r'));
 }
 
-// Wire the detail-view gallery: clicking a zoomable thumb/hero opens the lightbox
-// over the downloadable subset, plus the filmstrip arrows. Shared by the initial
-// render and the async agent (depicts) image injection.
-function wireDetailGallery(galleryImages, gallerySensitive) {
+// Wire the detail-view gallery: swap-mode thumbs (data-hero) swap the hero in
+// place; zoomable elements (data-lb) open the lightbox over the downloadable
+// subset; plus the filmstrip arrows. Shared by the initial render and the async
+// agent (depicts) image injection.
+function wireDetailGallery(galleryImages, gallerySensitive, galleryTitle) {
   const galleryEl = el.detail.querySelector('[data-gallery]');
   if (galleryEl) {
     const zoomImages = galleryImages.filter(isZoomable);
     galleryEl.addEventListener('click', (e) => {
+      const hs = e.target.closest('[data-hero]');
+      if (hs) {
+        swapGalleryHero(galleryEl, galleryImages, Number(hs.dataset.hero), gallerySensitive, galleryTitle);
+        return;
+      }
       const t = e.target.closest('[data-lb]');
       if (!t) return;
       openLightbox(zoomImages, Number(t.dataset.lb), gallerySensitive);
@@ -1482,7 +1526,7 @@ function openDetail(record) {
   });
   wireReveal(el.detail);
   // gallery → open the IIIF deep-zoom lightbox (reveal-btn clicks stop propagation)
-  wireDetailGallery(images, sensitive);
+  wireDetailGallery(images, sensitive, title);
   loadRelExplorer(record);   // relationship chips + carousel (async, race-guarded)
   // People/orgs: borrow the hero from a related object that depicts them.
   if (agentNoImage) {
@@ -1493,7 +1537,7 @@ function openDetail(record) {
       if (!slot || slot.firstChild) return;
       slot.innerHTML = renderGallery([d.rep], d.sensitive, title);
       wireReveal(slot);
-      wireDetailGallery([d.rep], d.sensitive);
+      wireDetailGallery([d.rep], d.sensitive, title);
     });
   }
   if (WIKI_TYPES.has(record.type)) loadWikipedia(record);
