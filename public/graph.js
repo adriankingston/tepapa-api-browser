@@ -6,16 +6,8 @@
    "made of (4)"). A bundle is one node you tap to page its members in — so a
    place with 250k relationships never tries to render 250k nodes. */
 (() => {
-  // Material 3-aligned, harmonised type palette. Object is the brand primary
-  // (teal #008e96) so focus, selection, bundles and Object icons share one hue.
-  const TYPE_COLORS = {
-    Object: '#008e96', Person: '#ff7043', Organisation: '#ff7043',
-    Place: '#43a047', Taxon: '#8e5fd9', Specimen: '#c79100',
-    Category: '#5c7a99', Topic: '#d81b78', Publication: '#d81b78',
-    Document: '#d81b78', Story: '#d81b78',
-  };
-  const DEFAULT_COLOR = '#9aa3b2';
-  const colorFor = (t) => TYPE_COLORS[t] || DEFAULT_COLOR;
+  // Type colours + icons live in app.js (typeColor / typeIconUri), shared app-wide.
+  const colorFor = (t) => typeColor(t);
 
   // Long record titles (esp. Rare Books / publications) wrap into many lines and
   // overlap neighbouring nodes. Cap the on-graph label at a sensible length on a
@@ -33,32 +25,8 @@
   // (the same cxttap handler). Used to word the panel tip per device.
   const noHover = () => !!(window.matchMedia && window.matchMedia('(hover: none)').matches);
 
-  // Simple type icons (24×24 SVG paths), drawn in the type colour.
-  const ICONS = {
-    Person: "<circle cx='12' cy='8' r='3.8'/><path d='M5 20c0-4 3.2-6.5 7-6.5s7 2.5 7 6.5v.6H5z'/>",
-    Place: "<path d='M12 2.2a6.6 6.6 0 0 0-6.6 6.6c0 4.6 6.6 12.4 6.6 12.4s6.6-7.8 6.6-12.4A6.6 6.6 0 0 0 12 2.2z'/><circle cx='12' cy='8.8' r='2.4' fill='#fff'/>",
-    Object: "<path d='M12 2.5 20.5 7v10L12 21.5 3.5 17V7z'/>",
-    Taxon: "<circle cx='7.5' cy='11' r='1.9'/><circle cx='12' cy='8.5' r='2'/><circle cx='16.5' cy='11' r='1.9'/><path d='M12 12.5c-2.8 0-4.7 2-4.7 4 0 1.5 1.2 2.4 2.8 2.4h3.8c1.6 0 2.8-.9 2.8-2.4 0-2-1.9-4-4.7-4z'/>",
-    Specimen: "<path d='M10 2.5h4v1.6h-1v4.3l4.7 8.5A1.6 1.6 0 0 1 16.3 19.5H7.7a1.6 1.6 0 0 1-1.4-2.6L11 8.4V4.1h-1z'/>",
-    Category: "<path d='M3.2 11.8 11.8 3.2H21v9.2l-8.6 8.6z'/><circle cx='16.4' cy='7.6' r='1.5' fill='#fff'/>",
-    Document: "<path d='M6.5 2.5h7L18 7v14.5H6.5z'/><path d='M13.5 2.5V7H18z' fill='#fff'/>",
-    _default: "<circle cx='12' cy='12' r='6.5'/>",
-  };
-  const ICON_ALIAS = { Organisation: 'Person', Topic: 'Document', Publication: 'Document', Story: 'Document' };
-  const iconCache = {};
-  // `pad` units around the 24×24 icon. Graph nodes use generous padding so boxy
-  // icons stay inside the circular node; the (square) legend swatch uses almost
-  // none so the icon fills it.
-  function iconUri(type, pad) {
-    const ck = `${type}|${pad}`;
-    if (iconCache[ck]) return iconCache[ck];
-    const key = ICONS[type] ? type : (ICON_ALIAS[type] || '_default');
-    const size = 24 + 2 * pad;
-    const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${size}' height='${size}' viewBox='${-pad} ${-pad} ${size} ${size}' fill='${colorFor(type)}'>${ICONS[key]}</svg>`;
-    return (iconCache[ck] = 'data:image/svg+xml;utf8,' + encodeURIComponent(svg));
-  }
-  const iconFor = (type) => iconUri(type, 9);     // graph nodes (fits the circle)
-  const legendIcon = (type) => iconUri(type, 1);  // legend swatch (fills it)
+  const iconFor = (type) => typeIconUri(type, 9);     // graph nodes (fits the circle)
+  const legendIcon = (type) => typeIconUri(type, 1);  // legend swatch (fills it)
 
   // Readable labels for the relationship fields live in app.js (predicateLabel),
   // shared with the detail view's related-records explorer.

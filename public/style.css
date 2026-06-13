@@ -596,6 +596,15 @@ a { color: var(--md-primary); }
 .badge { font:var(--md-label-md); padding:2px 8px; border-radius:var(--md-shape-sm); background:var(--md-surface-container-highest); color:var(--md-on-surface-variant); border:none; }
 .badge.type { color:var(--md-primary); background:var(--md-surface-container-highest); border:none; }
 
+/* Inline record-type icon (type-coloured) used in badges, tabs, list Type cells
+   and explorer-card subtitles */
+.type-icon { display:inline-block; vertical-align:-4px; margin-right:5px; }
+.result-tabs .tab .type-icon { vertical-align:-4px; margin-right:6px; }
+/* Imageless cards: a large, muted type icon as the placeholder. Sized relative
+   to the box (overriding the generic `.thumb img` fill) so it scales with the
+   card — grid, home shelf and explorer cards alike. */
+.thumb .type-icon-ph { width:40%; height:40%; opacity:.4; }
+
 @media (prefers-reduced-motion: reduce) {
   .card, .card::before, .result-graph, .card .result-graph, .result-graph::before, .reveal-btn::before { transition:none; }
 }
@@ -1074,7 +1083,7 @@ a { color: var(--md-primary); }
   font: var(--md-label-lg); color: var(--md-on-surface);
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
-.hcard-sub { margin-top: 4px; font: var(--md-body-sm); color: var(--md-on-surface-variant); }
+.hcard-sub { margin-top: 4px; font: var(--md-body-sm); color: var(--md-on-surface-variant); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* ---- Related-records explorer (detail view): chips + one swappable carousel ---- */
 #rel-explorer { margin: 0 0 18px; }

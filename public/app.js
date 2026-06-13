@@ -102,6 +102,73 @@ function predicateLabel(p) {
     (p || '').replace(/([a-z])([A-Z])/g, '$1 $2').replace(/\./g, ' · ').toLowerCase();
 }
 
+// ---- Record-type palette + icons ---------------------------------------------
+// Shared by the graph view (nodes, legend) and anywhere else that shows record
+// types. Material 3-aligned; Object is the brand primary (teal #008e96) so
+// focus, selection, bundles and Object icons share one hue.
+const TYPE_COLORS = {
+  Object: '#008e96', Person: '#ff7043', Organisation: '#ff7043',
+  Place: '#43a047', Taxon: '#8e5fd9', Specimen: '#c79100',
+  Category: '#5c7a99', Topic: '#d81b78', Publication: '#d81b78',
+  Document: '#d81b78', Story: '#d81b78',
+};
+function typeColor(t) { return TYPE_COLORS[t] || '#9aa3b2'; }
+
+// 24×24 icon markup per type. Solid shapes inherit the root SVG's fill; stroked
+// (line-drawn) icons set fill='none' and stroke='__C__' — the placeholder is
+// replaced with the type colour when the SVG is built.
+const TYPE_ICONS = {
+  Person: "<circle cx='12' cy='8' r='3.8'/><path d='M5 20c0-4 3.2-6.5 7-6.5s7 2.5 7 6.5v.6H5z'/>",
+  Place: "<path d='M12 2.2a6.6 6.6 0 0 0-6.6 6.6c0 4.6 6.6 12.4 6.6 12.4s6.6-7.8 6.6-12.4A6.6 6.6 0 0 0 12 2.2z'/><circle cx='12' cy='8.8' r='2.4' fill='#fff'/>",
+  // Hexagon divided into six segments — spokes from the centre to every vertex.
+  Object: "<g fill='none' stroke='__C__' stroke-width='2' stroke-linejoin='round' stroke-linecap='round'>" +
+    "<path d='M12 2.5 20.5 7v10L12 21.5 3.5 17V7z'/>" +
+    "<path d='M12 2.5v9.5l8.5-5M12 12l8.5 5M12 12v9.5M12 12l-8.5 5M12 12 3.5 7'/></g>",
+  // Cascading classification tree (à la Linnaean ranks): a root node branching
+  // to children, one of which branches again. Lines are trimmed to circle edges.
+  Taxon: "<g fill='none' stroke='__C__' stroke-width='2' stroke-linejoin='round' stroke-linecap='round'>" +
+    "<path d='M10.9 5.6 7.6 10.4M13.1 5.6l3.3 4.8M5.8 13.8l-1.6 4.4M7.2 13.8l1.6 4.4'/>" +
+    "<circle cx='12' cy='4' r='1.9'/><circle cx='6.5' cy='12' r='1.9'/><circle cx='17.5' cy='12' r='1.9'/>" +
+    "<circle cx='3.5' cy='20' r='1.9'/><circle cx='9.5' cy='20' r='1.9'/></g>",
+  // Natural-history specimen: a foraging kiwi — high rounded back, small head,
+  // long decurved beak probing toward a leaf on the ground (the flora half of
+  // the collections). Legs are bent with flat feet, after the user's reference.
+  // The eye dot sits outside the stroked group so it inherits the root fill.
+  Specimen: "<g fill='none' stroke='__C__' stroke-width='2' stroke-linejoin='round' stroke-linecap='round'>" +
+    "<path d='M8.7 9.5 C9 7.9 10 7 11.3 6.9 C13.6 5.9 17.8 6.3 20.3 8.7 C22.3 10.7 22.4 13.8 20.8 15.9 C19.5 17.7 17.4 18.6 15.5 18.2 C13.2 17.7 11 15.8 9.8 13.4 C9.1 12.1 8.8 10.8 8.7 9.5Z'/>" +
+    "<path d='M8.9 9.8 Q5.9 11.3 4.1 16.2'/>" +
+    "<path d='M14.9 18.4 13.9 21.4h-2.4M16.9 18.2 16.3 21.7h-2.4'/>" +
+    "<path d='M2.5 20.8 C3 18.6 5.7 17.8 7.7 19.1 C7.1 21.3 4.3 22 2.5 20.8Z M3.5 20.4 Q5 19.8 6.6 19.5'/></g>" +
+    "<circle cx='10' cy='8.6' r='.65'/>",
+  Category: "<path d='M3.2 11.8 11.8 3.2H21v9.2l-8.6 8.6z'/><circle cx='16.4' cy='7.6' r='1.5' fill='#fff'/>",
+  Document: "<path d='M6.5 2.5h7L18 7v14.5H6.5z'/><path d='M13.5 2.5V7H18z' fill='#fff'/>",
+  _default: "<circle cx='12' cy='12' r='6.5'/>",
+};
+const TYPE_ICON_ALIAS = { Organisation: 'Person', Topic: 'Document', Publication: 'Document', Story: 'Document' };
+const typeIconCache = {};
+// Data-URI SVG for a type icon. `pad` units of space around the 24×24 icon —
+// circular hosts (graph nodes) need generous padding, square swatches almost none.
+function typeIconUri(type, pad) {
+  const ck = `${type}|${pad}`;
+  if (typeIconCache[ck]) return typeIconCache[ck];
+  const key = TYPE_ICONS[type] ? type : (TYPE_ICON_ALIAS[type] || '_default');
+  const size = 24 + 2 * pad;
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${size}' height='${size}' viewBox='${-pad} ${-pad} ${size} ${size}' fill='${typeColor(type)}'>` +
+    TYPE_ICONS[key].replace(/__C__/g, typeColor(type)) + `</svg>`;
+  return (typeIconCache[ck] = 'data:image/svg+xml;utf8,' + encodeURIComponent(svg));
+}
+
+// Small inline type icon (type-coloured) for badges, tabs and card subtitles.
+function typeIconHtml(type, size = 16) {
+  if (!type || type === 'all') return '';
+  return `<img class="type-icon" src="${typeIconUri(type, 1)}" width="${size}" height="${size}" alt="">`;
+}
+
+// Imageless cards show a large, muted type icon as the placeholder.
+function noImageThumbHtml(type, size = 64) {
+  return `<div class="thumb no-image"><img class="type-icon-ph" src="${typeIconUri(type || '_default', 2)}" width="${size}" height="${size}" alt="No image"></div>`;
+}
+
 // ---- Culturally sensitive imagery -------------------------------------------
 // The API has no sensitivity flag, so this is a best-effort, deliberately
 // cautious heuristic over the record's materials, classification and text.
@@ -367,7 +434,7 @@ function renderTabs() {
   el.tabs.innerHTML = tabs
     .map(([t, n]) =>
       `<button class="tab${t === state.type ? ' active' : ''}" role="tab" aria-selected="${t === state.type}" data-type="${t}">` +
-      `${esc(typeLabel(t))} <span class="tab-count">${n.toLocaleString()}</span></button>`
+      `${typeIconHtml(t, 18)}${esc(typeLabel(t))} <span class="tab-count">${n.toLocaleString()}</span></button>`
     )
     .join('');
   el.tabs.hidden = false;
@@ -654,7 +721,7 @@ function cardHtml(record) {
   const sensitive = img && isSensitive(record);
   const thumb = img
     ? `<div class="thumb${sensitive ? ' sensitive' : ''}" style="aspect-ratio:${thumbAspect(img)}"><img loading="lazy" src="${esc(img.thumbnailUrl)}" alt="${esc(title)}">${sensitive ? sensitiveOverlay() : ''}</div>`
-    : `<div class="thumb no-image"><span>No image</span></div>`;
+    : noImageThumbHtml(record.type, 64);
   const sub = summaryOf(record); // type-appropriate secondary line
   return `
     <article class="card" data-i="${i}" tabindex="0">
@@ -664,7 +731,7 @@ function cardHtml(record) {
         <div class="card-title">${esc(title)}</div>
         ${sub ? `<div class="card-sub">${esc(sub)}</div>` : ''}
         <div class="card-meta">
-          <span class="badge type">${esc(record.type || '')}</span>
+          <span class="badge type">${typeIconHtml(record.type)}${esc(record.type || '')}</span>
           ${record.identifier ? `<span class="badge">${esc(record.identifier)}</span>` : ''}
         </div>
       </div>
@@ -717,7 +784,9 @@ function listHtml(items) {
         .map((c) => {
           const raw = c[1](record);
           const val = raw == null || raw === '' ? '—' : esc(raw);
-          const inner = c[2].includes('col-sci') && raw ? `<em>${val}</em>` : val;
+          const inner = c[2].includes('col-sci') && raw ? `<em>${val}</em>`
+            : c[2].includes('col-type') && raw ? `${typeIconHtml(raw)}${val}`   // the All tab's Type column
+            : val;
           return `<td class="${c[2]}">${inner}</td>`;
         })
         .join('');
@@ -1283,12 +1352,12 @@ function relCardHtml(m) {
   const w = m.thumb ? Math.round(thumbAspect({ width: m.w, height: m.h }, 0.75, 3.0) * 120) : 120;
   const thumb = m.thumb
     ? `<div class="thumb${m.sensitive ? ' sensitive' : ''}"><img loading="lazy" src="${esc(m.thumb)}" alt="">${m.sensitive ? sensitiveOverlay() : ''}</div>`
-    : `<div class="thumb no-image"><span>No image</span></div>`;
+    : noImageThumbHtml(m.type, 40);
   return `<article class="hcard rcard" data-relhref="${esc(m.href || '')}" tabindex="0" style="width:${w}px">
       ${thumb}
       <div class="hcard-body">
         <div class="hcard-title">${esc(m.title)}</div>
-        <div class="hcard-sub">${esc(m.type || '')}</div>
+        <div class="hcard-sub">${typeIconHtml(m.type, 15)}${esc(m.type || '')}</div>
       </div>
     </article>`;
 }
@@ -1497,7 +1566,7 @@ function openDetail(record) {
   el.detail.innerHTML = `
     <h2>${esc(title)}</h2>
     <div class="sub">
-      <span class="badge type">${esc(record.type || '')}</span>
+      <span class="badge type">${typeIconHtml(record.type)}${esc(record.type || '')}</span>
       ${record.scientificName ? `<span class="badge"><em>${esc(record.scientificName)}</em></span>` : ''}
       ${record.identifier ? `<span class="badge">${esc(record.identifier)}</span>` : ''}
     </div>
@@ -1640,7 +1709,7 @@ function homeCardHtml(record, idx) {
   const w = img ? Math.round(thumbAspect(img, 0.75, 3.0) * 176) : 176;
   const thumb = img
     ? `<div class="thumb${sensitive ? ' sensitive' : ''}"><img loading="lazy" src="${esc(img.thumbnailUrl)}" alt="${esc(title)}">${sensitive ? sensitiveOverlay() : ''}</div>`
-    : `<div class="thumb no-image"><span>No image</span></div>`;
+    : noImageThumbHtml(record.type, 56);
   return `<article class="hcard" data-h="${idx}" tabindex="0" style="width:${w}px">
       ${thumb}
       <div class="hcard-body">
