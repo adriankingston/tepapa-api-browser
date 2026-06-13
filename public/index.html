@@ -10,6 +10,7 @@
   <!-- Self-hosted Roboto (graph view). Preload the primary latin file; the
        latin-ext subset (macrons) loads on demand. font-display:swap in CSS. -->
   <link rel="preload" href="/fonts/roboto-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/vendor/leaflet.min.css" />
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
@@ -58,6 +59,7 @@
       <div class="viewswitch" role="group" aria-label="Result view">
         <button id="view-grid" type="button" class="active" aria-pressed="true" title="Grid view">▦ Grid</button>
         <button id="view-list" type="button" aria-pressed="false" title="List view">☰ List</button>
+        <button id="view-map" type="button" aria-pressed="false" title="Map view (records with coordinates)">📍 Map</button>
       </div>
       <label class="img-toggle">
         <input type="checkbox" id="images-only" />
@@ -159,6 +161,7 @@
 
   <script src="/vendor/cytoscape.min.js"></script>
   <script src="/vendor/openseadragon.min.js"></script>
+  <script src="/vendor/leaflet.min.js"></script>
   <script src="/app.js"></script>
   <script src="/graph.js"></script>
 </body>

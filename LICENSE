@@ -52,6 +52,12 @@ OpenSeadragon  (public/vendor/openseadragon.min.js)
   contributors. Licensed under the New BSD License (3-clause).
   https://openseadragon.github.io/
 
+Leaflet  (public/vendor/leaflet.min.js, public/vendor/leaflet.min.css)
+  The map view uses Leaflet to plot record coordinates on OpenStreetMap tiles.
+  Copyright (c) 2010-2024 Volodymyr Agafonkin, (c) 2010-2011 CloudMade.
+  Licensed under the BSD 2-Clause License.
+  https://leafletjs.com/
+
 
 ================================================================================
 DATA AND CONTENT RETRIEVED AT RUNTIME

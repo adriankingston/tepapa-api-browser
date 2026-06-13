@@ -43,6 +43,7 @@ const el = {
   sortSelect: document.getElementById('sort-select'),
   viewGrid: document.getElementById('view-grid'),
   viewList: document.getElementById('view-list'),
+  viewMap: document.getElementById('view-map'),
   pager: document.getElementById('pager'),
   prev: document.getElementById('prev'),
   next: document.getElementById('next'),
@@ -501,6 +502,7 @@ function renderTabs() {
   el.tabs.querySelectorAll('.tab').forEach((b) => {
     b.addEventListener('click', () => selectTab(b.dataset.type));
   });
+  applyMapMode();   // re-disable non-mappable tabs if the tab strip rebuilt in map view
 }
 
 function selectTab(type) {
@@ -647,6 +649,8 @@ async function runSearch(reset = true) {
 // ---- Render results ---------------------------------------------------------
 
 function renderResults() {
+  // Tear down a Leaflet map left over from a previous map-view render.
+  if (lmap && state.view !== 'map') { lmap.remove(); lmap = null; }
   const imagesOnly = el.imagesOnly.checked;
   let items = state.results;
   if (imagesOnly) items = items.filter((r) => imagesOf(r).length > 0);
@@ -663,6 +667,16 @@ function renderResults() {
     `<strong>${state.total.toLocaleString()}</strong> result${state.total === 1 ? '' : 's'} for ` +
     `“${esc(state.query)}”` +
     (state.type !== 'all' ? ` · ${esc(typeLabel(state.type))}` : '');
+
+  if (state.view === 'map') {
+    // The map does its own size:100 fetch and ignores the per-page / images-only
+    // filtering, so it branches before the items logic below.
+    el.results.className = 'map-view';
+    el.results.innerHTML = '<div id="map"></div><div class="map-status" id="map-status">Loading map…</div>';
+    el.pager.hidden = true;
+    loadMapResults();
+    return;
+  }
 
   if (items.length === 0) {
     el.results.className = 'grid';
@@ -689,6 +703,161 @@ function renderResults() {
   el.prev.disabled = state.from === 0;
   el.next.disabled = end >= state.total;
   el.pager.hidden = false;
+}
+
+// ---- Map view ----------------------------------------------------------------
+// Plot up to ~1000 of the current query's results on a Leaflet/OSM map. Two coord
+// sources are inline (plot instantly): a Place's geoLocation, and a specimen's
+// collection-event centroid (evidenceFor.atEvent.atLocation.mappingCentroid).
+// Objects carry no coords but reference a place — "made in", or a depicted/
+// referenced place — which is dereferenced one /api/record at a time (the slow
+// part), cached + concurrency-limited, and plotted progressively. Results are
+// paged sequentially (the API caps scored `size` ~250 and flakes on deep paging).
+let lmap = null;
+let mapSeq = 0;                       // bumped per render; stale runs (overlapping fetches) go inert
+const placeCoordCache = new Map();   // place href → Promise<{lat,lon}|null>
+
+// Coordinates carried *inline* on a record: a Place's own geoLocation, or a
+// specimen's collection-event location centroid. Returns {lat,lon} or null.
+function inlineCoords(r) {
+  const g = r.geoLocation;
+  const ev = r.evidenceFor && r.evidenceFor.atEvent;
+  const mc = ev && ev.atLocation && ev.atLocation.mappingCentroid;
+  for (const c of [g, mc]) {
+    const lat = c && +c.lat, lon = c && +c.lon;
+    if (c && isFinite(lat) && isFinite(lon)) return { lat, lon };
+  }
+  return null;
+}
+
+// The place a record can be located by, preferring where it was made.
+function recordPlaceRef(r) {
+  for (const ev of asArray(r.production)) {
+    for (const s of asArray(ev && ev.spatial)) {
+      if (s && s.type === 'Place' && s.href) return { href: s.href, title: s.title, via: 'made in' };
+    }
+  }
+  const first = (arr, via) => {
+    const s = asArray(arr).find((x) => x && x.type === 'Place' && x.href);
+    return s ? { href: s.href, title: s.title, via } : null;
+  };
+  return first(r.depicts, 'depicts') || first(r.refersTo, 'refers to') || null;
+}
+
+// Dereference a place href to its coordinates (cached — the slow per-place GET).
+function placeCoords(href) {
+  if (!href) return Promise.resolve(null);
+  if (!placeCoordCache.has(href)) {
+    placeCoordCache.set(href, fetch('/api/record?href=' + encodeURIComponent(href))
+      .then((r) => (r.ok ? r.json() : null))
+      .then((rec) => {
+        const g = rec && rec.geoLocation, lat = g && +g.lat, lon = g && +g.lon;
+        return g && isFinite(lat) && isFinite(lon) ? { lat, lon } : null;
+      })
+      .catch(() => null));
+  }
+  return placeCoordCache.get(href);
+}
+
+// Run async `fn` over `items` with at most `limit` in flight.
+async function asyncPool(limit, items, fn) {
+  let i = 0;
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, async () => {
+    while (i < items.length) await fn(items[i++]);
+  }));
+}
+
+function mapPopupHtml(r, place) {
+  const title = r.title || r.prefLabel || '(untitled)';
+  const ptype = r.placeType ? ' · ' + esc(String(r.placeType).split('/').pop()) : '';
+  const via = place ? `<div class="map-pop-via">📍 ${esc(place.via)} ${esc(place.title || 'a place')}</div>` : '';
+  return `<div class="map-pop"><strong>${esc(title)}</strong>` +
+    `<div class="map-pop-meta">${typeIconHtml(r.type, 14)}${esc(r.type || '')}${ptype}</div>${via}` +
+    `<button type="button" class="map-pop-btn">View details →</button></div>`;
+}
+
+const MAP_MAX = 1000, MAP_PAGE = 200;   // the API silently caps scored `size` ~250 and is flaky on deep parallel paging, so page sequentially
+
+async function loadMapResults() {
+  const mapEl = document.getElementById('map');
+  if (!mapEl || typeof L === 'undefined') return;
+  const token = ++mapSeq;   // a later render (tab switch, late search settle) supersedes this run
+  if (lmap) { lmap.remove(); lmap = null; }
+  // canvas renderer keeps ~1000 markers smooth (SVG bogs down past a few hundred)
+  lmap = L.map(mapEl, { worldCopyJump: true, preferCanvas: true }).setView([-41, 173], 4);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 18, attribution: '&copy; OpenStreetMap contributors',
+  }).addTo(lmap);
+  requestAnimationFrame(() => lmap && lmap.invalidateSize());
+
+  const status = document.getElementById('map-status');
+  const live = () => token === mapSeq && state.view === 'map' && mapEl.isConnected && lmap;
+  const pts = [], mapped = new Set();
+  const addMarker = (r, lat, lon, place) => {
+    if (!live()) return;
+    L.circleMarker([lat, lon], { radius: 7, weight: 2, color: '#fff', fillColor: typeColor(r.type), fillOpacity: 0.9 })
+      .addTo(lmap)
+      .bindPopup(mapPopupHtml(r, place))
+      .on('popupopen', (e) => { const b = e.popup.getElement().querySelector('.map-pop-btn'); if (b) b.onclick = () => openDetail(r); });
+    pts.push([lat, lon]);
+    mapped.add(r);
+  };
+  const fit = () => { if (live() && pts.length) lmap.fitBounds(pts, { padding: [30, 30], maxZoom: 9 }); };
+
+  // 1. page through up to MAP_MAX results. Inline-coord records (Places, specimens)
+  //    plot as each page lands; objects are queued for the place lookup below.
+  const seen = new Set(), deferred = [];
+  let fitted = false;
+  for (let from = 0; from < MAP_MAX; from += MAP_PAGE) {
+    if (!live()) return;
+    let page = [];
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const body = { query: effectiveQuery(), from, size: MAP_PAGE };
+        if (state.type !== 'all') body.filters = [{ field: 'type', keyword: state.type }];
+        page = (await fetch('/api/search', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then((r) => r.json())).results || [];
+      } catch { page = []; }
+      if (page.length || attempt === 1) break;   // retry an empty page once (the API flakes)
+    }
+    if (!live()) return;
+    if (!page.length) break;
+    for (const r of page) {
+      const key = `${r.type}:${r.id}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const c = inlineCoords(r);
+      if (c) {
+        const loc = !r.geoLocation && r.evidenceFor && r.evidenceFor.atEvent && r.evidenceFor.atEvent.atLocation;
+        addMarker(r, c.lat, c.lon, loc && (loc.title || loc.locality) ? { via: 'collected at', title: loc.title || loc.locality } : null);
+      } else {
+        const pl = recordPlaceRef(r);
+        if (pl) deferred.push({ r, pl });
+      }
+    }
+    if (!fitted && pts.length) { fit(); fitted = true; }
+    if (status) status.textContent = `Loading… ${seen.size} of ${MAP_MAX}`;
+    if (page.length < MAP_PAGE) break;   // reached the end of the result set
+  }
+  if (!live()) return;
+  fit();
+
+  let remaining = deferred.length;
+  const setStatus = (resolving) => {
+    if (!status) return;
+    const base = `Mapped ${mapped.size} of ${seen.size}`;
+    status.textContent = resolving > 0 ? `${base} · resolving ${resolving} place${resolving === 1 ? '' : 's'}…`
+      : mapped.size ? base : `No coordinates found for these ${seen.size} results.`;
+  };
+  setStatus(remaining);
+
+  // 2. dereference each object's place to coordinates (slow), plotting as they land
+  await asyncPool(6, deferred, async ({ r, pl }) => {
+    const c = await placeCoords(pl.href);
+    remaining--;
+    if (c && live()) { addMarker(r, c.lat, c.lon, pl); if (!fitted) { fit(); fitted = true; } }
+    setStatus(remaining);
+  });
+  if (live()) { fit(); setStatus(0); }
 }
 
 // The image grid is masonry: each card keeps its image's aspect ratio, so card
@@ -2035,18 +2204,44 @@ el.sortSelect.addEventListener('change', () => {
   if (state.query.trim()) runSearch(true);
 });
 
+// Record types the map can place. Other tabs (Taxa, People, Organisations,
+// Topics, Publications, Categories) and the Images-only toggle don't apply to the
+// map, so they're disabled while in map view.
+const MAP_TYPES = new Set(['all', 'Object', 'Specimen', 'Place']);
+
+function applyMapMode() {
+  const inMap = state.view === 'map';
+  el.tabs.querySelectorAll('.tab').forEach((b) => {
+    const off = inMap && !MAP_TYPES.has(b.dataset.type);
+    b.disabled = off;
+    b.classList.toggle('tab-disabled', off);
+    if (off) b.title = 'No coordinates — not shown on the map';
+    else b.removeAttribute('title');
+  });
+  el.imagesOnly.disabled = inMap;
+  el.imagesOnly.closest('.img-toggle')?.classList.toggle('disabled', inMap);
+}
+
 function setView(view) {
   state.view = view;
   localStorage.setItem('tepapa.view', view);
-  const isList = view === 'list';
-  el.viewList.classList.toggle('active', isList);
-  el.viewGrid.classList.toggle('active', !isList);
-  el.viewList.setAttribute('aria-pressed', String(isList));
-  el.viewGrid.setAttribute('aria-pressed', String(!isList));
+  for (const [v, btn] of [['grid', el.viewGrid], ['list', el.viewList], ['map', el.viewMap]]) {
+    const on = v === view;
+    btn.classList.toggle('active', on);
+    btn.setAttribute('aria-pressed', String(on));
+  }
+  applyMapMode();
+  // Entering the map on a non-mappable tab → move to a mappable one (this reloads
+  // the map for that type via selectTab → runSearch → renderResults).
+  if (view === 'map' && state.results.length && !MAP_TYPES.has(state.type)) {
+    selectTab(['Object', 'Specimen', 'Place'].find((t) => state.counts[t] > 0) || 'all');
+    return;
+  }
   if (state.results.length) renderResults();
 }
 el.viewGrid.addEventListener('click', () => setView('grid'));
 el.viewList.addEventListener('click', () => setView('list'));
+el.viewMap.addEventListener('click', () => setView('map'));
 setView(state.view); // reflect persisted choice in the toggle on load
 
 el.prev.addEventListener('click', () => {
