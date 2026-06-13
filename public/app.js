@@ -2443,7 +2443,10 @@ async function applyHash() {
         } catch {}
       }
       if (rec && seq === _applySeq) openDetail(rec, true);
+      return;
     }
+    // Overlay already open — update background results (e.g. view toggle) without closing.
+    if (!queryChanged && !pageChanged) renderResults();
     return;
   }
 
