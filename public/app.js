@@ -905,7 +905,7 @@ function agentDepictImage(record) {
     }).then((objs) => {
       const obj = objs[0];
       const rep = obj && imagesOf(obj)[0];   // full ImageObject (thumb/preview/full/iiif/rights)
-      return rep ? { rep, sensitive: isSensitive(obj) } : null;
+      return rep ? { rep, sensitive: isSensitive(obj), obj } : null;
     }).catch(() => null);
   }
   return record._depictImg;
@@ -1837,6 +1837,11 @@ function openDetail(record) {
       slot.innerHTML = renderGallery([d.rep], d.sensitive, title);
       wireReveal(slot);
       wireDetailGallery([d.rep], d.sensitive, title);
+      // Caption from the source object's caption field.
+      const caption = d.obj && (d.obj.caption || d.obj.captionFormatted);
+      if (caption) {
+        slot.insertAdjacentHTML('beforeend', `<p class="g-count g-depicts-caption">${caption}</p>`);
+      }
     });
   }
   if (WIKI_TYPES.has(record.type)) loadWikipedia(record);
