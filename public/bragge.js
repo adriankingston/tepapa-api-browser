@@ -184,6 +184,45 @@
     return null;
   }
 
+  // --- Portrait filter ---------------------------------------------------------
+  // This is a GEOGRAPHICAL journey, so studio portraits (the cartes-de-visite /
+  // cabinet cards of people) are dropped entirely. A record is a portrait when
+  // its SUBJECT is people, not a place: it is typed "studio portraits"/"portraits",
+  // or it depicts people-categories and no place/scene category. Exception: if the
+  // title names a route place (e.g. "Group at the Masterton pā"), it's a
+  // place-anchored documentary photo and stays. Format tags (carte-de-visite,
+  // cabinet, "group portraits") are NOT used — they also wrap building/town views
+  // ("View of Wellington", "Coker's Hotel") that belong on the map.
+  const PEOPLE_DEPICT = /^(people|men|women|man|woman|children|child|girl|boy|girls|boys|indigenous peoples|couples|brides|grooms|family|families|portraits|infants|babies)$/;
+  const SCENE_DEPICT = /road|street|river|bridge|building|cities|city|town|hotel|canyon|gorge|hill|valley|church|cathedral|school|store|shop|farm|wharf|quay|railway|station|museum|garden|fence|coast|\bbay\b|plain|bush|\btree|landscape|house|\bpa\b|village|settlement|monument|\bship|harbou?r|mountain|lake|waterfall|cliff|rock|beach|dwelling|wagon|carriage|\bcart|field|scener|\bview|terrace|reserve|park|jetty|crop|fern|hut|carving|architecture|community center/;
+  const vocab = (rec, field) => (Array.isArray(rec[field]) ? rec[field] : rec[field] ? [rec[field]] : [])
+    .map((x) => String((x && (x.title || x.prefLabel)) || '').toLowerCase());
+  function isPortrait(rec) {
+    if (matchGaz(cleanTitle(rec.title))) return false;        // titled with a route place → keep
+    const types = vocab(rec, 'isTypeOf');
+    if (types.includes('studio portraits') || types.includes('portraits')) return true;
+    const dep = vocab(rec, 'depicts');
+    return dep.some((t) => PEOPLE_DEPICT.test(t)) && !dep.some((t) => SCENE_DEPICT.test(t));
+  }
+
+  // --- Prints from one negative ("essentially the same image") -----------------
+  // There's no print↔negative link in the data, so same-image records are found
+  // by title: identical scene titles that differ only in album suffix, [bracketed]
+  // alternate spellings, "NZ", or punctuation collapse to one key. A key only
+  // counts as a real duplicate group when it's specific enough (≥3 words, and not
+  // a generic "… scene" label) — otherwise vague titles like "Bush scene" (11
+  // distinct negatives) or "Wellington" would wrongly merge unrelated photos.
+  const isNegative = (rec) => vocab(rec, 'isTypeOf').some((t) => /negative/.test(t));
+  function imageKey(title) {
+    return String(title || '').toLowerCase()
+      .split(/from the album|from the series/)[0]
+      .normalize('NFD').replace(/[̀-ͯ]/g, '')
+      .replace(/\[sic\]/g, ' ').replace(/\[[^\]]*\]/g, ' ')      // drop "[Rimutaka]" alt spellings
+      .replace(/\b(n\.?z\.?|new zealand)\b/g, ' ')
+      .replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+  const groupable = (key) => !!key && key.split(' ').length >= 3 && !/\bscene\b/.test(key);
+
   // --- Images (rights-aware, mirrors the main app) -----------------------------
 
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
@@ -214,13 +253,14 @@
   // --- State -------------------------------------------------------------------
 
   const state = {
-    photos: [],          // { rec, img, stop, source }
+    photos: [],          // one CLUSTER per image: { rec, img, stop, source, count, versions:[{rec,img,negative,reg}] }
     byStop: new Map(),   // stopKey -> { stop, photos:[] }
+    totalPrints: 0,      // total records folded into the clusters (prints + negatives)
     routeOnly: true,     // hide Elsewhere + studio-attributed by default
     map: null,
     markers: new Map(),  // stopKey -> L.circleMarker
     selected: null,
-    lb: { photos: [], i: 0 },
+    lb: { photos: [], i: 0, v: 0 },
   };
 
   const $ = (sel) => document.querySelector(sel);
@@ -256,15 +296,37 @@
   }
 
   function index(records) {
+    // 1. Every placed, non-portrait, imaged record.
+    const placed = [];
     for (const rec of records) {
       const imgs = imagesOf(rec);
       if (!imgs.length) continue;                  // nothing to show on a visual map
+      if (isPortrait(rec)) continue;               // studio portraits aren't part of the journey
       const g = geocode(rec);
       if (!g) continue;                            // couldn't place it
-      const p = { rec, img: imgs[0], stop: g.stop, source: g.source };
-      state.photos.push(p);
-      if (!state.byStop.has(g.stop.key)) state.byStop.set(g.stop.key, { stop: g.stop, photos: [] });
-      state.byStop.get(g.stop.key).photos.push(p);
+      placed.push({ rec, img: imgs[0], stop: g.stop, source: g.source });
+    }
+    // 2. Collapse prints-from-the-same-negative into one entry per image.
+    const byKey = new Map();
+    for (const p of placed) {
+      const key = imageKey(p.rec.title);
+      const k = groupable(key) ? 'g:' + key : 'u:' + p.rec.type + ':' + p.rec.id;  // ungroupable → its own
+      if (!byKey.has(k)) byKey.set(k, []);
+      byKey.get(k).push(p);
+    }
+    // 3. One cluster per image, represented by the negative ("behind the negative").
+    for (const members of byKey.values()) {
+      members.sort((a, b) => (isNegative(b.rec) - isNegative(a.rec)));   // negative(s) first
+      const rep = members[0];
+      state.totalPrints += members.length;
+      const cluster = {
+        rec: rep.rec, img: rep.img, stop: rep.stop, source: rep.source,
+        count: members.length,
+        versions: members.map((m) => ({ rec: m.rec, img: m.img, negative: isNegative(m.rec), reg: m.rec.identifier || '' })),
+      };
+      state.photos.push(cluster);
+      if (!state.byStop.has(rep.stop.key)) state.byStop.set(rep.stop.key, { stop: rep.stop, photos: [] });
+      state.byStop.get(rep.stop.key).photos.push(cluster);
     }
   }
 
@@ -342,8 +404,10 @@
         for (const p of s.photos) {
           const gi = state.photos.indexOf(p);
           const w = Math.round(thumbAspect(p.img) * RAIL_THUMB_H);
-          html += `<button class="th" type="button" data-photo="${gi}" style="width:${w}px" title="${esc(shortTitle(p.rec.title))}">
-            <img loading="lazy" src="${esc(p.img.thumbnailUrl)}" alt="${esc(shortTitle(p.rec.title))}">
+          const badge = p.count > 1
+            ? `<span class="th-badge" title="${p.count} copies — prints &amp; negative">×${p.count}</span>` : '';
+          html += `<button class="th${p.count > 1 ? ' th-stack' : ''}" type="button" data-photo="${gi}" style="width:${w}px" title="${esc(shortTitle(p.rec.title))}${p.count > 1 ? ` (${p.count} copies)` : ''}">
+            <img loading="lazy" src="${esc(p.img.thumbnailUrl)}" alt="${esc(shortTitle(p.rec.title))}">${badge}
           </button>`;
         }
         html += `</div></div>`;
@@ -385,27 +449,34 @@
   function openLightbox(globalIdx) {
     const p = state.photos[globalIdx];
     if (!p) return;
-    // Page within the photo's own stop, in rail order.
+    // Prev/next page through the distinct images at this stop, in rail order.
     const group = state.byStop.get(p.stop.key).photos.filter((x) => visiblePhotos().includes(x));
     state.lb.photos = group;
     state.lb.i = Math.max(0, group.indexOf(p));
+    state.lb.v = 0;                 // start on the representative (the negative)
     $('#lightbox').hidden = false;
     document.body.style.overflow = 'hidden';
     renderLightbox();
   }
   function renderLightbox() {
-    const p = state.lb.photos[state.lb.i];
-    if (!p) return;
-    const zoom = isZoomable(p.img);
-    const big = zoom ? (p.img.previewUrl || p.img.thumbnailUrl) : p.img.thumbnailUrl;
-    const full = zoom && p.img.contentUrl;
-    const rec = p.rec;
-    const rights = p.img.rights && p.img.rights.title ? esc(p.img.rights.title) : '';
+    const cl = state.lb.photos[state.lb.i];
+    if (!cl) return;
+    const ver = cl.versions[state.lb.v] || cl.versions[0];   // which physical copy we're viewing
+    const img = ver.img, rec = ver.rec;
+    const zoom = isZoomable(img);
+    const big = zoom ? (img.previewUrl || img.thumbnailUrl) : img.thumbnailUrl;
+    const full = zoom && img.contentUrl;
+    const rights = img.rights && img.rights.title ? esc(img.rights.title) : '';
     $('#lb-img').src = big;
-    $('#lb-img').alt = esc(shortTitle(rec.title));
-    $('#lb-title').textContent = shortTitle(rec.title);
-    $('#lb-place').textContent = p.stop.label;
+    $('#lb-img').alt = esc(shortTitle(cl.rec.title));
+    $('#lb-title').textContent = shortTitle(cl.rec.title);
+    $('#lb-place').textContent = cl.stop.label;
     $('#lb-counter').textContent = `${state.lb.i + 1} / ${state.lb.photos.length}`;
+    // Version switcher — one chip per physical copy (negative + prints).
+    $('#lb-versions').innerHTML = cl.count > 1
+      ? `<span class="lb-vlabel">Held as ${cl.count} copies:</span>` + cl.versions.map((vv, j) =>
+          `<button class="lb-ver${j === state.lb.v ? ' on' : ''}" data-v="${j}">${vv.negative ? 'negative' : 'print'}${vv.reg ? ' ' + esc(vv.reg) : ''}</button>`).join('')
+      : '';
     $('#lb-meta').innerHTML =
       (rights ? `<span class="lb-rights">${rights}</span>` : '') +
       `<a href="index.html#detail=${esc(rec.type)}:${esc(rec.id)}" target="_blank" rel="noopener">Open in browser ↗</a>` +
@@ -417,6 +488,7 @@
   function lbStep(d) {
     if (!state.lb.photos.length) return;
     state.lb.i = (state.lb.i + d + state.lb.photos.length) % state.lb.photos.length;
+    state.lb.v = 0;                 // reset to the representative when changing image
     renderLightbox();
   }
   function closeLightbox() {
@@ -427,11 +499,16 @@
   // --- Boot --------------------------------------------------------------------
 
   function updateStats() {
-    const located = state.photos.filter(onRoute).length;
-    const stops = new Set(state.photos.filter(onRoute).map((p) => p.stop.key)).size;
-    $('#stat-located').textContent = located;
+    const onR = state.photos.filter(onRoute);
+    const stops = new Set(onR.map((p) => p.stop.key)).size;
+    $('#stat-located').textContent = onR.length;
     $('#stat-stops').textContent = stops;
     $('#stat-total').textContent = state.photos.length;
+    const grouped = state.totalPrints - state.photos.length;   // duplicate prints folded away
+    const note = $('#dup-note');
+    if (note) note.textContent = grouped > 0
+      ? `${state.totalPrints} prints & negatives, with ${grouped} duplicate prints grouped behind their negatives → ${state.photos.length} distinct images.`
+      : '';
   }
 
   function renderLegend() {
@@ -470,6 +547,13 @@
     $('#lb-close').addEventListener('click', closeLightbox);
     $('#lb-prev').addEventListener('click', () => lbStep(-1));
     $('#lb-next').addEventListener('click', () => lbStep(1));
+    // Version chips: switch which physical copy (negative / print) is shown.
+    $('#lb-versions').addEventListener('click', (e) => {
+      const b = e.target.closest('[data-v]');
+      if (!b) return;
+      state.lb.v = Number(b.dataset.v);
+      renderLightbox();
+    });
     $('#lightbox').addEventListener('click', (e) => { if (e.target.id === 'lightbox') closeLightbox(); });
     document.addEventListener('keydown', (e) => {
       if ($('#lightbox').hidden) return;

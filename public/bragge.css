@@ -76,6 +76,7 @@
 .bragge-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 10px; }
 .bragge-legend .lg { display: inline-flex; align-items: center; gap: 6px; font: var(--md-label-md, 500 12px/16px sans-serif); color: var(--md-on-surface-variant, #3f484a); }
 .lg-dot, .leg-dot { width: 11px; height: 11px; border-radius: 50%; flex: none; }
+.dup-note { margin: 12px 0 0; padding-top: 10px; border-top: 1px solid var(--md-outline-variant, #bfc8ca); font: var(--md-body-sm, 400 12px/16px sans-serif); color: var(--muted, #5b6472); }
 
 .bragge-status { max-width: var(--content-max, 1280px); margin: 18px auto; padding: 0 20px; color: var(--muted, #5b6472); }
 
@@ -146,9 +147,18 @@
   overflow: hidden; cursor: pointer; background: var(--md-surface-container, #eef0f2);
   transition: transform 120ms, box-shadow 120ms, border-color 120ms;
 }
+.th { position: relative; }
 /* Never crop: the button width is set per-image to its real aspect ratio, so
    `contain` fills it exactly — the whole photo shows, no letterbox bands. */
 .th img { width: 100%; height: 100%; object-fit: contain; display: block; }
+/* Clustered images (prints from one negative) get a "stack" edge + a count badge. */
+.th-stack { box-shadow: 2px 2px 0 -1px var(--md-surface, #fbfcfd), 3px 3px 0 -1px var(--md-outline-variant, #bfc8ca); }
+.th-badge {
+  position: absolute; right: 3px; bottom: 3px;
+  font: 600 10px/1 var(--md-font, sans-serif); color: #fff;
+  background: rgba(20, 23, 28, 0.82); border-radius: 999px; padding: 3px 5px;
+  pointer-events: none;
+}
 .th:hover { transform: translateY(-2px); box-shadow: var(--shadow, 0 8px 24px rgba(20,30,50,0.12)); border-color: var(--md-primary, #00696f); }
 
 /* --- Lightbox ---------------------------------------------------------------- */
@@ -166,6 +176,15 @@
 .lb-cap { color: #e8eaec; text-align: center; margin-top: 14px; max-width: 70ch; }
 .lb-cap strong { display: block; font: 500 17px/1.3 var(--md-font, sans-serif); }
 .lb-place { display: inline-block; margin-top: 4px; font: var(--md-label-md, 500 12px/16px sans-serif); text-transform: uppercase; letter-spacing: 0.05em; color: #9fd6db; }
+.lb-versions { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; align-items: center; margin-top: 10px; }
+.lb-vlabel { font: var(--md-body-sm, 400 12px/16px sans-serif); color: #9aa3b2; }
+.lb-ver {
+  font: var(--md-label-md, 500 12px/16px sans-serif); color: #e8eaec;
+  background: rgba(255,255,255,0.12); border: 1px solid transparent; border-radius: 999px;
+  padding: 4px 11px; cursor: pointer;
+}
+.lb-ver:hover { background: rgba(255,255,255,0.22); }
+.lb-ver.on { background: #bdeef1; color: #00363a; }
 .lb-meta { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-top: 10px; font: var(--md-body-sm, 400 12px/16px sans-serif); }
 .lb-meta a { color: #bdeef1; text-decoration: none; }
 .lb-meta a:hover { text-decoration: underline; }
