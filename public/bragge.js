@@ -560,9 +560,16 @@
           const w = Math.round(thumbAspect(p.img) * RAIL_THUMB_H);
           const badge = p.count > 1
             ? `<span class="th-badge" title="${p.count} copies — prints &amp; negative">×${p.count}</span>` : '';
-          html += `<button class="th${p.count > 1 ? ' th-stack' : ''}" type="button" data-photo="${gi}" style="width:${w}px" title="${esc(shortTitle(p.rec.title))}${p.count > 1 ? ` (${p.count} copies)` : ''}">
-            <img loading="lazy" src="${esc(p.img.thumbnailUrl)}" alt="${esc(shortTitle(p.rec.title))}">${badge}
-          </button>`;
+          const regs = (p.versions || []).map((v) => v.reg).filter(Boolean);
+          const repReg = p.rec.identifier || (regs[0] || '');
+          const regLabel = esc(repReg) + (p.count > 1 ? ` <span class="th-more">+${p.count - 1}</span>` : '');
+          const tip = esc(shortTitle(p.rec.title)) + (regs.length ? ` — ${esc(regs.join(', '))}` : '');
+          html += `<figure class="th-fig" style="width:${w}px">
+            <button class="th${p.count > 1 ? ' th-stack' : ''}" type="button" data-photo="${gi}" title="${tip}">
+              <img loading="lazy" src="${esc(p.img.thumbnailUrl)}" alt="${esc(shortTitle(p.rec.title))}">${badge}
+            </button>
+            <figcaption class="th-reg">${regLabel}</figcaption>
+          </figure>`;
         }
         html += `</div></div>`;
       }
@@ -624,7 +631,7 @@
     $('#lb-img').src = big;
     $('#lb-img').alt = esc(shortTitle(cl.rec.title));
     $('#lb-title').textContent = shortTitle(cl.rec.title);
-    $('#lb-place').textContent = cl.stop.label;
+    $('#lb-place').textContent = cl.stop.label + (ver.reg ? ' · ' + ver.reg : '');
     $('#lb-counter').textContent = `${state.lb.i + 1} / ${state.lb.photos.length}`;
     // Version switcher — one chip per physical copy (negative + prints).
     $('#lb-versions').innerHTML = cl.count > 1
