@@ -911,6 +911,15 @@
 
   function closeSuggest() { $('#suggest').hidden = true; }
 
+  // Dismiss an overlay on a backdrop click — but ONLY when the press started on
+  // the backdrop. Otherwise selecting/dragging text inside an input and releasing
+  // outside the card fires a click that resolves to the backdrop and closes it.
+  function dismissOnBackdrop(overlay, close) {
+    let downOnBackdrop = false;
+    overlay.addEventListener('pointerdown', (e) => { downOnBackdrop = e.target === overlay; });
+    overlay.addEventListener('click', (e) => { if (downOnBackdrop && e.target === overlay) close(); });
+  }
+
   // --- Boot --------------------------------------------------------------------
 
   function updateStats() {
@@ -1018,7 +1027,7 @@
       state.lb.v = Number(b.dataset.v);
       renderLightbox();
     });
-    $('#lightbox').addEventListener('click', (e) => { if (e.target.id === 'lightbox') closeLightbox(); });
+    dismissOnBackdrop($('#lightbox'), closeLightbox);
 
     // Suggest-a-location picker
     $('#lb-suggest').addEventListener('click', () => openSuggest(state.lb.photos[state.lb.i]));
@@ -1027,7 +1036,7 @@
     $('#sg-submit').addEventListener('click', submitSuggestion);
     $('#sg-lat').addEventListener('change', syncFromInputs);
     $('#sg-lng').addEventListener('change', syncFromInputs);
-    $('#suggest').addEventListener('click', (e) => { if (e.target.id === 'suggest') closeSuggest(); });
+    dismissOnBackdrop($('#suggest'), closeSuggest);
 
     document.addEventListener('keydown', (e) => {
       if (!$('#suggest').hidden) { if (e.key === 'Escape') closeSuggest(); return; }
