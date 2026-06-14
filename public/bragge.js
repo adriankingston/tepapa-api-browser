@@ -256,6 +256,7 @@
     photos: [],          // one CLUSTER per image: { rec, img, stop, source, count, versions:[{rec,img,negative,reg}] }
     byStop: new Map(),   // stopKey -> { stop, photos:[] }
     totalPlaced: 0,      // total placed records (prints + negatives) before grouping
+    imageDupes: [],      // print-dupe groups from bragge-dupes.json (reg-number arrays)
     routeOnly: true,     // hide Elsewhere + studio-attributed by default
     map: null,
     markers: new Map(),  // stopKey -> L.circleMarker
@@ -336,40 +337,54 @@
       placed.push({ rec, img: imgs[0], stop: g.stop, source: g.source });
     }
     state.totalPlaced = placed.length;
-    const used = new Set();
+
+    // Merge same-image records from three vetted sources, unioned so overlaps
+    // (e.g. an image-dupe pair inside a forced group) collapse into one cluster:
+    //   a) FORCED_GROUPS — curated corrections (representative listed first).
+    //   b) state.imageDupes — print dupes found by title + perceptual-hash
+    //      agreement and visually verified (bragge-dupes.json).
+    //   c) the single-negative title rule — a specific shared title holding
+    //      exactly ONE negative + its prints (one unambiguous exposure). Titles
+    //      with 0 or ≥2 negatives are left apart (different exposures can share a
+    //      caption — that's what produced earlier wrong merges).
     const byReg = new Map();
-    for (const p of placed) if (p.rec.identifier) byReg.set(String(p.rec.identifier), p);
+    placed.forEach((p) => { if (p.rec.identifier) byReg.set(String(p.rec.identifier), p); });
+    const slot = new Map();
+    placed.forEach((p, i) => slot.set(p, i));
+    const parent = placed.map((_, i) => i);
+    const find = (x) => { while (parent[x] !== x) { parent[x] = parent[parent[x]]; x = parent[x]; } return x; };
+    const union = (a, b) => { const ra = find(a), rb = find(b); if (ra !== rb) parent[ra] = rb; };
+    const repRank = new Map();   // photo → representative priority (higher wins)
+    const mergeGroup = (members, headRank) => {
+      members = members.filter(Boolean);
+      if (members.length < 2) return;
+      for (let i = 1; i < members.length; i++) union(slot.get(members[0]), slot.get(members[i]));
+      if (headRank) repRank.set(members[0], Math.max(repRank.get(members[0]) || 0, headRank));
+    };
 
-    // 2. Curated forced groups first.
-    for (const regs of FORCED_GROUPS) {
-      const members = regs.map((r) => byReg.get(r)).filter((m) => m && !used.has(m));
-      if (members.length < 2) continue;
-      members.forEach((m) => used.add(m));
-      addCluster(members);
-    }
-
-    // 3. Automatic, but ONLY where it's safe: a specific shared title that holds
-    //    exactly ONE negative + its prints = one exposure, unambiguous. Titles
-    //    with 0 negatives (prints whose negatives differ/aren't held — these can
-    //    mix distinct views) or ≥2 negatives (several exposures) are left apart.
-    const byKey = new Map();
+    FORCED_GROUPS.forEach((regs) => mergeGroup(regs.map((r) => byReg.get(r)), 3));      // (a) curated head always wins
+    (state.imageDupes || []).forEach((regs) => mergeGroup(regs.map((r) => byReg.get(r)), 1)); // (b) head only breaks all-print ties
+    const byKey = new Map();                                                            // (c)
     for (const p of placed) {
-      if (used.has(p)) continue;
       const key = imageKey(p.rec.title);
       if (!groupable(key)) continue;
       if (!byKey.has(key)) byKey.set(key, []);
       byKey.get(key).push(p);
     }
     for (const members of byKey.values()) {
-      if (members.length < 2) continue;
-      if (members.filter((m) => isNegative(m.rec)).length !== 1) continue;   // exactly one negative
-      members.sort((a, b) => (isNegative(b.rec) - isNegative(a.rec)));       // negative → representative
-      members.forEach((m) => used.add(m));
-      addCluster(members);
+      if (members.length > 1 && members.filter((m) => isNegative(m.rec)).length === 1) mergeGroup(members, 0);
     }
 
-    // 4. Everything else is its own single image.
-    for (const p of placed) if (!used.has(p)) addCluster([p]);
+    // Build one cluster per connected component. Representative rank: a curated
+    // FORCED head always wins (3); otherwise prefer a negative ("behind the
+    // negative", 2); an image-dupe head only breaks all-print ties (1).
+    const rankOf = (p) => (repRank.get(p) === 3 ? 3 : isNegative(p.rec) ? 2 : (repRank.get(p) || 0));
+    const comp = new Map();
+    placed.forEach((p, i) => { const r = find(i); (comp.get(r) || comp.set(r, []).get(r)).push(p); });
+    for (const members of comp.values()) {
+      members.sort((a, b) => rankOf(b) - rankOf(a));
+      addCluster(members);
+    }
   }
 
   // --- Map ---------------------------------------------------------------------
@@ -560,7 +575,12 @@
 
   async function boot() {
     try {
-      const records = await fetchBragge();
+      const [records] = await Promise.all([
+        fetchBragge(),
+        fetch('/bragge-dupes.json').then((r) => r.json())
+          .then((d) => { state.imageDupes = (d && d.groups) || []; })
+          .catch(() => { state.imageDupes = []; }),   // grouping still works without the dupe file
+      ]);
       index(records);
     } catch (e) {
       $('#status').textContent = 'Could not load Bragge’s photographs from the API.';
