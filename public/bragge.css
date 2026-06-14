@@ -51,6 +51,19 @@
 :root[data-theme="dark"] .leaflet-control-attribution a,
 :root[data-theme="dark"] .leaflet-control-layers a { color: #74d3da; }
 
+/* The vendored Leaflet ships no images/ dir, so the collapsed layers control's
+   icon (images/layers.png) 404s and renders as a blank square. Supply our own
+   "stacked layers" glyph as an inline SVG, themed for light/dark. */
+.leaflet-control-layers-toggle {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231a1d23' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolygon points='12 2 2 7 12 12 22 7 12 2'/%3E%3Cpolyline points='2 17 12 22 22 17'/%3E%3Cpolyline points='2 12 12 17 22 12'/%3E%3C/svg%3E");
+  background-size: 22px 22px;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+:root[data-theme="dark"] .leaflet-control-layers-toggle {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23c3ccce' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolygon points='12 2 2 7 12 12 22 7 12 2'/%3E%3Cpolyline points='2 17 12 22 22 17'/%3E%3Cpolyline points='2 12 12 17 22 12'/%3E%3C/svg%3E");
+}
+
 /* --- Theme switch (Light | Dark segmented toggle) ---------------------------- */
 .theme-switch {
   position: absolute; top: 14px; right: 20px; z-index: 5;
