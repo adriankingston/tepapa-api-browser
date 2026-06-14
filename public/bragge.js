@@ -92,6 +92,8 @@
       aliases: ['tauherenikau'] },
     { key: 'featherston', label: 'Featherston', leg: 'Wairarapa', seq: 200, lat: -41.1167, lon: 175.3170, pri: 3,
       aliases: ['featherston'] },
+    { key: 'waihenga', label: 'Waihenga Bridge (Ruamāhanga)', leg: 'Wairarapa', seq: 215, lat: -41.1950, lon: 175.4250, pri: 4,
+      aliases: ['waihenga'] },
     { key: 'greytown', label: 'Greytown', leg: 'Wairarapa', seq: 220, lat: -41.0789, lon: 175.4583, pri: 3,
       aliases: ['greytown', 'waiohine'] },
     { key: 'carterton', label: 'Carterton', leg: 'Wairarapa', seq: 240, lat: -41.0272, lon: 175.5236, pri: 3,
@@ -100,7 +102,7 @@
       aliases: ['wairarapa'] },
     { key: 'masterton', label: 'Masterton', leg: 'Wairarapa', seq: 260, lat: -40.9511, lon: 175.6575, pri: 3,
       aliases: ['masterton', 'iorns', 'waipoua', 'ruamahanga', 'ruamahunga', 'waingawa'] },
-    { key: 'opaki', label: 'Opaki', leg: 'Wairarapa', seq: 262, lat: -40.9000, lon: 175.6670, pri: 3,
+    { key: 'opaki', label: 'Opaki', leg: 'Wairarapa', seq: 262, lat: -40.9000, lon: 175.6670, pri: 4,
       aliases: ['opaki'] },
     { key: 'te-ore-ore', label: 'Te Ore Ore', leg: 'Wairarapa', seq: 264, lat: -40.9400, lon: 175.7150, pri: 3,
       aliases: ['te ore ore', 'te oreore'] },
@@ -110,7 +112,7 @@
     { key: 'forty-mile-bush', label: 'Forty-Mile Bush', leg: 'Bush', seq: 300, lat: -40.7300, lon: 175.7000, pri: 3,
       aliases: ['forty mile bush', '40 mile bush', 'five mile avenue'] },
     { key: 'eketahuna', label: 'Eketāhuna', leg: 'Bush', seq: 320, lat: -40.6519, lon: 175.7011, pri: 3,
-      aliases: ['eketahuna'] },
+      aliases: ['eketahuna', 'makakahi'] },
     { key: 'seventy-mile-bush', label: 'Seventy-Mile Bush', leg: 'Bush', seq: 330, lat: -40.5300, lon: 175.8100, pri: 3,
       aliases: ['seventy mile bush', '70 mile bush', 'fish river'] },
     { key: 'pahiatua', label: 'Pahiatua', leg: 'Bush', seq: 340, lat: -40.4561, lon: 175.8378, pri: 3,
@@ -118,8 +120,16 @@
     { key: 'woodville', label: 'Woodville', leg: 'Bush', seq: 360, lat: -40.3333, lon: 175.8714, pri: 3,
       aliases: ['woodville'] },
     // --- Manawatū ---
-    { key: 'manawatu-gorge', label: 'Manawatū Gorge', leg: 'Manawatū', seq: 380, lat: -40.3200, lon: 175.7900, pri: 3,
+    // The gorge runs west (Ashhurst/Palmerston plain) to east (Woodville); photos
+    // spread along it by named feature. Ends placed via LOC_FIX, Cascade by alias.
+    { key: 'gorge-east', label: 'Manawatū Gorge (Woodville end)', leg: 'Manawatū', seq: 381, lat: -40.3300, lon: 175.8350, pri: 3,
+      aliases: [] },
+    { key: 'gorge-cascade', label: 'The Cascade, Manawatū Gorge', leg: 'Manawatū', seq: 382, lat: -40.3230, lon: 175.8080, pri: 4,
+      aliases: ['cascade'] },
+    { key: 'manawatu-gorge', label: 'Manawatū Gorge (the bridge)', leg: 'Manawatū', seq: 383, lat: -40.3190, lon: 175.7920, pri: 3,
       aliases: ['manawatu gorge', 'gorge bridge'] },
+    { key: 'gorge-west', label: 'Manawatū Gorge (Palmerston end)', leg: 'Manawatū', seq: 384, lat: -40.3070, lon: 175.7580, pri: 3,
+      aliases: [] },
     { key: 'ashhurst', label: 'Ashhurst', leg: 'Manawatū', seq: 385, lat: -40.2931, lon: 175.7481, pri: 3,
       aliases: ['ashhurst'] },
     { key: 'manawatu-river', label: 'Manawatū River', leg: 'Manawatū', seq: 390, lat: -40.3700, lon: 175.6200, pri: 2,
@@ -164,6 +174,9 @@
     'O.020208': 'wadestown',
     // Waterfront / Queens Wharf (Pier Hotel, ships in the harbour)
     'D.000036': 'wgtn-waterfront', 'A.004275': 'wgtn-waterfront', 'D.000051': 'wgtn-waterfront',
+    // Manawatū Gorge ends (no clean title token — placed by position along the gorge)
+    'O.040859': 'gorge-east', 'O.040860': 'gorge-east', 'O.040857': 'gorge-east',     // mouth/top, Woodville end
+    'D.000154': 'gorge-west', 'D.000127': 'gorge-west', 'O.026980': 'gorge-west', 'O.026981': 'gorge-west', // bottom, Palmerston plain
   };
 
   // The drawn coach-road corridor (hand-traced down the modern SH2 alignment so
