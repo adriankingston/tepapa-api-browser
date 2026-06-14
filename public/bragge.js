@@ -255,7 +255,7 @@
   const state = {
     photos: [],          // one CLUSTER per image: { rec, img, stop, source, count, versions:[{rec,img,negative,reg}] }
     byStop: new Map(),   // stopKey -> { stop, photos:[] }
-    totalPrints: 0,      // total records folded into the clusters (prints + negatives)
+    totalPlaced: 0,      // total placed records (prints + negatives) before grouping
     routeOnly: true,     // hide Elsewhere + studio-attributed by default
     map: null,
     markers: new Map(),  // stopKey -> L.circleMarker
@@ -295,6 +295,30 @@
     return all;
   }
 
+  // Curator-confirmed same-image groups the title heuristic can't get, by
+  // registration number (the negative first). The data has no print↔negative
+  // link, titles collide, and near-identical compositions defeat image hashing,
+  // so genuinely-ambiguous cases are corrected here.
+  //  • 2026-06-14: negative D.000123 ("…looking North") + its 3 prints share no
+  //    common catalogue title, and the print group also held a DIFFERENT view
+  //    (O.026974, which correctly falls out as its own image).
+  const FORCED_GROUPS = [
+    ['D.000123', 'O.047751', 'O.011680', 'O.040858'],
+  ];
+
+  function addCluster(members) {
+    members.sort((a, b) => (isNegative(b.rec) - isNegative(a.rec)));   // negative → representative
+    const rep = members[0];
+    const cluster = {
+      rec: rep.rec, img: rep.img, stop: rep.stop, source: rep.source,
+      count: members.length,
+      versions: members.map((m) => ({ rec: m.rec, img: m.img, negative: isNegative(m.rec), reg: m.rec.identifier || '' })),
+    };
+    state.photos.push(cluster);
+    if (!state.byStop.has(rep.stop.key)) state.byStop.set(rep.stop.key, { stop: rep.stop, photos: [] });
+    state.byStop.get(rep.stop.key).photos.push(cluster);
+  }
+
   function index(records) {
     // 1. Every placed, non-portrait, imaged record.
     const placed = [];
@@ -306,28 +330,40 @@
       if (!g) continue;                            // couldn't place it
       placed.push({ rec, img: imgs[0], stop: g.stop, source: g.source });
     }
-    // 2. Collapse prints-from-the-same-negative into one entry per image.
+    state.totalPlaced = placed.length;
+    const used = new Set();
+    const byReg = new Map();
+    for (const p of placed) if (p.rec.identifier) byReg.set(String(p.rec.identifier), p);
+
+    // 2. Curated forced groups first.
+    for (const regs of FORCED_GROUPS) {
+      const members = regs.map((r) => byReg.get(r)).filter((m) => m && !used.has(m));
+      if (members.length < 2) continue;
+      members.forEach((m) => used.add(m));
+      addCluster(members);
+    }
+
+    // 3. Automatic, but ONLY where it's safe: a specific shared title that holds
+    //    exactly ONE negative + its prints = one exposure, unambiguous. Titles
+    //    with 0 negatives (prints whose negatives differ/aren't held — these can
+    //    mix distinct views) or ≥2 negatives (several exposures) are left apart.
     const byKey = new Map();
     for (const p of placed) {
+      if (used.has(p)) continue;
       const key = imageKey(p.rec.title);
-      const k = groupable(key) ? 'g:' + key : 'u:' + p.rec.type + ':' + p.rec.id;  // ungroupable → its own
-      if (!byKey.has(k)) byKey.set(k, []);
-      byKey.get(k).push(p);
+      if (!groupable(key)) continue;
+      if (!byKey.has(key)) byKey.set(key, []);
+      byKey.get(key).push(p);
     }
-    // 3. One cluster per image, represented by the negative ("behind the negative").
     for (const members of byKey.values()) {
-      members.sort((a, b) => (isNegative(b.rec) - isNegative(a.rec)));   // negative(s) first
-      const rep = members[0];
-      state.totalPrints += members.length;
-      const cluster = {
-        rec: rep.rec, img: rep.img, stop: rep.stop, source: rep.source,
-        count: members.length,
-        versions: members.map((m) => ({ rec: m.rec, img: m.img, negative: isNegative(m.rec), reg: m.rec.identifier || '' })),
-      };
-      state.photos.push(cluster);
-      if (!state.byStop.has(rep.stop.key)) state.byStop.set(rep.stop.key, { stop: rep.stop, photos: [] });
-      state.byStop.get(rep.stop.key).photos.push(cluster);
+      if (members.length < 2) continue;
+      if (members.filter((m) => isNegative(m.rec)).length !== 1) continue;   // exactly one negative
+      members.forEach((m) => used.add(m));
+      addCluster(members);
     }
+
+    // 4. Everything else is its own single image.
+    for (const p of placed) if (!used.has(p)) addCluster([p]);
   }
 
   // --- Map ---------------------------------------------------------------------
@@ -504,10 +540,10 @@
     $('#stat-located').textContent = onR.length;
     $('#stat-stops').textContent = stops;
     $('#stat-total').textContent = state.photos.length;
-    const grouped = state.totalPrints - state.photos.length;   // duplicate prints folded away
+    const grouped = state.totalPlaced - state.photos.length;   // duplicate prints folded away
     const note = $('#dup-note');
     if (note) note.textContent = grouped > 0
-      ? `${state.totalPrints} prints & negatives, with ${grouped} duplicate prints grouped behind their negatives → ${state.photos.length} distinct images.`
+      ? `${state.totalPlaced} prints & negatives → ${state.photos.length} images (${grouped} duplicate prints grouped behind their negative; only where a single negative is unambiguous).`
       : '';
   }
 
