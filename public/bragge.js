@@ -39,11 +39,34 @@
   // side" (the hill) beats "featherston" (the town), and a town beats its region.
   // Aliases are pre-folded: lower-case, no macrons, no apostrophes/brackets.
   const GAZ = [
-    // --- Wellington ---
+    // --- Wellington (city, with precisely-placed sub-locations) ---
+    // The generic city dot is the fallback; specific photos are pulled to the
+    // streets/suburbs below by title alias or the LOC_FIX map (building names
+    // with no street in the title, identified from the high-res scans).
     { key: 'wellington', label: 'Wellington', leg: 'Wellington', seq: 100, lat: -41.2865, lon: 174.7762, pri: 1,
-      aliases: ['wellington', 'lambton quay', 'te aro', 'thorndon', 'mount cook', 'mt cook', 'customhouse quay', 'mulgrave', 'kaiwarawara', 'kaiwharawhara', 'the terrace', 'willis street', 'pipitea', 'oriental bay'] },
+      aliases: ['wellington', 'port nicholson', 'city of wellington'] },
+    { key: 'wgtn-waterfront', label: 'Wellington waterfront', leg: 'Wellington', seq: 101, lat: -41.2845, lon: 174.7810, pri: 3,
+      aliases: ['customhouse quay', 'queens wharf', 'jervois quay', 'oriental bay'] },
+    { key: 'lambton-quay', label: 'Lambton Quay', leg: 'Wellington', seq: 102, lat: -41.2828, lon: 174.7758, pri: 3,
+      aliases: ['lambton quay', 'lambton', 'willis street', 'union bank'] },
+    { key: 'whitmore', label: 'Whitmore Street (govt precinct)', leg: 'Wellington', seq: 103, lat: -41.2786, lon: 174.7775, pri: 3,
+      aliases: ['whitmore', 'stout street'] },
+    { key: 'thorndon', label: 'Thorndon', leg: 'Wellington', seq: 104, lat: -41.2758, lon: 174.7795, pri: 3,
+      aliases: ['thorndon', 'mulgrave', 'pipitea', 'tinakori', 'hill street', 'museum street'] },
+    { key: 'te-aro', label: 'Te Aro', leg: 'Wellington', seq: 105, lat: -41.2925, lon: 174.7765, pri: 3,
+      aliases: ['te aro', 'cuba street', 'manners street', 'courtenay', 'dixon street'] },
+    { key: 'the-terrace', label: 'The Terrace', leg: 'Wellington', seq: 106, lat: -41.2878, lon: 174.7712, pri: 3,
+      aliases: ['the terrace', 'gaol hill'] },
+    { key: 'mount-cook', label: 'Mount Cook', leg: 'Wellington', seq: 107, lat: -41.3010, lon: 174.7742, pri: 3,
+      aliases: ['mount cook', 'mt cook', 'buckle street'] },
+    { key: 'basin-reserve', label: 'Basin Reserve', leg: 'Wellington', seq: 108, lat: -41.3018, lon: 174.7805, pri: 3,
+      aliases: ['basin reserve'] },
+    { key: 'wadestown', label: 'Wadestown', leg: 'Wellington', seq: 109, lat: -41.2680, lon: 174.7665, pri: 3,
+      aliases: ['wadestown'] },
+    { key: 'kaiwharawhara', label: 'Kaiwharawhara', leg: 'Wellington', seq: 109, lat: -41.2607, lon: 174.7935, pri: 3,
+      aliases: ['kaiwarawara', 'kaiwharawhara'] },
     { key: 'ngauranga', label: 'Ngauranga Gorge', leg: 'Wellington', seq: 110, lat: -41.2456, lon: 174.8113, pri: 3,
-      aliases: ['ngauranga', 'ngahauranga'] },
+      aliases: ['ngauranga', 'ngahauranga', 'nghauranga', 'ngahuranga'] },
     // --- Hutt Valley ---
     { key: 'petone', label: 'Petone', leg: 'Hutt Valley', seq: 120, lat: -41.2256, lon: 174.8726, pri: 3,
       aliases: ['petone', 'colletts farm', 'collett'] },
@@ -115,6 +138,34 @@
   ];
   const GAZ_BY_KEY = Object.fromEntries(GAZ.map((g) => [g.key, g]));
 
+  // Per-record location overrides (by registration number) for Wellington photos
+  // whose title is just a building name — placed from the high-res scans + known
+  // 1870s Wellington geography. Checked before the title gazetteer in geocode().
+  const LOC_FIX = {
+    // Lambton Quay
+    'D.000008': 'lambton-quay', 'D.000018': 'lambton-quay', 'D.000038': 'lambton-quay',
+    'D.000035': 'lambton-quay', 'D.000050': 'lambton-quay', 'D.000006': 'lambton-quay',
+    // Whitmore St / government precinct (Supreme Court, Government Buildings, Parliament)
+    'D.000001': 'whitmore', 'D.000016': 'whitmore', 'D.000007': 'whitmore',
+    'D.000015': 'whitmore', 'O.011673': 'whitmore', 'O.026976': 'whitmore',
+    // Thorndon (St Paul's/Mulgrave St, Sacred Heart/Hill St, Colonial Museum/Museum St)
+    'D.000011': 'thorndon', 'D.000019': 'thorndon', 'D.000014': 'thorndon',
+    // Te Aro (Te Aro House, St John's Dixon St)
+    'D.000023': 'te-aro', 'D.000025': 'te-aro', 'D.000020': 'te-aro',
+    // The Terrace (city from the Terrace, From Gaol Hill = Terrace Gaol)
+    'D.000004': 'the-terrace', 'D.000039': 'the-terrace', 'D.000040': 'the-terrace',
+    // Mount Cook schools
+    'D.000021': 'mount-cook', 'D.000022': 'mount-cook',
+    // Basin Reserve
+    'D.000017': 'basin-reserve',
+    // Kaiwharawhara (on the Hutt Road)
+    'O.032463': 'kaiwharawhara', 'O.032419': 'kaiwharawhara',
+    // Wadestown
+    'O.020208': 'wadestown',
+    // Waterfront / Queens Wharf (Pier Hotel, ships in the harbour)
+    'D.000036': 'wgtn-waterfront', 'A.004275': 'wgtn-waterfront', 'D.000051': 'wgtn-waterfront',
+  };
+
   // The drawn coach-road corridor (hand-traced down the modern SH2 alignment so
   // it reads as a road, not straight hops between dots).
   const ROUTE = [
@@ -168,6 +219,9 @@
 
   // Resolve one record to a gazetteer stop, recording how confident we are.
   function geocode(rec) {
+    const fix = LOC_FIX[String(rec.identifier || '')];
+    if (fix && GAZ_BY_KEY[fix]) return { stop: GAZ_BY_KEY[fix], source: 'fix' };
+
     const fromTitle = matchGaz(cleanTitle(rec.title));
     if (fromTitle) return { stop: fromTitle, source: 'title' };
 

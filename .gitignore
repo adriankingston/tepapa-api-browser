@@ -4,3 +4,5 @@ node_modules/
 .DS_Store
 .claude/
 .vercel
+bragge-assets/
+dl_bragge.js
