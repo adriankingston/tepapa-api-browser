@@ -24,6 +24,17 @@
   <link rel="stylesheet" href="/bragge.css" />
 </head>
 <body class="bragge-page">
+  <!-- Loading affordance: the API fetch + geocoding take a few seconds. Visible
+       by default so it paints immediately; bragge.js fades it out when ready. -->
+  <div id="loading" class="bragge-loading" role="status" aria-live="polite">
+    <div class="bl-card">
+      <div id="bl-spinner" class="bl-spinner" aria-hidden="true"></div>
+      <p id="bl-title" class="bl-title">Mapping the journey…</p>
+      <p id="bl-sub" class="bl-sub">Fetching James Bragge’s photographs from Te&nbsp;Papa and placing each one on the map — this can take a few seconds.</p>
+      <button id="bl-retry" class="bl-retry" type="button" hidden>Retry</button>
+    </div>
+  </div>
+
   <header class="bragge-top">
     <div id="theme-switch" class="theme-switch" role="radiogroup" aria-label="Colour theme" data-active="light">
       <span class="theme-knob" aria-hidden="true"></span>

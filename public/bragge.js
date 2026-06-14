@@ -915,6 +915,22 @@
       + `<span class="lg"><span class="lg-pin"></span>Pinpointed exactly</span>`;
   }
 
+  function hideLoading() {
+    const el = $('#loading');
+    if (!el || el.hidden) return;
+    el.classList.add('is-hiding');
+    setTimeout(() => { el.hidden = true; }, 340);
+  }
+  function loadingError(msg) {
+    const el = $('#loading');
+    if (!el) { $('#status').textContent = msg; return; }
+    const sp = $('#bl-spinner'); if (sp) sp.hidden = true;
+    $('#bl-title').textContent = 'Couldn’t load the photographs';
+    $('#bl-sub').textContent = msg;
+    const retry = $('#bl-retry');
+    if (retry) { retry.hidden = false; retry.onclick = () => location.reload(); }
+  }
+
   async function boot() {
     try {
       const [records] = await Promise.all([
@@ -937,17 +953,23 @@
       ]);
       index(records);
     } catch (e) {
+      loadingError('Could not reach the Te Papa Collections API. Please check your connection and try again.');
       $('#status').textContent = 'Could not load Bragge’s photographs from the API.';
       console.error(e);
       return;
     }
-    if (!state.photos.length) { $('#status').textContent = 'No located photographs found.'; return; }
+    if (!state.photos.length) {
+      hideLoading();
+      $('#status').textContent = 'No located photographs found.';
+      return;
+    }
 
     $('#status').hidden = true;
     updateStats();
     renderLegend();
     buildMap();
     buildRail();
+    hideLoading();
 
     // Controls
     syncThemeToggle();
