@@ -50,18 +50,29 @@
 :root[data-theme="dark"] .leaflet-control-attribution a,
 :root[data-theme="dark"] .leaflet-control-layers a { color: #74d3da; }
 
-/* --- Theme toggle ------------------------------------------------------------ */
-.theme-toggle {
-  position: absolute; top: 16px; right: 20px; z-index: 5;
-  width: 38px; height: 38px; padding: 0; cursor: pointer;
-  display: inline-flex; align-items: center; justify-content: center;
-  font-size: 18px; line-height: 1;
+/* --- Theme switch (Light | Dark segmented toggle) ---------------------------- */
+.theme-switch {
+  position: absolute; top: 14px; right: 20px; z-index: 5;
+  box-sizing: border-box; display: inline-flex; padding: 3px;
   background: var(--md-surface-container-low, #f4f6f7);
-  border: 1px solid var(--md-outline-variant, #bfc8ca);
   border-radius: var(--md-shape-full, 999px);
-  transition: background 160ms, border-color 160ms;
+  box-shadow: inset 0 0 0 1px var(--md-outline-variant, #bfc8ca);   /* border via shadow so % widths ignore it */
 }
-.theme-toggle:hover { background: var(--md-surface-container-high, #e8eaec); border-color: var(--md-outline, #6f797b); }
+.theme-knob {
+  position: absolute; top: 3px; bottom: 3px; left: 3px;
+  width: calc((100% - 6px) / 2); border-radius: var(--md-shape-full, 999px);
+  background: var(--md-primary, #00696f);
+  transition: transform 180ms var(--md-ease, cubic-bezier(0.2, 0, 0, 1));
+}
+.theme-switch[data-active="dark"] .theme-knob { transform: translateX(100%); }
+.theme-opt {
+  position: relative; z-index: 1; box-sizing: border-box;
+  flex: 1 1 0; min-width: 52px; padding: 5px 14px; text-align: center;
+  background: none; border: none; cursor: pointer;
+  font: var(--md-label-lg, 500 14px/20px sans-serif);
+  color: var(--muted, #5b6472); transition: color 160ms;
+}
+.theme-opt[aria-checked="true"] { color: var(--md-on-primary, #fff); }
 
 /* --- Header ------------------------------------------------------------------ */
 .bragge-top {

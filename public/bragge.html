@@ -25,7 +25,11 @@
 </head>
 <body class="bragge-page">
   <header class="bragge-top">
-    <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch theme">🌙</button>
+    <div id="theme-switch" class="theme-switch" role="radiogroup" aria-label="Colour theme" data-active="light">
+      <span class="theme-knob" aria-hidden="true"></span>
+      <button type="button" class="theme-opt" data-val="light" role="radio" aria-checked="true">Light</button>
+      <button type="button" class="theme-opt" data-val="dark" role="radio" aria-checked="false">Dark</button>
+    </div>
     <a class="bragge-back" href="/" title="Back to the collections browser">← Collections browser</a>
     <div class="bragge-titles">
       <p class="bragge-eyebrow">Te Papa Tongarewa · A photographic journey, c.1875</p>

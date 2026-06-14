@@ -391,12 +391,12 @@
   }
 
   function syncThemeToggle() {
-    const btn = $('#theme-toggle');
-    if (!btn) return;
+    const sw = $('#theme-switch');
+    if (!sw) return;
     const dark = isDark();
-    btn.textContent = dark ? '☀️' : '🌙';
-    btn.setAttribute('aria-label', dark ? 'Switch to light mode' : 'Switch to dark mode');
-    btn.title = btn.getAttribute('aria-label');
+    sw.dataset.active = dark ? 'dark' : 'light';
+    sw.querySelectorAll('.theme-opt').forEach((b) =>
+      b.setAttribute('aria-checked', String((b.dataset.val === 'dark') === dark)));
   }
 
   function setTheme(dark) {
@@ -951,8 +951,9 @@
 
     // Controls
     syncThemeToggle();
-    const themeBtn = $('#theme-toggle');
-    if (themeBtn) themeBtn.addEventListener('click', () => setTheme(!isDark()));
+    const themeSwitch = $('#theme-switch');
+    if (themeSwitch) themeSwitch.querySelectorAll('.theme-opt').forEach((b) =>
+      b.addEventListener('click', () => setTheme(b.dataset.val === 'dark')));
 
     const toggle = $('#route-toggle');
     toggle.checked = state.routeOnly;
