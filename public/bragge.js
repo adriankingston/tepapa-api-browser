@@ -377,6 +377,23 @@
   const FORCED_GROUPS = [
     ['D.000123', 'O.047751', 'O.011680', 'O.040858'],
     ['O.020834', 'O.032450', 'O.032494'],
+    // Curator-confirmed (2026-06-14) — Ngauranga gorge: negatives captioned
+    // "Ngauranga Gorge", prints captioned "Ngauranga, entrance to the gorge…".
+    ['D.000142', 'O.026995', 'O.000774'],
+    ['D.000141', 'O.000730'],
+    // Greytown main street — O.020833 (oval print) is the same view as negative
+    // D.000075 (already grouped with prints O.032493/O.032449).
+    ['D.000075', 'O.020833'],
+    // The two "Wellington" panoramas are the same image.
+    ['O.005959/01', 'O.005959/02'],
+    // Manawatū Gorge — river bend with the fallen tree-fern + figures on a rock.
+    ['D.000126', 'O.026992', 'O.011681'],
+    // Manawatū Gorge — the road cutting at Stoney Point (a different view).
+    ['D.000140', 'O.026990', 'O.026979'],
+    // Manawatū Gorge bottom — looking down the river toward the Palmerston plain.
+    ['D.000154', 'O.026981'],
+    // Manawatū Gorge bottom — looking up the river into the gorge.
+    ['D.000127', 'O.026980'],
   ];
 
   // members[0] is the representative. Forced groups pass their intended order;
