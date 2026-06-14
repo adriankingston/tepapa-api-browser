@@ -46,6 +46,7 @@ const routes = {
   'POST /api/collections': require('./api/collections'),
   'POST /api/neighbors': require('./api/neighbors'),
   'GET /api/record': require('./api/record'),
+  'GET /api/mapconfig': require('./api/mapconfig'),
   'GET /api/wikipedia': require('./api/wikipedia'),
   'GET /api/imgproxy': require('./api/imgproxy'),
 };

@@ -324,6 +324,7 @@
     byStop: new Map(),   // stopKey -> { stop, photos:[] }
     totalPlaced: 0,      // total placed records (prints + negatives) before grouping
     imageDupes: [],      // print-dupe groups from bragge-dupes.json (reg-number arrays)
+    linzKey: null,       // LINZ Basemaps API key (from /api/mapconfig) — enables the NZ aerial layer
     routeOnly: true,     // hide Elsewhere + studio-attributed by default
     map: null,
     markers: new Map(),  // stopKey -> L.circleMarker
@@ -458,9 +459,27 @@
 
   function buildMap() {
     const map = L.map('map', { scrollWheelZoom: true, preferCanvas: false }).setView([-40.85, 175.3], 8);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 17, attribution: '© OpenStreetMap contributors',
-    }).addTo(map);
+
+    // Selectable base layers (all but LINZ need no key). LINZ aerial appears only
+    // when a key is configured (LINZ_API_KEY → /api/mapconfig).
+    const bases = {
+      'Map (OpenStreetMap)': L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19, attribution: '© OpenStreetMap contributors' }),
+      'Topographic': L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+        maxZoom: 17, attribution: '© OpenStreetMap contributors, SRTM · © OpenTopoMap (CC-BY-SA)' }),
+      'Satellite': L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        maxZoom: 19, attribution: 'Imagery © Esri, Maxar, Earthstar Geographics' }),
+      'Light': L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        maxZoom: 20, subdomains: 'abcd', attribution: '© OpenStreetMap contributors © CARTO' }),
+    };
+    if (state.linzKey) {
+      bases['LINZ aerial (NZ)'] = L.tileLayer(
+        `https://basemaps.linz.govt.nz/v1/tiles/aerial/3857/{z}/{x}/{y}.webp?api=${state.linzKey}`,
+        { maxZoom: 19, attribution: '© <a href="https://www.linz.govt.nz/linz-copyright" target="_blank" rel="noopener">LINZ CC BY 4.0</a> · Imagery Basemap contributors' });
+    }
+    bases['Map (OpenStreetMap)'].addTo(map);                 // default
+    L.control.layers(bases, null, { position: 'topright' }).addTo(map);
+
     L.polyline(ROUTE, { color: '#5b6472', weight: 3, opacity: 0.55, dashArray: '2 7', lineCap: 'round' }).addTo(map);
     state.map = map;
     drawMarkers({ fit: true });
@@ -647,6 +666,9 @@
         fetch('/bragge-dupes.json').then((r) => r.json())
           .then((d) => { state.imageDupes = (d && d.groups) || []; })
           .catch(() => { state.imageDupes = []; }),   // grouping still works without the dupe file
+        fetch('/api/mapconfig').then((r) => r.json())
+          .then((c) => { state.linzKey = (c && c.linz) || null; })
+          .catch(() => { state.linzKey = null; }),    // LINZ layer just won't appear
       ]);
       index(records);
     } catch (e) {
