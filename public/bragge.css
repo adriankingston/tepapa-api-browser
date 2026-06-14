@@ -140,6 +140,10 @@
   text-transform: uppercase;
   color: var(--md-primary, #00696f);
 }
+/* Constrain the title/eyebrow to the left 50% column so it wraps in line with
+   the intro-text & map beneath it (calc(50% - 10px) = half the content minus
+   half the 20px grid gap). Full width again on mobile (single column). */
+.bragge-titles { max-width: calc(50% - 10px); }
 .bragge-titles h1 {
   margin: 0;
   font: 600 clamp(26px, 4.2vw, 40px)/1.1 var(--md-font, sans-serif);
@@ -441,6 +445,7 @@
 
 /* --- Responsive -------------------------------------------------------------- */
 @media (max-width: 880px) {
+  .bragge-titles { max-width: none; }   /* full width when columns stack */
   .bragge-intro { grid-template-columns: 1fr; gap: 18px; }
   .bragge-main { grid-template-columns: 1fr; }
   .bragge-map { position: relative; top: 0; height: 56vh; min-height: 360px; }
