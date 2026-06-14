@@ -194,6 +194,16 @@
   // allowsDownload === false → thumbnail only, never preview/full, never zoom.
   const isZoomable = (img) => !(img && img.rights && img.rights.allowsDownload === false);
 
+  // Images are NEVER cropped (copyright, cultural sensitivity, artist intent).
+  // Rail thumbs are a fixed height; each thumb's WIDTH is set to the image's true
+  // aspect ratio so `object-fit:contain` fills the box exactly — no crop, no bands.
+  const RAIL_THUMB_H = 74;
+  function thumbAspect(img, min = 0.5, max = 3.0) {
+    const w = +(img && img.width), h = +(img && img.height);
+    const ar = (w > 0 && h > 0) ? w / h : 1.4;   // default to a gentle landscape
+    return Math.min(max, Math.max(min, ar));
+  }
+
   // Clean up Bragge's long album titles for display (drop the boilerplate tail).
   function shortTitle(t) {
     let s = String(t || '').split(/\.?\s*From the album/i)[0].trim();
@@ -331,7 +341,8 @@
           <div class="thumbs">`;
         for (const p of s.photos) {
           const gi = state.photos.indexOf(p);
-          html += `<button class="th" type="button" data-photo="${gi}" title="${esc(shortTitle(p.rec.title))}">
+          const w = Math.round(thumbAspect(p.img) * RAIL_THUMB_H);
+          html += `<button class="th" type="button" data-photo="${gi}" style="width:${w}px" title="${esc(shortTitle(p.rec.title))}">
             <img loading="lazy" src="${esc(p.img.thumbnailUrl)}" alt="${esc(shortTitle(p.rec.title))}">
           </button>`;
         }

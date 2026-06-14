@@ -138,15 +138,17 @@
 .stop-h:hover { color: var(--md-primary, #00696f); }
 .stop-n { font: var(--md-label-md, 500 12px/16px sans-serif); color: var(--muted, #5b6472); }
 
-.thumbs { display: flex; flex-wrap: wrap; gap: 6px; padding: 2px; }
+.thumbs { display: flex; flex-wrap: wrap; gap: 6px; padding: 2px; align-items: flex-end; }
 .th {
-  width: 88px; height: 70px;
+  height: 74px; flex: 0 0 auto;
   padding: 0; border: 1px solid var(--md-outline-variant, #bfc8ca);
   border-radius: var(--md-shape-sm, 8px);
   overflow: hidden; cursor: pointer; background: var(--md-surface-container, #eef0f2);
   transition: transform 120ms, box-shadow 120ms, border-color 120ms;
 }
-.th img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* Never crop: the button width is set per-image to its real aspect ratio, so
+   `contain` fills it exactly — the whole photo shows, no letterbox bands. */
+.th img { width: 100%; height: 100%; object-fit: contain; display: block; }
 .th:hover { transform: translateY(-2px); box-shadow: var(--shadow, 0 8px 24px rgba(20,30,50,0.12)); border-color: var(--md-primary, #00696f); }
 
 /* --- Lightbox ---------------------------------------------------------------- */

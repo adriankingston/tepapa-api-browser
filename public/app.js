@@ -2217,7 +2217,7 @@ async function loadHome() {
     if (s.type === 'feature') {
       host.innerHTML =
         `<a class="home-feature" href="${esc(s.href || '#')}">` +
-        (s.image ? `<span class="home-feature-img" style="background-image:url('${esc(s.image)}')"></span>` : '') +
+        (s.image ? `<img class="home-feature-img" src="${esc(s.image)}" alt="">` : '') +
         `<span class="home-feature-text">` +
         (s.eyebrow ? `<span class="home-feature-eyebrow">${esc(s.eyebrow)}</span>` : '') +
         `<span class="home-feature-title">${esc(s.title || '')}</span>` +
