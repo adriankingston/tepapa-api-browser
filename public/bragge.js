@@ -364,6 +364,7 @@
     routeOnly: true,     // hide Elsewhere + studio-attributed by default
     map: null,
     lightBase: null, darkBase: null,   // the two theme-default base layers (for the toggle)
+    routeLine: null, routeCasing: null,// the dashed coach-road corridor (+ its halo)
     markers: new Map(),  // stopKey -> L.circleMarker (still-approximate photos)
     pinMarkers: [],      // L.marker per precisely-located photo
     selected: null,
@@ -387,7 +388,7 @@
     const drop = dark ? state.lightBase : state.darkBase;
     // Only auto-swap when the *other* theme default is showing — leave a manual
     // choice (Satellite, Topographic, LINZ…) untouched.
-    if (map.hasLayer(drop)) { map.removeLayer(drop); want.addTo(map); }
+    if (map.hasLayer(drop)) { map.removeLayer(drop); want.addTo(map); styleRoute(dark); }
   }
 
   function syncThemeToggle() {
@@ -563,6 +564,20 @@
 
   // --- Map ---------------------------------------------------------------------
 
+  // Base layers whose imagery is dark — the route dash must go light to show up.
+  const DARK_BASES = new Set(['Satellite', 'Dark', 'LINZ aerial (NZ)']);
+  const ROUTE_STYLE = {
+    light: { line: '#454e57', casing: 'rgba(255,255,255,0.80)' },   // on the OSM/Topo/Light maps
+    dark:  { line: '#eef3f4', casing: 'rgba(0,0,0,0.55)' },         // on satellite / dark imagery
+  };
+  // Colour the coach-road corridor (+ its halo) to contrast with the active base.
+  function styleRoute(darkBase) {
+    if (!state.routeLine) return;
+    const s = darkBase ? ROUTE_STYLE.dark : ROUTE_STYLE.light;
+    state.routeLine.setStyle({ color: s.line });
+    state.routeCasing.setStyle({ color: s.casing });
+  }
+
   function buildMap() {
     const map = L.map('map', { scrollWheelZoom: true, preferCanvas: false }).setView([-40.85, 175.3], 8);
 
@@ -591,7 +606,13 @@
     (isDark() ? darkBase : osm).addTo(map);                  // default follows the theme
     L.control.layers(bases, null, { position: 'topright' }).addTo(map);
 
-    L.polyline(ROUTE, { color: '#5b6472', weight: 3, opacity: 0.55, dashArray: '2 7', lineCap: 'round' }).addTo(map);
+    // The dashed coach-road corridor — a halo casing plus the dash on top, then
+    // coloured to contrast with whatever base layer is showing (so it survives on
+    // satellite/dark imagery, not only the OSM map). Recoloured on layer change.
+    state.routeCasing = L.polyline(ROUTE, { weight: 5, opacity: 0.6, dashArray: '2 7', lineCap: 'round', interactive: false }).addTo(map);
+    state.routeLine = L.polyline(ROUTE, { weight: 3, opacity: 0.9, dashArray: '2 7', lineCap: 'round', interactive: false }).addTo(map);
+    styleRoute(isDark());                                     // default base matches the theme
+    map.on('baselayerchange', (e) => styleRoute(DARK_BASES.has(e.name)));
     state.map = map;
     drawMarkers({ fit: true });
     // The map lives in a sticky/grid cell that may not have its final size on the
