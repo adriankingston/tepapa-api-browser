@@ -1,0 +1,5 @@
+{
+  "_comment": "Curator-approved PRECISE photo locations. Each entry pins one image (by any of its registration numbers) to an exact point, which then renders as its own diamond marker instead of the shared gazetteer dot. Populated from moderated Google Form suggestions.",
+  "_schema": { "reg": "D.000xxx or O.0xxxxx", "lat": -41.0, "lng": 175.0, "by": "contributor name (optional, shown as 'located by')", "note": "optional curator note, not displayed" },
+  "locations": []
+}

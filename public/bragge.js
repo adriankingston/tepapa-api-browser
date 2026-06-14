@@ -19,6 +19,41 @@
 
   const BRAGGE_ID = '4243';
 
+  // --- Crowd-sourced precise locations -----------------------------------------
+  // Visitors can pin the exact spot a photo was taken ("Suggest a precise
+  // location" in the lightbox). Submitting opens a PRE-FILLED Google Form owned
+  // by the curator; approved points are added to bragge-locations.json (reg →
+  // lat/lng) and then render as their own exact marker, replacing the shared
+  // gazetteer dot. Nothing here is secret — the form id + field ids are public.
+  //
+  // SETUP (one-time, in the curator's Google account):
+  //   1. Create a Google Form, e.g. "Bragge map — suggest a photo location".
+  //   2. Add SHORT-ANSWER questions in THIS order:
+  //        Registration number · Photo title · Latitude · Longitude ·
+  //        Te Papa record URL · "What does this spot show? / how do you know?" ·
+  //        "Your name (optional)"
+  //      The first five are pre-filled automatically; the visitor writes the
+  //      last two. (Mark all of them "not required" so a pre-fill never blocks.)
+  //   3. Form ⋮ menu → "Get pre-filled link". For each of the first five answers
+  //      type the UPPER-CASE token REG, TITLE, LAT, LNG, URL respectively, click
+  //      "Get link" → Copy. The link looks like:
+  //        https://docs.google.com/forms/d/e/<FORM_ID>/viewform?usp=pp_url
+  //          &entry.111111=REG&entry.222222=TITLE&entry.333333=LAT
+  //          &entry.444444=LNG&entry.555555=URL
+  //   4. Paste <FORM_ID> and each entry.NNN number below (match the token).
+  //   5. Form → Settings: keep "Limit to 1 response" OFF and any "restrict to
+  //      <org>" OFF so anyone can submit. Responses → link a Google Sheet to
+  //      moderate. (Send me approved rows and I add them to bragge-locations.json.)
+  // Until `id` is filled the picker still works and copies the coordinates to the
+  // clipboard instead of opening the form.
+  const SUGGEST_FORM = {
+    id: '1FAIpQLSfyBSn8hiepnAswiz7IHtiV4x7ZP1sviUJfLCD4aQVvlnUVmQ',   // token in /forms/d/e/<id>/viewform
+    entry: {
+      reg: 'entry.1027090352', title: 'entry.746195277',
+      lat: 'entry.1654933462', lng: 'entry.232982861', url: 'entry.398227931',
+    },
+  };
+
   // --- The route, south → north -------------------------------------------------
   // Each leg is a stretch of the 1870s coach road from Wellington up to the
   // Manawatū. Colours echo the main app's record-type palette.
@@ -324,12 +359,15 @@
     byStop: new Map(),   // stopKey -> { stop, photos:[] }
     totalPlaced: 0,      // total placed records (prints + negatives) before grouping
     imageDupes: [],      // print-dupe groups from bragge-dupes.json (reg-number arrays)
+    locations: new Map(),// reg -> { lat, lng, by } — curator-approved precise points
     linzKey: null,       // LINZ Basemaps API key (from /api/mapconfig) — enables the NZ aerial layer
     routeOnly: true,     // hide Elsewhere + studio-attributed by default
     map: null,
-    markers: new Map(),  // stopKey -> L.circleMarker
+    markers: new Map(),  // stopKey -> L.circleMarker (still-approximate photos)
+    pinMarkers: [],      // L.marker per precisely-located photo
     selected: null,
     lb: { photos: [], i: 0, v: 0 },
+    sg: { cl: null, map: null, marker: null },   // the "suggest a location" picker
   };
 
   const $ = (sel) => document.querySelector(sel);
@@ -400,8 +438,14 @@
   // automatic groups sort the negative to the front before calling.
   function addCluster(members) {
     const rep = members[0];
+    // A curator-approved precise point (on ANY version's reg) pins the whole image.
+    let coord = null;
+    for (const m of members) {
+      const loc = state.locations.get(String(m.rec.identifier || ''));
+      if (loc) { coord = loc; break; }
+    }
     const cluster = {
-      rec: rep.rec, img: rep.img, stop: rep.stop, source: rep.source,
+      rec: rep.rec, img: rep.img, stop: rep.stop, source: rep.source, coord,
       count: members.length,
       versions: members.map((m) => ({ rec: m.rec, img: m.img, negative: isNegative(m.rec), reg: m.rec.identifier || '' })),
     };
@@ -522,19 +566,27 @@
   // Always frame the journey corridor — never the off-route outliers (Dunedin,
   // Napier…), so toggling "show everything" doesn't zoom out to all of NZ.
   function fitToVisible() {
-    const bounds = [...new Set(visiblePhotos().map((p) => p.stop.key))]
-      .filter((k) => GAZ_BY_KEY[k].leg !== 'Elsewhere')
-      .map((k) => [GAZ_BY_KEY[k].lat, GAZ_BY_KEY[k].lon]);
-    if (bounds.length) state.map.fitBounds(bounds, { padding: [40, 40], maxZoom: 10 });
+    const show = visiblePhotos();
+    const pts = [];
+    for (const p of show) {                                   // exact contributor points
+      if (p.coord && p.stop.leg !== 'Elsewhere') pts.push([p.coord.lat, p.coord.lng]);
+    }
+    for (const k of new Set(show.filter((p) => !p.coord).map((p) => p.stop.key))) {
+      if (GAZ_BY_KEY[k].leg !== 'Elsewhere') pts.push([GAZ_BY_KEY[k].lat, GAZ_BY_KEY[k].lon]);
+    }
+    if (pts.length) state.map.fitBounds(pts, { padding: [40, 40], maxZoom: 10 });
   }
 
   function drawMarkers({ fit } = {}) {
     for (const m of state.markers.values()) m.remove();
     state.markers.clear();
+    for (const m of state.pinMarkers) m.remove();
+    state.pinMarkers = [];
     const show = visiblePhotos();
-    const counts = new Map();
-    for (const p of show) counts.set(p.stop.key, (counts.get(p.stop.key) || 0) + 1);
 
+    // Still-approximate photos aggregate into one circle per gazetteer stop.
+    const counts = new Map();
+    for (const p of show) if (!p.coord) counts.set(p.stop.key, (counts.get(p.stop.key) || 0) + 1);
     for (const [key, n] of counts) {
       const stop = GAZ_BY_KEY[key];
       const r = Math.max(7, Math.min(26, 6 + Math.sqrt(n) * 3.2));
@@ -544,6 +596,22 @@
       m.bindTooltip(`${stop.label} · ${n}`, { direction: 'top', offset: [0, -r] });
       m.on('click', () => selectStop(key, { fly: false }));
       state.markers.set(key, m);
+    }
+
+    // Precisely-located photos break out as their own diamond at the exact point.
+    for (const p of show) {
+      if (!p.coord) continue;
+      const gi = state.photos.indexOf(p);
+      const icon = L.divIcon({
+        className: 'bragge-pin-wrap',
+        html: `<span class="bragge-pin" style="background:${LEGS[p.stop.leg].color}"></span>`,
+        iconSize: [16, 16], iconAnchor: [8, 8],
+      });
+      const m = L.marker([p.coord.lat, p.coord.lng], { icon, riseOnHover: true }).addTo(state.map);
+      m.bindTooltip(`${shortTitle(p.rec.title)}${p.coord.by ? ' · located by ' + p.coord.by : ''}`,
+        { direction: 'top', offset: [0, -9] });
+      m.on('click', () => openLightbox(gi));
+      state.pinMarkers.push(m);
     }
     if (fit) fitToVisible();
   }
@@ -577,13 +645,15 @@
           const w = Math.round(thumbAspect(p.img) * RAIL_THUMB_H);
           const badge = p.count > 1
             ? `<span class="th-badge" title="${p.count} copies — prints &amp; negative">×${p.count}</span>` : '';
+          const pin = p.coord
+            ? `<span class="th-pin" title="Precisely located${p.coord.by ? ' by ' + esc(p.coord.by) : ''}">📍</span>` : '';
           const regs = (p.versions || []).map((v) => v.reg).filter(Boolean);
           const repReg = p.rec.identifier || (regs[0] || '');
           const regLabel = esc(repReg) + (p.count > 1 ? ` <span class="th-more">+${p.count - 1}</span>` : '');
           const tip = esc(shortTitle(p.rec.title)) + (regs.length ? ` — ${esc(regs.join(', '))}` : '');
           html += `<figure class="th-fig" style="width:${w}px">
             <button class="th${p.count > 1 ? ' th-stack' : ''}" type="button" data-photo="${gi}" title="${tip}">
-              <img loading="lazy" src="${esc(p.img.thumbnailUrl)}" alt="${esc(shortTitle(p.rec.title))}">${badge}
+              <img loading="lazy" src="${esc(p.img.thumbnailUrl)}" alt="${esc(shortTitle(p.rec.title))}">${badge}${pin}
             </button>
             <figcaption class="th-reg">${regLabel}</figcaption>
           </figure>`;
@@ -662,6 +732,12 @@
       (full ? `<a href="${esc(full)}" target="_blank" rel="noopener">Full image ↗</a>` : '');
     $('#lb-prev').hidden = state.lb.photos.length < 2;
     $('#lb-next').hidden = state.lb.photos.length < 2;
+    // Precise-location state + the "suggest" call to action.
+    const loc = cl.coord;
+    const located = $('#lb-located');
+    located.textContent = loc ? `📍 Precisely located${loc.by ? ' by ' + loc.by : ''}` : '';
+    located.hidden = !loc;
+    $('#lb-suggest').textContent = loc ? '📍 Suggest a correction' : '📍 Suggest a precise location';
   }
   function lbStep(d) {
     if (!state.lb.photos.length) return;
@@ -673,6 +749,103 @@
     $('#lightbox').hidden = true;
     document.body.style.overflow = '';
   }
+
+  // --- "Suggest a precise location" picker -------------------------------------
+  // A draggable pin on a small map (with satellite / LINZ aerial to line up
+  // landmarks). The chosen lat/lng hand off to a pre-filled Google Form the
+  // curator moderates; approved points land in bragge-locations.json.
+
+  function setLatLng(lat, lng) {
+    $('#sg-lat').value = (+lat).toFixed(6);
+    $('#sg-lng').value = (+lng).toFixed(6);
+  }
+
+  function openSuggest(cl) {
+    if (!cl) return;
+    state.sg.cl = cl;
+    const start = cl.coord ? [cl.coord.lat, cl.coord.lng] : [cl.stop.lat, cl.stop.lon];
+    $('#sg-photo').textContent = shortTitle(cl.rec.title) + (cl.rec.identifier ? ' · ' + cl.rec.identifier : '');
+    $('#sg-note').textContent = SUGGEST_FORM.id
+      ? 'Opens a short form with the registration number & coordinates pre-filled. Suggestions are reviewed before they appear on the map.'
+      : 'The suggestions form isn’t connected yet — Submit will copy the coordinates so you can send them to the curator.';
+    setLatLng(start[0], start[1]);
+    $('#suggest').hidden = false;
+
+    if (!state.sg.map) {
+      const map = L.map('suggest-map', { scrollWheelZoom: true }).setView(start, 14);
+      const bases = {
+        'Map': L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19, attribution: '© OpenStreetMap contributors' }),
+        'Satellite': L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+          maxZoom: 19, attribution: 'Imagery © Esri, Maxar, Earthstar Geographics' }),
+      };
+      if (state.linzKey) {
+        bases['LINZ aerial (NZ)'] = L.tileLayer(
+          `https://basemaps.linz.govt.nz/v1/tiles/aerial/3857/{z}/{x}/{y}.webp?api=${state.linzKey}`,
+          { maxZoom: 19, attribution: '© LINZ CC BY 4.0' });
+      }
+      bases['Map'].addTo(map);
+      L.control.layers(bases, null, { collapsed: false }).addTo(map);   // vendored Leaflet has no icon image
+      const pinIcon = L.divIcon({                                       // image-free draggable pin
+        className: 'sg-pin-wrap', html: '<span class="sg-pin"></span>',
+        iconSize: [28, 28], iconAnchor: [14, 14],
+      });
+      const marker = L.marker(start, { draggable: true, autoPan: true, icon: pinIcon }).addTo(map);
+      marker.on('move', () => { const ll = marker.getLatLng(); setLatLng(ll.lat, ll.lng); });
+      map.on('click', (e) => marker.setLatLng(e.latlng));
+      state.sg.map = map; state.sg.marker = marker;
+    } else {
+      state.sg.map.setView(start, 14);
+      state.sg.marker.setLatLng(start);
+    }
+    // The container was display:none until now — re-measure once it's laid out.
+    requestAnimationFrame(() => state.sg.map.invalidateSize());
+    setTimeout(() => state.sg.map.invalidateSize(), 200);
+  }
+
+  // Typing coordinates moves the pin (so people can paste exact lat/long too).
+  function syncFromInputs() {
+    const lat = parseFloat($('#sg-lat').value), lng = parseFloat($('#sg-lng').value);
+    if (isFinite(lat) && isFinite(lng) && state.sg.marker) {
+      state.sg.marker.setLatLng([lat, lng]);
+      state.sg.map.panTo([lat, lng]);
+    }
+  }
+
+  function suggestUrl(cl, lat, lng) {
+    if (!SUGGEST_FORM.id) return null;
+    const vals = {
+      reg: cl.rec.identifier || '',
+      title: shortTitle(cl.rec.title),
+      lat, lng,
+      url: `https://collections.tepapa.govt.nz/object/${cl.rec.id}`,
+    };
+    const params = ['usp=pp_url'];
+    for (const k in SUGGEST_FORM.entry) {
+      const id = SUGGEST_FORM.entry[k];
+      if (id && vals[k] != null && vals[k] !== '') params.push(`${id}=${encodeURIComponent(vals[k])}`);
+    }
+    return `https://docs.google.com/forms/d/e/${SUGGEST_FORM.id}/viewform?${params.join('&')}`;
+  }
+
+  function submitSuggestion() {
+    const cl = state.sg.cl;
+    if (!cl) return;
+    const lat = parseFloat($('#sg-lat').value), lng = parseFloat($('#sg-lng').value);
+    if (!isFinite(lat) || !isFinite(lng)) { $('#sg-note').textContent = 'Please choose a point on the map first.'; return; }
+    const slat = lat.toFixed(6), slng = lng.toFixed(6);
+    const url = suggestUrl(cl, slat, slng);
+    if (url) {
+      window.open(url, '_blank', 'noopener');
+      closeSuggest();
+    } else {
+      const text = `${cl.rec.identifier || ''}\t${slat}\t${slng}\t${shortTitle(cl.rec.title)}`;
+      if (navigator.clipboard) navigator.clipboard.writeText(text).catch(() => {});
+      $('#sg-note').textContent = `Coordinates copied: ${slat}, ${slng}. Send them to the curator — thank you!`;
+    }
+  }
+
+  function closeSuggest() { $('#suggest').hidden = true; }
 
   // --- Boot --------------------------------------------------------------------
 
@@ -687,11 +860,16 @@
     if (note) note.textContent = grouped > 0
       ? `${state.totalPlaced} prints & negatives → ${state.photos.length} distinct images (${grouped} duplicates grouped behind a single representative, where unambiguous).`
       : '';
+    const pinned = onR.filter((p) => p.coord).length;
+    const cta = $('#loc-cta');
+    if (cta) cta.innerHTML = (pinned ? `<strong>${pinned}</strong> pinpointed by visitors so far. ` : '')
+      + `Know exactly where one was taken? Open a photo and choose <em>“Suggest a precise location”</em>.`;
   }
 
   function renderLegend() {
     $('#legend').innerHTML = LEG_ORDER.filter((l) => l !== 'Elsewhere').map((l) =>
-      `<span class="lg"><span class="lg-dot" style="background:${LEGS[l].color}"></span>${esc(l)}</span>`).join('');
+      `<span class="lg"><span class="lg-dot" style="background:${LEGS[l].color}"></span>${esc(l)}</span>`).join('')
+      + `<span class="lg"><span class="lg-pin"></span>Pinpointed exactly</span>`;
   }
 
   async function boot() {
@@ -701,6 +879,15 @@
         fetch('/bragge-dupes.json').then((r) => r.json())
           .then((d) => { state.imageDupes = (d && d.groups) || []; })
           .catch(() => { state.imageDupes = []; }),   // grouping still works without the dupe file
+        fetch('/bragge-locations.json').then((r) => r.json())
+          .then((d) => {
+            for (const L of (d && d.locations) || []) {
+              if (L && L.reg && isFinite(L.lat) && isFinite(L.lng)) {
+                state.locations.set(String(L.reg), { lat: +L.lat, lng: +L.lng, by: L.by || '' });
+              }
+            }
+          })
+          .catch(() => {}),   // no approved points yet — every photo stays on its stop dot
         fetch('/api/mapconfig').then((r) => r.json())
           .then((c) => { state.linzKey = (c && c.linz) || null; })
           .catch(() => { state.linzKey = null; }),    // LINZ layer just won't appear
@@ -741,7 +928,18 @@
       renderLightbox();
     });
     $('#lightbox').addEventListener('click', (e) => { if (e.target.id === 'lightbox') closeLightbox(); });
+
+    // Suggest-a-location picker
+    $('#lb-suggest').addEventListener('click', () => openSuggest(state.lb.photos[state.lb.i]));
+    $('#sg-close').addEventListener('click', closeSuggest);
+    $('#sg-cancel').addEventListener('click', closeSuggest);
+    $('#sg-submit').addEventListener('click', submitSuggestion);
+    $('#sg-lat').addEventListener('change', syncFromInputs);
+    $('#sg-lng').addEventListener('change', syncFromInputs);
+    $('#suggest').addEventListener('click', (e) => { if (e.target.id === 'suggest') closeSuggest(); });
+
     document.addEventListener('keydown', (e) => {
+      if (!$('#suggest').hidden) { if (e.key === 'Escape') closeSuggest(); return; }
       if ($('#lightbox').hidden) return;
       if (e.key === 'Escape') closeLightbox();
       else if (e.key === 'ArrowLeft') lbStep(-1);

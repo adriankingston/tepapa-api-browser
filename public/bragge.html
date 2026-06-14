@@ -45,6 +45,7 @@
       </label>
       <div id="legend" class="bragge-legend"></div>
       <p id="dup-note" class="dup-note"></p>
+      <p id="loc-cta" class="loc-cta"></p>
     </div>
   </section>
 
@@ -75,9 +76,33 @@
         <span id="lb-place" class="lb-place"></span>
         <span id="lb-versions" class="lb-versions"></span>
         <span id="lb-meta" class="lb-meta"></span>
+        <span id="lb-located" class="lb-located" hidden></span>
+        <button id="lb-suggest" class="lb-suggest" type="button">📍 Suggest a precise location</button>
       </figcaption>
     </figure>
     <button id="lb-next" class="lb-arrow lb-r" type="button" aria-label="Next">›</button>
+  </div>
+
+  <!-- Suggest a precise location -->
+  <div id="suggest" class="suggest-modal" hidden>
+    <div class="suggest-card">
+      <button id="sg-close" class="sg-close" type="button" aria-label="Close">×</button>
+      <h2 class="sg-h">Suggest a precise location</h2>
+      <p id="sg-photo" class="sg-sub"></p>
+      <div class="sg-body">
+        <div id="suggest-map" class="sg-map"></div>
+        <div class="sg-side">
+          <p class="sg-hint">Drag the pin to the exact spot the photograph was taken — or click the map. Switch to the satellite or aerial layer to line up landmarks. You can also paste coordinates below.</p>
+          <label class="sg-field">Latitude<input id="sg-lat" type="text" inputmode="decimal" autocomplete="off"></label>
+          <label class="sg-field">Longitude<input id="sg-lng" type="text" inputmode="decimal" autocomplete="off"></label>
+          <div class="sg-actions">
+            <button id="sg-submit" class="sg-submit" type="button">Submit suggestion →</button>
+            <button id="sg-cancel" class="sg-cancel" type="button">Cancel</button>
+          </div>
+          <p id="sg-note" class="sg-note"></p>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script src="/vendor/leaflet.min.js"></script>
