@@ -793,6 +793,23 @@ function mapPopupHtml(r, place) {
 
 const MAP_MAX = 1500, MAP_PAGE = 200;   // the API silently caps scored `size` ~250 and is flaky on deep parallel paging, so page sequentially
 
+// Selectable base layers for the map view (mirrors the Bragge story-map). All
+// but LINZ need no key. Fresh instances per map — a tile layer belongs to one map.
+function mapBaseLayers() {
+  return {
+    'Map (OpenStreetMap)': L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap contributors' }),
+    'Topographic': L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { maxZoom: 17, attribution: '&copy; OpenStreetMap contributors, SRTM &middot; &copy; OpenTopoMap (CC-BY-SA)' }),
+    'Satellite': L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Imagery &copy; Esri, Maxar, Earthstar Geographics' }),
+    'Light': L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 20, subdomains: 'abcd', attribution: '&copy; OpenStreetMap contributors &copy; CARTO' }),
+  };
+}
+const linzAerialLayer = (key) => L.tileLayer(
+  `https://basemaps.linz.govt.nz/v1/tiles/aerial/3857/{z}/{x}/{y}.webp?api=${key}`,
+  { maxZoom: 19, attribution: '&copy; <a href="https://www.linz.govt.nz/linz-copyright" target="_blank" rel="noopener">LINZ CC BY 4.0</a> &middot; Imagery Basemap contributors' });
+// LINZ Basemaps key (from /api/mapconfig), fetched once and cached. Null when unset.
+let _linzKeyPromise = null;
+const getLinzKey = () => (_linzKeyPromise ||= fetch('/api/mapconfig').then((r) => r.json()).then((c) => (c && c.linz) || null).catch(() => null));
+
 async function loadMapResults() {
   const mapEl = document.getElementById('map');
   if (!mapEl || typeof L === 'undefined') return;
@@ -800,9 +817,11 @@ async function loadMapResults() {
   if (lmap) { lmap.remove(); lmap = null; }
   // canvas renderer keeps ~1000 markers smooth (SVG bogs down past a few hundred)
   lmap = L.map(mapEl, { worldCopyJump: true, preferCanvas: true }).setView([-41, 173], 4);
-  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 18, attribution: '&copy; OpenStreetMap contributors',
-  }).addTo(lmap);
+  const bases = mapBaseLayers();
+  bases['Map (OpenStreetMap)'].addTo(lmap);
+  const layerCtrl = L.control.layers(bases, null, { position: 'topright' }).addTo(lmap);
+  // Add the LINZ aerial layer once its key resolves, if this render is still current.
+  getLinzKey().then((key) => { if (key && token === mapSeq && lmap) layerCtrl.addBaseLayer(linzAerialLayer(key), 'LINZ aerial (NZ)'); });
   requestAnimationFrame(() => lmap && lmap.invalidateSize());
 
   const status = document.getElementById('map-status');
