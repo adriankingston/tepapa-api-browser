@@ -302,12 +302,17 @@
   //  • 2026-06-14: negative D.000123 ("…looking North") + its 3 prints share no
   //    common catalogue title, and the print group also held a DIFFERENT view
   //    (O.026974, which correctly falls out as its own image).
+  //  • 2026-06-14: three copies of the same "Ford of Waiohine River at Greytown"
+  //    panorama print (no negative held — its source plates are separate frames),
+  //    representative O.020834 first as requested.
   const FORCED_GROUPS = [
     ['D.000123', 'O.047751', 'O.011680', 'O.040858'],
+    ['O.020834', 'O.032450', 'O.032494'],
   ];
 
+  // members[0] is the representative. Forced groups pass their intended order;
+  // automatic groups sort the negative to the front before calling.
   function addCluster(members) {
-    members.sort((a, b) => (isNegative(b.rec) - isNegative(a.rec)));   // negative → representative
     const rep = members[0];
     const cluster = {
       rec: rep.rec, img: rep.img, stop: rep.stop, source: rep.source,
@@ -358,6 +363,7 @@
     for (const members of byKey.values()) {
       if (members.length < 2) continue;
       if (members.filter((m) => isNegative(m.rec)).length !== 1) continue;   // exactly one negative
+      members.sort((a, b) => (isNegative(b.rec) - isNegative(a.rec)));       // negative → representative
       members.forEach((m) => used.add(m));
       addCluster(members);
     }
@@ -543,7 +549,7 @@
     const grouped = state.totalPlaced - state.photos.length;   // duplicate prints folded away
     const note = $('#dup-note');
     if (note) note.textContent = grouped > 0
-      ? `${state.totalPlaced} prints & negatives → ${state.photos.length} images (${grouped} duplicate prints grouped behind their negative; only where a single negative is unambiguous).`
+      ? `${state.totalPlaced} prints & negatives → ${state.photos.length} distinct images (${grouped} duplicates grouped behind a single representative, where unambiguous).`
       : '';
   }
 
