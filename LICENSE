@@ -46,6 +46,13 @@ Roboto  (public/fonts/roboto-latin.woff2, public/fonts/roboto-latinext.woff2)
   Licensed under the Apache License, Version 2.0.
   https://fonts.google.com/specimen/Roboto
 
+Cal Sans  (public/fonts/calsans-latin.woff2, public/fonts/calsans-latinext.woff2)
+  The James Bragge story-map's page title is set in the Cal Sans display
+  typeface (latin + latin-extended subsets, self-hosted).
+  Copyright the Cal.com, Inc. team and contributors.
+  Licensed under the SIL Open Font License, Version 1.1.
+  https://fonts.google.com/specimen/Cal+Sans
+
 OpenSeadragon  (public/vendor/openseadragon.min.js)
   The image lightbox uses OpenSeadragon for IIIF deep-zoom viewing.
   Copyright (c) 2009 CodePlex Foundation and (c) 2010-2025 OpenSeadragon
