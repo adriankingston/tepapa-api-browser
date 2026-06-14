@@ -44,6 +44,15 @@
 
   "sections": [
     {
+      "type": "feature",
+      "eyebrow": "A photographic journey · c.1875",
+      "title": "James Bragge — Wellington to the Manawatū",
+      "blurb": "Follow the photographer’s wet-plate camera up the old coach road over the Remutaka Range and through the Wairarapa to the Manawatū Gorge — every photograph placed on a map.",
+      "cta": "Open the story map →",
+      "href": "/bragge.html",
+      "image": "https://media.tepapa.govt.nz/collection/550311/preview"
+    },
+    {
       "type": "recent",
       "title": "Recently updated records",
       "types": ["Object", "Specimen"],

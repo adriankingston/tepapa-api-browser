@@ -2191,7 +2191,7 @@ async function loadHome() {
   if (config.stats) html += renderStats(config.stats);
   const sections = Array.isArray(config.sections) ? config.sections : [];
   html += sections.map((s, i) =>
-    `<div class="home-section" data-sec="${i}">${s.type === 'links' ? '' : '<div class="home-shelf"><div class="home-skeleton"></div></div>'}</div>`
+    `<div class="home-section" data-sec="${i}">${(s.type === 'links' || s.type === 'feature') ? '' : '<div class="home-shelf"><div class="home-skeleton"></div></div>'}</div>`
   ).join('');
   el.home.innerHTML = html;
 
@@ -2210,6 +2210,20 @@ async function loadHome() {
       host.innerHTML = `<section class="home-shelf"><h2 class="home-shelf-title">${esc(s.title || 'Explore')}</h2><div class="home-links">${chips}</div></section>`;
       host.querySelectorAll('.home-link').forEach((b) =>
         b.addEventListener('click', () => navigateTo({ q: b.dataset.q, type: 'all', from: 0, relField: null, relKw: null, relLabel: null, detail: null })));
+      return;
+    }
+    // A curated feature — a full-width banner that links out to a custom page
+    // (e.g. the James Bragge story-map). Static href, no search involved.
+    if (s.type === 'feature') {
+      host.innerHTML =
+        `<a class="home-feature" href="${esc(s.href || '#')}">` +
+        (s.image ? `<span class="home-feature-img" style="background-image:url('${esc(s.image)}')"></span>` : '') +
+        `<span class="home-feature-text">` +
+        (s.eyebrow ? `<span class="home-feature-eyebrow">${esc(s.eyebrow)}</span>` : '') +
+        `<span class="home-feature-title">${esc(s.title || '')}</span>` +
+        (s.blurb ? `<span class="home-feature-blurb">${esc(s.blurb)}</span>` : '') +
+        `<span class="home-feature-cta">${esc(s.cta || 'Explore →')}</span>` +
+        `</span></a>`;
       return;
     }
     let records = [];
@@ -2398,7 +2412,24 @@ async function applyHash() {
   const seq = ++_applySeq;
   const h = readHashParams();
 
-  if (!h.q) { showHome(); return; }
+  if (!h.q) {
+    showHome();
+    // Deep-link straight to one record with no search context (e.g. from the
+    // James Bragge story-map's "Open in browser" link): open its detail over home.
+    if (h.detail && el.overlay.hidden) {
+      const colonIdx = h.detail.indexOf(':');
+      const dtype = h.detail.slice(0, colonIdx);
+      const did = h.detail.slice(colonIdx + 1);
+      try {
+        const res = await fetch(`/api/record?href=${encodeURIComponent(`https://data.tepapa.govt.nz/collection/${dtype.toLowerCase()}/${did}`)}`);
+        if (seq !== _applySeq) return;
+        const d = await res.json();
+        const rec = d.result || d;
+        if (rec && seq === _applySeq) openDetail(rec, true);
+      } catch { /* leave home shown */ }
+    }
+    return;
+  }
   hideHome();
 
   const relFilter = h.relField
@@ -2436,7 +2467,7 @@ async function applyHash() {
       let rec = state.results.find(r => r.type === dtype && String(r.id) === did);
       if (!rec) {
         try {
-          const res = await fetch(`/api/record?href=/collection/${dtype.toLowerCase()}/${did}`);
+          const res = await fetch(`/api/record?href=${encodeURIComponent(`https://data.tepapa.govt.nz/collection/${dtype.toLowerCase()}/${did}`)}`);
           if (seq !== _applySeq) return;
           const d = await res.json();
           rec = d.result || d;
