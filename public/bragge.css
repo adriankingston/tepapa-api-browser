@@ -34,6 +34,7 @@
   --md-on-surface-variant: #c3ccce;
   --md-outline: #899295;
   --md-outline-variant: #3a464a;
+  --rail-shadow: rgba(150,215,220,0.18);   /* faint glow reads as an edge on dark */
 }
 /* The blue "tiles loading" backdrop would flash bright in dark mode. */
 :root[data-theme="dark"] .bragge-map,
@@ -175,8 +176,32 @@
 .bragge-rail {
   max-height: calc(100vh - 120px);
   overflow-y: auto;
-  padding-right: 4px;
+  padding-right: 8px;
   scroll-behavior: smooth;
+  /* Signal that this column scrolls on its own: a persistent styled scrollbar
+     (below) plus CSS-only top/bottom scroll-shadows. The "cover" gradients scroll
+     WITH the content and mask the shadow at the extremes; the "shadow" gradients
+     are pinned to the pane, so an edge shadow appears only when more is hidden
+     that way — i.e. the cues show up exactly when the rail is scrollable. */
+  background:
+    linear-gradient(var(--md-surface, #fbfcfd) 30%, rgba(127,127,127,0)) top / 100% 30px no-repeat local,
+    linear-gradient(rgba(127,127,127,0), var(--md-surface, #fbfcfd) 70%) bottom / 100% 30px no-repeat local,
+    radial-gradient(farthest-side at 50% 0, var(--rail-shadow, rgba(20,30,50,0.20)), rgba(127,127,127,0)) top / 100% 14px no-repeat,
+    radial-gradient(farthest-side at 50% 100%, var(--rail-shadow, rgba(20,30,50,0.20)), rgba(127,127,127,0)) bottom / 100% 14px no-repeat;
+}
+/* A classic, always-visible scrollbar (overrides macOS/Chromium overlay bars,
+   which auto-hide and made the independent scroll undiscoverable). NOTE: do not
+   add `scrollbar-width`/`scrollbar-color` here — a non-auto standard value makes
+   Chromium ignore these ::-webkit rules and fall back to a thin overlay bar. */
+.bragge-rail::-webkit-scrollbar { width: 11px; }
+.bragge-rail::-webkit-scrollbar-track { background: transparent; }
+.bragge-rail::-webkit-scrollbar-thumb {
+  background: var(--md-outline-variant, #bfc8ca);
+  border: 3px solid transparent; background-clip: padding-box; border-radius: 999px;
+}
+.bragge-rail:hover::-webkit-scrollbar-thumb,
+.bragge-rail::-webkit-scrollbar-thumb:hover {
+  background: var(--md-outline, #6f797b); background-clip: padding-box;
 }
 
 /* Legs & stops */
@@ -376,7 +401,7 @@
   .bragge-intro { grid-template-columns: 1fr; gap: 18px; }
   .bragge-main { grid-template-columns: 1fr; }
   .bragge-map { position: relative; top: 0; height: 56vh; min-height: 360px; }
-  .bragge-rail { max-height: none; overflow: visible; }
+  .bragge-rail { max-height: none; overflow: visible; background: none; }   /* flows inline — no scroll cues */
   .lb-arrow { width: 44px; height: 60px; font-size: 28px; }
 }
 @media (max-width: 760px) {
