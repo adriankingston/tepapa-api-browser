@@ -203,11 +203,19 @@
   border-radius: var(--md-shape-lg, 16px);
   padding: 16px 18px;
 }
+/* The stats band now sits in its own box below the intro text (left column). */
+.intro-stats-box {
+  margin-top: 20px;
+  background: var(--md-surface-container-low, #f4f6f7);
+  border: 1px solid var(--md-outline-variant, #bfc8ca);
+  border-radius: var(--md-shape-lg, 16px);
+  padding: 16px 18px;
+}
 .bragge-stats {
   display: flex;
   gap: 18px;
   flex-wrap: wrap;
-  margin-bottom: 14px;
+  margin-bottom: 0;
 }
 .bragge-stats div { display: flex; flex-direction: column; }
 .bragge-stats b { font: 600 26px/1 var(--md-font, sans-serif); color: var(--md-primary, #00696f); }
@@ -219,8 +227,7 @@
   gap: 9px;
   font: var(--md-body-md, 400 14px/20px sans-serif);
   cursor: pointer;
-  padding: 8px 0;
-  border-top: 1px solid var(--md-outline-variant, #bfc8ca);
+  padding: 0 0 8px;
 }
 .route-switch input { margin-top: 2px; width: 16px; height: 16px; accent-color: var(--md-primary, #00696f); }
 .route-switch small { color: var(--muted, #5b6472); display: block; }
