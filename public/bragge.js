@@ -442,6 +442,17 @@
     for (const members of byKey.values()) {
       if (members.length > 1 && members.filter((m) => isNegative(m.rec)).length === 1) mergeGroup(members, 0);
     }
+    // (d) Album twins: the "New Zealand scenery" album was issued in two editions
+    //     (registration numbers O.0324xx and O.0325xx, offset ~44), so each plate
+    //     has an identical twin print sharing its caption. Merge same-title album
+    //     prints — this catches the wide-panorama twins that hashing misses, while
+    //     NOT touching the multi-frame O.026xxx sequences or the distinct negatives
+    //     (different frames of a sweep that happen to share a caption).
+    const isAlbumPrint = (rec) => /^O\.032[45]\d\d/.test(String(rec.identifier || ''));
+    for (const members of byKey.values()) {
+      const twins = members.filter((m) => isAlbumPrint(m.rec));
+      if (twins.length > 1) mergeGroup(twins, 0);
+    }
 
     // Build one cluster per connected component. Representative rank: a curated
     // FORCED head always wins (3); otherwise prefer a negative ("behind the
