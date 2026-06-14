@@ -5,8 +5,67 @@
   color: var(--text, #1a1d23);
 }
 
+/* --- Dark theme -------------------------------------------------------------- */
+/* Scoped to this page (bragge.css only loads here). Overrides the light tokens
+   from style.css :root; `:root[data-theme="dark"]` (0,2,0) outscores :root. */
+:root[data-theme="dark"] {
+  --bg: #0e1416;
+  --panel: #161d20;
+  --panel-2: #1d262a;
+  --line: #2b363a;
+  --text: #e2e6e7;
+  --muted: #9aa6aa;
+  --accent: #4fd1d9;
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.55);
+
+  --md-primary: #74d3da;
+  --md-primary-hover: #8fe0e6;
+  --md-on-primary: #00363a;
+  --md-primary-container: #00474c;
+  --md-on-primary-container: #9defe6;
+
+  --md-surface: #0e1416;
+  --md-surface-container-lowest: #080c0e;
+  --md-surface-container-low: #151c1f;
+  --md-surface-container: #1a2225;
+  --md-surface-container-high: #232c30;
+  --md-surface-container-highest: #2c363a;
+  --md-on-surface: #e2e6e7;
+  --md-on-surface-variant: #c3ccce;
+  --md-outline: #899295;
+  --md-outline-variant: #3a464a;
+}
+/* The blue "tiles loading" backdrop would flash bright in dark mode. */
+:root[data-theme="dark"] .bragge-map,
+:root[data-theme="dark"] .sg-map { background: #0a1115; }
+
+/* Leaflet's own controls default to white — tone them for the dark basemap. */
+:root[data-theme="dark"] .leaflet-bar a,
+:root[data-theme="dark"] .leaflet-control-layers,
+:root[data-theme="dark"] .leaflet-control-attribution {
+  background: #1a2225; color: #c3ccce;
+}
+:root[data-theme="dark"] .leaflet-bar a { border-bottom-color: #3a464a; }
+:root[data-theme="dark"] .leaflet-bar a:hover { background: #232c30; }
+:root[data-theme="dark"] .leaflet-control-attribution a,
+:root[data-theme="dark"] .leaflet-control-layers a { color: #74d3da; }
+
+/* --- Theme toggle ------------------------------------------------------------ */
+.theme-toggle {
+  position: absolute; top: 16px; right: 20px; z-index: 5;
+  width: 38px; height: 38px; padding: 0; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 18px; line-height: 1;
+  background: var(--md-surface-container-low, #f4f6f7);
+  border: 1px solid var(--md-outline-variant, #bfc8ca);
+  border-radius: var(--md-shape-full, 999px);
+  transition: background 160ms, border-color 160ms;
+}
+.theme-toggle:hover { background: var(--md-surface-container-high, #e8eaec); border-color: var(--md-outline, #6f797b); }
+
 /* --- Header ------------------------------------------------------------------ */
 .bragge-top {
+  position: relative;
   max-width: var(--content-max, 1280px);
   margin: 0 auto;
   padding: 18px 20px 6px;

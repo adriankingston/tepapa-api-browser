@@ -363,6 +363,7 @@
     linzKey: null,       // LINZ Basemaps API key (from /api/mapconfig) — enables the NZ aerial layer
     routeOnly: true,     // hide Elsewhere + studio-attributed by default
     map: null,
+    lightBase: null, darkBase: null,   // the two theme-default base layers (for the toggle)
     markers: new Map(),  // stopKey -> L.circleMarker (still-approximate photos)
     pinMarkers: [],      // L.marker per precisely-located photo
     selected: null,
@@ -371,6 +372,39 @@
   };
 
   const $ = (sel) => document.querySelector(sel);
+
+  // --- Theme (light / dark) ----------------------------------------------------
+  // The <html data-theme> attribute is set before paint by an inline script in
+  // bragge.html (saved choice → OS preference). Dark token values live in
+  // bragge.css; here we just flip the attribute, persist it, swap the basemap,
+  // and keep the toggle's icon in sync.
+  const isDark = () => document.documentElement.dataset.theme === 'dark';
+
+  function applyMapTheme(dark) {
+    const map = state.map;
+    if (!map || !state.lightBase || !state.darkBase) return;
+    const want = dark ? state.darkBase : state.lightBase;
+    const drop = dark ? state.lightBase : state.darkBase;
+    // Only auto-swap when the *other* theme default is showing — leave a manual
+    // choice (Satellite, Topographic, LINZ…) untouched.
+    if (map.hasLayer(drop)) { map.removeLayer(drop); want.addTo(map); }
+  }
+
+  function syncThemeToggle() {
+    const btn = $('#theme-toggle');
+    if (!btn) return;
+    const dark = isDark();
+    btn.textContent = dark ? '☀️' : '🌙';
+    btn.setAttribute('aria-label', dark ? 'Switch to light mode' : 'Switch to dark mode');
+    btn.title = btn.getAttribute('aria-label');
+  }
+
+  function setTheme(dark) {
+    document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+    try { localStorage.setItem('bragge-theme', dark ? 'dark' : 'light'); } catch (e) { /* private mode */ }
+    syncThemeToggle();
+    applyMapTheme(dark);
+  }
 
   // A photo is part of the "journey" unless it's off-route, or merely attributed
   // to Wellington by the studio default (spatial) with no real location signal.
@@ -534,22 +568,27 @@
 
     // Selectable base layers (all but LINZ need no key). LINZ aerial appears only
     // when a key is configured (LINZ_API_KEY → /api/mapconfig).
+    const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19, attribution: '© OpenStreetMap contributors' });
+    const darkBase = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      maxZoom: 20, subdomains: 'abcd', attribution: '© OpenStreetMap contributors © CARTO' });
     const bases = {
-      'Map (OpenStreetMap)': L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19, attribution: '© OpenStreetMap contributors' }),
+      'Map (OpenStreetMap)': osm,
       'Topographic': L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
         maxZoom: 17, attribution: '© OpenStreetMap contributors, SRTM · © OpenTopoMap (CC-BY-SA)' }),
       'Satellite': L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
         maxZoom: 19, attribution: 'Imagery © Esri, Maxar, Earthstar Geographics' }),
       'Light': L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
         maxZoom: 20, subdomains: 'abcd', attribution: '© OpenStreetMap contributors © CARTO' }),
+      'Dark': darkBase,
     };
     if (state.linzKey) {
       bases['LINZ aerial (NZ)'] = L.tileLayer(
         `https://basemaps.linz.govt.nz/v1/tiles/aerial/3857/{z}/{x}/{y}.webp?api=${state.linzKey}`,
         { maxZoom: 19, attribution: '© <a href="https://www.linz.govt.nz/linz-copyright" target="_blank" rel="noopener">LINZ CC BY 4.0</a> · Imagery Basemap contributors' });
     }
-    bases['Map (OpenStreetMap)'].addTo(map);                 // default
+    state.lightBase = osm; state.darkBase = darkBase;
+    (isDark() ? darkBase : osm).addTo(map);                  // default follows the theme
     L.control.layers(bases, null, { position: 'topright' }).addTo(map);
 
     L.polyline(ROUTE, { color: '#5b6472', weight: 3, opacity: 0.55, dashArray: '2 7', lineCap: 'round' }).addTo(map);
@@ -773,9 +812,13 @@
 
     if (!state.sg.map) {
       const map = L.map('suggest-map', { scrollWheelZoom: true }).setView(start, 14);
+      const sgOsm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19, attribution: '© OpenStreetMap contributors' });
+      const sgDark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        maxZoom: 20, subdomains: 'abcd', attribution: '© OpenStreetMap contributors © CARTO' });
       const bases = {
-        'Map': L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          maxZoom: 19, attribution: '© OpenStreetMap contributors' }),
+        'Map': sgOsm,
+        'Dark': sgDark,
         'Satellite': L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
           maxZoom: 19, attribution: 'Imagery © Esri, Maxar, Earthstar Geographics' }),
       };
@@ -784,7 +827,7 @@
           `https://basemaps.linz.govt.nz/v1/tiles/aerial/3857/{z}/{x}/{y}.webp?api=${state.linzKey}`,
           { maxZoom: 19, attribution: '© LINZ CC BY 4.0' });
       }
-      bases['Map'].addTo(map);
+      (isDark() ? sgDark : sgOsm).addTo(map);
       L.control.layers(bases, null, { collapsed: false }).addTo(map);   // vendored Leaflet has no icon image
       const pinIcon = L.divIcon({                                       // image-free draggable pin
         className: 'sg-pin-wrap', html: '<span class="sg-pin"></span>',
@@ -907,6 +950,10 @@
     buildRail();
 
     // Controls
+    syncThemeToggle();
+    const themeBtn = $('#theme-toggle');
+    if (themeBtn) themeBtn.addEventListener('click', () => setTheme(!isDark()));
+
     const toggle = $('#route-toggle');
     toggle.checked = state.routeOnly;
     toggle.addEventListener('change', () => {

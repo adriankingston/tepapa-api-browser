@@ -4,6 +4,18 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>James Bragge: Wellington to the Manawatū — Te Papa Collections</title>
+  <script>
+    // Set the theme before first paint (no flash): saved choice, else OS preference.
+    (function () {
+      try {
+        var t = localStorage.getItem('bragge-theme');
+        if (t !== 'dark' && t !== 'light') {
+          t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        document.documentElement.dataset.theme = t;
+      } catch (e) { document.documentElement.dataset.theme = 'light'; }
+    })();
+  </script>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="icon" type="image/png" sizes="64x64" href="/favicon.png" />
   <link rel="preload" href="/fonts/roboto-latin.woff2" as="font" type="font/woff2" crossorigin>
@@ -13,6 +25,7 @@
 </head>
 <body class="bragge-page">
   <header class="bragge-top">
+    <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch theme">🌙</button>
     <a class="bragge-back" href="/" title="Back to the collections browser">← Collections browser</a>
     <div class="bragge-titles">
       <p class="bragge-eyebrow">Te Papa Tongarewa · A photographic journey, c.1875</p>
