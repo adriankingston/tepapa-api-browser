@@ -50,42 +50,43 @@
     </div>
   </header>
 
-  <section class="bragge-intro">
-    <div class="intro-text">
-      <p>In the mid-1870s the Wellington photographer <strong>James Bragge</strong> loaded his
-      wet-plate camera onto a horse-drawn van and worked his way up the new coach road from
-      Wellington, over the Remutaka (Rimutaka) Range and across the Wairarapa, into the
-      Forty- and Seventy-Mile Bush and on through the Manawatū Gorge. The resulting album,
-      <em>“New Zealand scenery: Wellington to the Wairarapa”</em>, is one of the country’s great
-      early topographical records.</p>
-      <p>Every photograph below is pulled from Te Papa’s Collections API and placed on the map
-      using a combination of catalogue assessment and AI. If you have better suggestions for more
-      accurate coordinates, suggest them in the image popup. Prints that have been made from
-      negatives have been grouped. <span class="muted">Tap a dot or a photograph to explore.</span></p>
+  <p id="status" class="bragge-status">Loading James Bragge’s photographs…</p>
+
+  <main class="bragge-main">
+    <div class="bragge-col bragge-col-left">
+      <div class="intro-text">
+        <p>In the mid-1870s the Wellington photographer <strong>James Bragge</strong> loaded his
+        wet-plate camera onto a horse-drawn van and worked his way up the new coach road from
+        Wellington, over the Remutaka (Rimutaka) Range and across the Wairarapa, into the
+        Forty- and Seventy-Mile Bush and on through the Manawatū Gorge. The resulting album,
+        <em>“New Zealand scenery: Wellington to the Wairarapa”</em>, is one of the country’s great
+        early topographical records.</p>
+        <p>Every photograph below is pulled from Te Papa’s Collections API and placed on the map
+        using a combination of catalogue assessment and AI. If you have better suggestions for more
+        accurate coordinates, suggest them in the image popup. Prints that have been made from
+        negatives have been grouped. <span class="muted">Tap a dot or a photograph to explore.</span></p>
+      </div>
       <div class="intro-stats-box">
         <div class="bragge-stats">
           <div><b id="stat-located">—</b><span>located on the route</span></div>
           <div><b id="stat-stops">—</b><span>places</span></div>
           <div><b id="stat-total">—</b><span>photos mapped</span></div>
         </div>
+        <p id="dup-note" class="dup-note"></p>
+        <p id="loc-cta" class="loc-cta"></p>
       </div>
+      <div id="map" class="bragge-map"></div>
     </div>
-    <div class="intro-side">
-      <label class="route-switch">
-        <input type="checkbox" id="route-toggle" checked>
-        <span>Journey route only <small>(hide studio &amp; off-route)</small></span>
-      </label>
-      <div id="legend" class="bragge-legend"></div>
-      <p id="dup-note" class="dup-note"></p>
-      <p id="loc-cta" class="loc-cta"></p>
+    <div class="bragge-col bragge-col-right">
+      <div class="intro-side">
+        <label class="route-switch">
+          <input type="checkbox" id="route-toggle" checked>
+          <span>Journey route only <small>(hide studio &amp; off-route)</small></span>
+        </label>
+        <div id="legend" class="bragge-legend"></div>
+      </div>
+      <aside id="rail" class="bragge-rail" aria-label="Photographs in journey order"></aside>
     </div>
-  </section>
-
-  <p id="status" class="bragge-status">Loading James Bragge’s photographs…</p>
-
-  <main class="bragge-main">
-    <div id="map" class="bragge-map"></div>
-    <aside id="rail" class="bragge-rail" aria-label="Photographs in journey order"></aside>
   </main>
 
   <footer class="footer">

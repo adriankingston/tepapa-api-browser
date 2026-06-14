@@ -185,15 +185,6 @@
 }
 
 /* --- Intro ------------------------------------------------------------------- */
-.bragge-intro {
-  max-width: var(--content-max, 1280px);
-  margin: 30px auto 0;
-  padding: 0 20px;
-  display: grid;
-  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);   /* 60:40, aligned with .bragge-main */
-  gap: 20px;
-  align-items: start;
-}
 .intro-text p { margin: 0 0 12px; font: 400 16px/1.55 var(--md-font, sans-serif); }
 .intro-text .muted { color: var(--muted, #5b6472); }
 
@@ -242,13 +233,18 @@
 /* --- Main: map + rail -------------------------------------------------------- */
 .bragge-main {
   max-width: var(--content-max, 1280px);
-  margin: 20px auto 0;
+  margin: 30px auto 0;
   padding: 0 20px 40px;
   display: grid;
-  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);   /* 60:40, aligned with .bragge-intro */
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);   /* 60:40, title tracks the 60% */
   gap: 20px;
-  align-items: start;
 }
+/* Each side is a stacked column: left = intro text, stats box, map; right =
+   route/legend box, then the rail. Grid items stretch to the (tall) row height
+   by default, leaving empty space below the map so the sticky map stays pinned
+   for the full length of the thumbnail list. */
+.bragge-col { min-width: 0; }
+.bragge-col > * + * { margin-top: 20px; }
 .bragge-map {
   height: calc(100vh - 120px);
   min-height: 460px;
@@ -261,36 +257,9 @@
 }
 .leaflet-container { font-family: var(--md-font, sans-serif); }
 
-.bragge-rail {
-  max-height: calc(100vh - 120px);
-  overflow-y: auto;
-  padding-right: 8px;
-  scroll-behavior: smooth;
-  /* Signal that this column scrolls on its own: a persistent styled scrollbar
-     (below) plus CSS-only top/bottom scroll-shadows. The "cover" gradients scroll
-     WITH the content and mask the shadow at the extremes; the "shadow" gradients
-     are pinned to the pane, so an edge shadow appears only when more is hidden
-     that way — i.e. the cues show up exactly when the rail is scrollable. */
-  background:
-    linear-gradient(var(--md-surface, #fbfcfd) 30%, rgba(127,127,127,0)) top / 100% 30px no-repeat local,
-    linear-gradient(rgba(127,127,127,0), var(--md-surface, #fbfcfd) 70%) bottom / 100% 30px no-repeat local,
-    radial-gradient(farthest-side at 50% 0, var(--rail-shadow, rgba(20,30,50,0.20)), rgba(127,127,127,0)) top / 100% 14px no-repeat,
-    radial-gradient(farthest-side at 50% 100%, var(--rail-shadow, rgba(20,30,50,0.20)), rgba(127,127,127,0)) bottom / 100% 14px no-repeat;
-}
-/* A classic, always-visible scrollbar (overrides macOS/Chromium overlay bars,
-   which auto-hide and made the independent scroll undiscoverable). NOTE: do not
-   add `scrollbar-width`/`scrollbar-color` here — a non-auto standard value makes
-   Chromium ignore these ::-webkit rules and fall back to a thin overlay bar. */
-.bragge-rail::-webkit-scrollbar { width: 11px; }
-.bragge-rail::-webkit-scrollbar-track { background: transparent; }
-.bragge-rail::-webkit-scrollbar-thumb {
-  background: var(--md-outline-variant, #bfc8ca);
-  border: 3px solid transparent; background-clip: padding-box; border-radius: 999px;
-}
-.bragge-rail:hover::-webkit-scrollbar-thumb,
-.bragge-rail::-webkit-scrollbar-thumb:hover {
-  background: var(--md-outline, #6f797b); background-clip: padding-box;
-}
+/* The rail is now full height and scrolls with the PAGE while the map stays
+   pinned (sticky) beside it — so the thumbnails rise to fill the right column. */
+.bragge-rail { padding-right: 2px; }
 
 /* Legs & stops */
 .leg { margin-bottom: 22px; }
@@ -487,7 +456,6 @@
 /* --- Responsive -------------------------------------------------------------- */
 @media (max-width: 880px) {
   .bragge-titles { max-width: none; }   /* full width when columns stack */
-  .bragge-intro { grid-template-columns: 1fr; gap: 18px; }
   .bragge-main { grid-template-columns: 1fr; }
   .bragge-map { position: relative; top: 0; height: 56vh; min-height: 360px; }
   .bragge-rail { max-height: none; overflow: visible; background: none; }   /* flows inline — no scroll cues */
