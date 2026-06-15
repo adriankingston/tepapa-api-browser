@@ -76,13 +76,94 @@
       ['Taxon', 'Taxon'], ['Specimen', 'Specimen'], ['Category', 'Category'],
       ['Topic', 'Topic / pub'],
     ];
+    const C = graphPalette();
     elLegend.innerHTML = items
       .map(([t, lbl]) => `<span class="lg"><img class="lg-ic" src="${legendIcon(t)}" alt="">${esc(lbl)}</span>`)
       .join('') +
-      `<span class="lg"><span class="dot" style="background:#bdeef1;border:1px solid #74d3da"></span>bundle (tap to expand)</span>`;
+      `<span class="lg"><span class="dot" style="background:${C.bundleBg};border:1px solid ${C.bundleBorder}"></span>bundle (tap to expand)</span>`;
   }
 
   // ---- cytoscape setup ----
+  // Canvas colours can't read CSS tokens, so pick a palette per theme. Light
+  // values match the original styling exactly; dark mirrors the --md-* dark tokens.
+  function graphPalette() {
+    const dark = document.documentElement.dataset.theme === 'dark';
+    return dark ? {
+      nodeBg: '#242b2b', nodeBorder: '#54605f', label: '#dde4e3',
+      brand: '#5fd4db', focusLabel: '#dde4e3',
+      bundleBg: '#004f54', bundleBorder: '#3f9098', bundleText: '#a8eef3',
+      doneBg: '#2f3636', doneBorder: '#54605f', doneText: '#bec9c8',
+      edge: '#54605f', edgeLabel: '#bec9c8', edgeLabelBg: '#0e1414',
+      hover: '#ffffff',
+    } : {
+      nodeBg: '#ffffff', nodeBorder: '#bfc8ca', label: '#191c1d',
+      brand: '#008e96', focusLabel: '#00363a',
+      bundleBg: '#bdeef1', bundleBorder: '#74d3da', bundleText: '#00363a',
+      doneBg: '#e1e4e6', doneBorder: '#bfc8ca', doneText: '#3f484a',
+      edge: '#bfc8ca', edgeLabel: '#3f484a', edgeLabelBg: '#fbfcfd',
+      hover: '#191c1d',
+    };
+  }
+
+  function cyStyle() {
+    const C = graphPalette();
+    return [
+      {
+        selector: 'node[kind="record"]',
+        style: {
+          // photo if the record has one, otherwise a type icon on a neutral disc
+          'background-color': C.nodeBg,
+          'background-image': (e) => (e.data('thumb') ? e.data('thumb') : iconFor(e.data('type'))),
+          // Te Papa media redirects to S3 without CORS headers, so load images
+          // without the crossorigin flag (we never read pixels back).
+          'background-image-crossorigin': 'null',
+          'background-fit': 'contain',   // never crop — show the whole image, fit inside the node
+          width: 48, height: 48,
+          'border-width': 2,
+          'border-color': C.nodeBorder,
+          label: (e) => truncateLabel(e.data('label')), 'font-size': 10, color: C.label,
+          'text-wrap': 'wrap', 'text-max-width': 86,
+          'text-valign': 'bottom', 'text-margin-y': 5,
+          'min-zoomed-font-size': 6,
+        },
+      },
+      {
+        selector: 'node.focus',                // starting record — teal primary emphasis
+        style: {
+          width: 76, height: 76, 'border-width': 4, 'border-color': C.brand,
+          'overlay-color': C.brand, 'overlay-opacity': 0.10, 'overlay-padding': 6,
+          'font-size': 12, 'font-weight': 'bold', color: C.focusLabel,
+        },
+      },
+      {
+        selector: 'node[kind="bundle"]',       // M3 filled-tonal chip
+        style: {
+          'background-image': 'none', 'background-color': C.bundleBg,
+          shape: 'round-rectangle', 'border-color': C.bundleBorder, 'border-width': 1,
+          width: 'label', height: 'label', padding: '10px',
+          label: 'data(label)', 'text-wrap': 'wrap', 'text-max-width': 130,
+          'text-valign': 'center', 'text-margin-y': 0, color: C.bundleText, 'font-size': 11,
+        },
+      },
+      { selector: 'node.bundle-done', style: { 'background-color': C.doneBg, 'border-color': C.doneBorder, color: C.doneText } },
+      { selector: 'node[kind="record"].expanded', style: { 'border-width': 3, 'border-color': C.brand } },
+      { selector: 'node.hover', style: { 'overlay-color': C.hover, 'overlay-opacity': 0.08, 'overlay-padding': 4 } },
+      { selector: 'node:selected', style: { 'border-color': C.brand, 'border-width': 3, 'overlay-color': C.brand, 'overlay-opacity': 0.12, 'overlay-padding': 4 } },
+      {
+        selector: 'edge',
+        style: {
+          width: 1.5, 'line-color': C.edge, 'curve-style': 'bezier',
+          'target-arrow-shape': 'triangle', 'target-arrow-color': C.edge, 'arrow-scale': 0.8,
+          label: 'data(label)', 'font-size': 8, color: C.edgeLabel,
+          'text-rotation': 'autorotate',
+          'text-background-color': C.edgeLabelBg, 'text-background-opacity': 0.92,
+          'text-background-padding': 1, 'min-zoomed-font-size': 7,
+        },
+      },
+      { selector: 'edge.reverse', style: { 'line-style': 'dashed' } },
+    ];
+  }
+
   function ensureCy() {
     if (cy) return cy;
     cy = cytoscape({
@@ -90,61 +171,7 @@
       wheelSensitivity: 0.2,
       minZoom: 0.15,
       maxZoom: 3,
-      style: [
-        {
-          selector: 'node[kind="record"]',
-          style: {
-            // photo if the record has one, otherwise a type icon on a white disc
-            'background-color': '#ffffff',
-            'background-image': (e) => (e.data('thumb') ? e.data('thumb') : iconFor(e.data('type'))),
-            // Te Papa media redirects to S3 without CORS headers, so load images
-            // without the crossorigin flag (we never read pixels back).
-            'background-image-crossorigin': 'null',
-            'background-fit': 'contain',   // never crop — show the whole image, fit inside the node
-            width: 48, height: 48,
-            'border-width': 2,
-            'border-color': '#bfc8ca',       // M3 outline-variant
-            label: (e) => truncateLabel(e.data('label')), 'font-size': 10, color: '#191c1d',
-            'text-wrap': 'wrap', 'text-max-width': 86,
-            'text-valign': 'bottom', 'text-margin-y': 5,
-            'min-zoomed-font-size': 6,
-          },
-        },
-        {
-          selector: 'node.focus',                // starting record — teal primary emphasis
-          style: {
-            width: 76, height: 76, 'border-width': 4, 'border-color': '#008e96',
-            'overlay-color': '#008e96', 'overlay-opacity': 0.10, 'overlay-padding': 6,
-            'font-size': 12, 'font-weight': 'bold', color: '#00363a',
-          },
-        },
-        {
-          selector: 'node[kind="bundle"]',       // M3 filled-tonal chip
-          style: {
-            'background-image': 'none', 'background-color': '#bdeef1',
-            shape: 'round-rectangle', 'border-color': '#74d3da', 'border-width': 1,
-            width: 'label', height: 'label', padding: '10px',
-            label: 'data(label)', 'text-wrap': 'wrap', 'text-max-width': 130,
-            'text-valign': 'center', 'text-margin-y': 0, color: '#00363a', 'font-size': 11,
-          },
-        },
-        { selector: 'node.bundle-done', style: { 'background-color': '#e1e4e6', 'border-color': '#bfc8ca', color: '#3f484a' } },
-        { selector: 'node[kind="record"].expanded', style: { 'border-width': 3, 'border-color': '#008e96' } },
-        { selector: 'node.hover', style: { 'overlay-color': '#191c1d', 'overlay-opacity': 0.08, 'overlay-padding': 4 } },
-        { selector: 'node:selected', style: { 'border-color': '#008e96', 'border-width': 3, 'overlay-color': '#008e96', 'overlay-opacity': 0.12, 'overlay-padding': 4 } },
-        {
-          selector: 'edge',
-          style: {
-            width: 1.5, 'line-color': '#bfc8ca', 'curve-style': 'bezier',
-            'target-arrow-shape': 'triangle', 'target-arrow-color': '#bfc8ca', 'arrow-scale': 0.8,
-            label: 'data(label)', 'font-size': 8, color: '#3f484a',
-            'text-rotation': 'autorotate',
-            'text-background-color': '#fbfcfd', 'text-background-opacity': 0.92,
-            'text-background-padding': 1, 'min-zoomed-font-size': 7,
-          },
-        },
-        { selector: 'edge.reverse', style: { 'line-style': 'dashed' } },
-      ],
+      style: cyStyle(),
     });
     cy.on('tap', 'node', (evt) => onTapNode(evt.target));
     cy.on('cxttap', 'node', (evt) => collapse(evt.target)); // right-click / long-press
@@ -404,6 +431,7 @@
     elInfo.hidden = true;
     buildLegend();
     ensureCy();
+    cy.style(cyStyle());   // re-theme in case the light/dark setting changed since last open
     cy.elements().remove();
     cy.resize();
     const focus = {

@@ -801,6 +801,7 @@ function mapBaseLayers() {
     'Topographic': L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { maxZoom: 17, attribution: '&copy; OpenStreetMap contributors, SRTM &middot; &copy; OpenTopoMap (CC-BY-SA)' }),
     'Satellite': L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Imagery &copy; Esri, Maxar, Earthstar Geographics' }),
     'Light': L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 20, subdomains: 'abcd', attribution: '&copy; OpenStreetMap contributors &copy; CARTO' }),
+    'Dark': L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 20, subdomains: 'abcd', attribution: '&copy; OpenStreetMap contributors &copy; CARTO' }),
   };
 }
 const linzAerialLayer = (key) => L.tileLayer(
@@ -818,7 +819,9 @@ async function loadMapResults() {
   // canvas renderer keeps ~1000 markers smooth (SVG bogs down past a few hundred)
   lmap = L.map(mapEl, { worldCopyJump: true, preferCanvas: true }).setView([-41, 173], 4);
   const bases = mapBaseLayers();
-  bases['Map (OpenStreetMap)'].addTo(lmap);
+  // Default to the dark base map in dark mode; the layer control still offers all.
+  const darkTheme = document.documentElement.dataset.theme === 'dark';
+  (darkTheme ? bases['Dark'] : bases['Map (OpenStreetMap)']).addTo(lmap);
   const layerCtrl = L.control.layers(bases, null, { position: 'topright' }).addTo(lmap);
   // Add the LINZ aerial layer once its key resolves, if this render is still current.
   getLinzKey().then((key) => { if (key && token === mapSeq && lmap) layerCtrl.addBaseLayer(linzAerialLayer(key), 'LINZ aerial (NZ)'); });
