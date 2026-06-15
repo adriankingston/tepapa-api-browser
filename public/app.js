@@ -2198,6 +2198,15 @@ async function loadHome() {
   if (!config) { el.home.innerHTML = '<div class="message">Couldn\'t load the home page (home.json).</div>'; return; }
 
   let html = '';
+  if (config.banner && config.banner.image) {
+    const b = config.banner;
+    const tag = b.href ? 'a' : 'div';
+    const href = b.href ? ` href="${esc(b.href)}"` : '';
+    html += `<${tag} class="home-banner"${href}>` +
+      `<img class="home-banner-img" src="${esc(b.image)}" alt="${esc(b.alt || '')}">` +
+      (b.caption ? `<span class="home-banner-caption">${esc(b.caption)}</span>` : '') +
+      `</${tag}>`;
+  }
   const hasCats = config.categories &&
     ((Array.isArray(config.categories.items) && config.categories.items.length) ||
      config.categories.source === 'collections');

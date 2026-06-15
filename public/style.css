@@ -1030,6 +1030,37 @@ a { color: var(--md-primary); }
 .home { padding: 0 0 48px; font-family: var(--md-font); }
 
 /* Intro — a graphic, branded lead-in panel */
+.home-banner {
+  position: relative;
+  display: block;
+  margin: 18px 20px 14px;
+  border-radius: 28px;
+  overflow: hidden;
+  border: 1px solid var(--md-outline-variant);
+  background: var(--md-surface-container-low);
+  text-decoration: none;
+}
+.home-banner-img {
+  display: block;
+  width: 100%;
+  height: clamp(200px, 26vw, 340px);
+  object-fit: cover;
+  object-position: center 42%;
+}
+.home-banner-caption {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  padding: 40px 24px 16px;
+  font: var(--md-body-sm);
+  color: #fff;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.62), rgba(0, 0, 0, 0));
+}
+@media (max-width: 720px) {
+  .home-banner { margin: 18px 16px 12px; }
+  .home-banner-img { height: clamp(150px, 40vw, 220px); }
+  .home-banner-caption { padding: 32px 16px 12px; font-size: 12px; }
+}
+
 .home-intro {
   position: relative;
   margin: 18px 20px 14px;
