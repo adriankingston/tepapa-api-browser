@@ -1,7 +1,7 @@
 /* Te Papa Collections Browser — front-end logic.
    Talks only to our own /api/search proxy, which adds the API key. */
 
-const PAGE_SIZE = 24;
+const PAGE_SIZE = 90;
 
 // Record types shown as result tabs, in order, with their (plural) labels.
 const TYPE_LABELS = {
