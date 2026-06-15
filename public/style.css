@@ -689,6 +689,32 @@ a { color: var(--md-primary); }
   background: var(--md-surface-container);
   z-index: 0;
 }
+
+/* Leaflet controls. The vendored build ships no images/ dir, so the collapsed
+   layers control's icon (images/layers.png) 404s and renders as a blank square.
+   Supply our own stacked-layers glyph as an inline SVG (light + dark), and tone
+   the controls for the dark basemap. */
+/* Scoped under .leaflet-control-layers to out-specify Leaflet's own
+   .leaflet-retina / .leaflet-touch toggle rules (which set the 404-ing PNG). */
+.leaflet-control-layers .leaflet-control-layers-toggle {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23191c1d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolygon points='12 2 2 7 12 12 22 7 12 2'/%3E%3Cpolyline points='2 17 12 22 22 17'/%3E%3Cpolyline points='2 12 12 17 22 12'/%3E%3C/svg%3E");
+  background-size: 22px 22px;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+[data-theme="dark"] .leaflet-control-layers .leaflet-control-layers-toggle {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23cbc6c1' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolygon points='12 2 2 7 12 12 22 7 12 2'/%3E%3Cpolyline points='2 17 12 22 22 17'/%3E%3Cpolyline points='2 12 12 17 22 12'/%3E%3C/svg%3E");
+}
+[data-theme="dark"] .leaflet-bar a,
+[data-theme="dark"] .leaflet-control-layers,
+[data-theme="dark"] .leaflet-control-attribution {
+  background: var(--md-surface-container-high);
+  color: var(--md-on-surface-variant);
+}
+[data-theme="dark"] .leaflet-bar a { border-bottom-color: var(--md-outline-variant); }
+[data-theme="dark"] .leaflet-bar a:hover { background: var(--md-surface-container-highest); }
+[data-theme="dark"] .leaflet-control-layers a,
+[data-theme="dark"] .leaflet-control-attribution a { color: var(--md-primary); }
 /* Loading overlay — covers the map while fetching/resolving */
 .map-overlay {
   position: absolute;
