@@ -1040,15 +1040,25 @@ a { color: var(--md-primary); }
   background: var(--md-surface-container-low);
   text-decoration: none;
 }
+/* Blurred copy of the same image fills the band so the banner reads full-width
+   without cropping the object — the sharp image sits on top, fully contained. */
+.home-banner::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: var(--home-banner-bg) center / cover no-repeat;
+  filter: blur(32px) saturate(1.15);
+  transform: scale(1.2);
+  opacity: 0.5;
+}
 .home-banner-img {
+  position: relative; z-index: 1;
   display: block;
   width: 100%;
-  height: clamp(200px, 26vw, 340px);
-  object-fit: cover;
-  object-position: center 42%;
+  height: clamp(240px, 30vw, 380px);
+  object-fit: contain;   /* show the whole object — never crop it */
 }
 .home-banner-caption {
-  position: absolute;
+  position: absolute; z-index: 2;
   left: 0; right: 0; bottom: 0;
   padding: 40px 24px 16px;
   font: var(--md-body-sm);
@@ -1057,7 +1067,7 @@ a { color: var(--md-primary); }
 }
 @media (max-width: 720px) {
   .home-banner { margin: 18px 16px 12px; }
-  .home-banner-img { height: clamp(150px, 40vw, 220px); }
+  .home-banner-img { height: clamp(200px, 46vw, 280px); }
   .home-banner-caption { padding: 32px 16px 12px; font-size: 12px; }
 }
 
