@@ -1033,7 +1033,9 @@ a { color: var(--md-primary); }
 .home-banner {
   position: relative;
   display: block;
-  margin: 18px 20px 14px;
+  width: calc(100% - 40px);
+  max-width: 1000px;   /* cap height on wide screens; matches the image's native width */
+  margin: 18px auto 14px;
   border-radius: 28px;
   overflow: hidden;
   border: 1px solid var(--md-outline-variant);
@@ -1053,15 +1055,15 @@ a { color: var(--md-primary); }
 /* Caption sits in its own strip below the image so it never obscures the object. */
 .home-banner-caption {
   display: block;
-  padding: 11px 22px 13px;
-  font: var(--md-body-sm);
-  line-height: 1.45;
+  padding: 10px 20px 12px;
+  font-size: 11px;
+  line-height: 1.4;
   color: var(--md-on-surface-variant);
   background: var(--md-surface-container-low);
 }
 @media (max-width: 720px) {
-  .home-banner { margin: 18px 16px 12px; }
-  .home-banner-caption { padding: 10px 16px 12px; font-size: 12px; }
+  .home-banner { margin: 18px auto 12px; }
+  .home-banner-caption { padding: 9px 16px 11px; }
 }
 
 .home-intro {
