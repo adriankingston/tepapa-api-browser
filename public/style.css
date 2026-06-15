@@ -1412,6 +1412,21 @@ h1, h2, h3, h4, h5, h6 { font-family: var(--md-font-display); }
   .home-hero[data-layout="c"] .hh-stats .home-stats { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
 }
 
+/* TEMP — hero layout switcher (A/B/C exploration; remove when a layout is chosen) */
+.home-layout-switch {
+  position: fixed; right: 16px; bottom: 16px; z-index: 50;
+  display: flex; align-items: center; gap: 4px; padding: 5px 6px 5px 12px;
+  background: var(--md-surface-container-high); color: var(--md-on-surface-variant);
+  border: 1px solid var(--md-outline-variant); border-radius: var(--md-shape-full);
+  box-shadow: var(--md-elev-3); font: var(--md-label-md);
+}
+.home-layout-switch span { white-space: nowrap; }
+.home-layout-switch button {
+  width: 30px; height: 30px; border: none; border-radius: var(--md-shape-full);
+  background: transparent; color: var(--md-on-surface); cursor: pointer; font: var(--md-label-lg);
+}
+.home-layout-switch button[aria-pressed="true"] { background: var(--md-primary); color: var(--md-on-primary); }
+
 .home-shelf { padding: 22px 0 2px; }
 .home-shelf-title { margin: 0 0 12px; padding: 0 20px; font: var(--md-title-md); font-family: var(--md-font-display); font-size: 18px; color: var(--md-on-surface); }
 

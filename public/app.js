@@ -2231,6 +2231,25 @@ async function loadHome() {
   ).join('');
   el.home.innerHTML = html;
 
+  // TEMP — A/B/C hero layout switcher for the design exploration. Remove once a
+  // layout is chosen. Flips .home-hero[data-layout] live (pure CSS) + persists.
+  const heroEl = el.home.querySelector('.home-hero');
+  if (heroEl) {
+    const sw = document.createElement('div');
+    sw.className = 'home-layout-switch';
+    sw.innerHTML = '<span>Hero layout</span>' +
+      ['a', 'b', 'c'].map((l) => `<button type="button" data-l="${l}">${l.toUpperCase()}</button>`).join('');
+    el.home.appendChild(sw);
+    const syncSw = () => sw.querySelectorAll('button').forEach((b) =>
+      b.setAttribute('aria-pressed', String(b.dataset.l === heroEl.dataset.layout)));
+    sw.querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
+      heroEl.dataset.layout = b.dataset.l;
+      try { localStorage.setItem('tepapa.homeLayout', b.dataset.l); } catch {}
+      syncSw();
+    }));
+    syncSw();
+  }
+
   // Intro category links → run the search. A "collections" rail fills in async.
   el.home.querySelectorAll('.home-cat').forEach((b) =>
     b.addEventListener('click', () => navigateTo({ q: b.dataset.q, type: 'all', from: 0, relField: null, relKw: null, relLabel: null, detail: null })));
