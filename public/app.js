@@ -2202,11 +2202,12 @@ async function loadHome() {
   if (!config) { el.home.innerHTML = '<div class="message">Couldn\'t load the home page (home.json).</div>'; return; }
 
   let html = '';
+  let bannerHtml = '';
   if (config.banner && config.banner.image) {
     const b = config.banner;
     const tag = b.href ? 'a' : 'div';
     const href = b.href ? ` href="${esc(b.href)}"` : '';
-    html += `<${tag} class="home-banner"${href}>` +
+    bannerHtml = `<${tag} class="home-banner"${href}>` +
       `<img class="home-banner-img" src="${esc(b.image)}" alt="${esc(b.alt || '')}">` +
       (b.caption ? `<span class="home-banner-caption">${esc(b.caption)}</span>` : '') +
       `</${tag}>`;
@@ -2214,13 +2215,16 @@ async function loadHome() {
   const hasCats = config.categories &&
     ((Array.isArray(config.categories.items) && config.categories.items.length) ||
      config.categories.source === 'collections');
-  if (config.hero || hasCats) {
-    html += `<div class="home-intro${hasCats ? ' has-cats' : ''}">` +
-      `<div class="home-intro-text">${config.hero ? heroInner(config.hero, {}) : ''}</div>` +
-      (hasCats ? `<div class="home-intro-cats">${categoriesInner(config.categories)}</div>` : '') +
-      `</div>`;
-  }
-  if (config.stats) html += renderStats(config.stats);
+  // Hero zone — image / explore text / collections / stats arranged by the
+  // [data-layout] grid (see .home-hero in style.css). Switch with
+  // localStorage 'tepapa.homeLayout' = a|b|c, or set the attribute live.
+  const heroLayout = localStorage.getItem('tepapa.homeLayout') || 'a';
+  const heroCells =
+    (bannerHtml ? `<div class="hh-cell hh-image">${bannerHtml}</div>` : '') +
+    (config.hero ? `<div class="hh-cell hh-text">${heroInner(config.hero, {})}</div>` : '') +
+    (hasCats ? `<div class="hh-cell hh-cats">${categoriesInner(config.categories)}</div>` : '') +
+    (config.stats ? `<div class="hh-cell hh-stats">${renderStats(config.stats)}</div>` : '');
+  if (heroCells) html += `<section class="home-hero" data-layout="${esc(heroLayout)}">${heroCells}</section>`;
   const sections = Array.isArray(config.sections) ? config.sections : [];
   html += sections.map((s, i) =>
     `<div class="home-section" data-sec="${i}">${(s.type === 'links' || s.type === 'feature') ? '' : '<div class="home-shelf"><div class="home-skeleton"></div></div>'}</div>`
