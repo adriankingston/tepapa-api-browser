@@ -2524,4 +2524,29 @@ function goHome() {
 }
 window.goHome = goHome;
 el.brand.addEventListener('click', goHome);
+
+// ---- Theme toggle ----------------------------------------------------------
+// The inline <head> script sets the initial theme (saved choice or OS default);
+// this just flips and persists it, and keeps following the OS until the user
+// makes an explicit choice.
+(function initTheme() {
+  const btn = document.getElementById('theme-toggle');
+  if (!btn) return;
+  const apply = (t) => {
+    document.documentElement.dataset.theme = t;
+    btn.setAttribute('aria-label', t === 'dark' ? 'Switch to light theme' : 'Switch to dark theme');
+  };
+  apply(document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light');
+  btn.addEventListener('click', () => {
+    const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+    try { localStorage.setItem('tepapa.theme', next); } catch {}
+    apply(next);
+  });
+  try {
+    matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+      if (!localStorage.getItem('tepapa.theme')) apply(e.matches ? 'dark' : 'light');
+    });
+  } catch {}
+})();
+
 applyHash();

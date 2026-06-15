@@ -98,6 +98,54 @@
   --md-body-sm: 400 12px/16px var(--md-font);
 }
 
+/* ===== Dark theme =====
+   Redefines only the colour tokens (shape / type / motion are shared). Applied
+   when <html data-theme="dark">, which the inline script in index.html sets from
+   localStorage, falling back to the OS prefers-color-scheme. Because --md-status
+   / --md-error resolve var(--ok) / var(--accent-2) lazily, overriding those here
+   recolours the status/error roles too. */
+:root { color-scheme: light; }
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* Primary — a lighter teal tone reads as the accent on dark surfaces */
+  --md-primary: #5fd4db;
+  --md-primary-hover: #7ce0e6;
+  --md-on-primary: #00363a;
+  --md-primary-container: #004f54;
+  --md-on-primary-container: #a8eef3;
+  --md-primary-fixed-dim: #3f9098;
+
+  /* Neutral surfaces (M3 dark surface-container family, faint teal tint) */
+  --md-surface: #0e1414;
+  --md-surface-container-lowest: #090f0f;
+  --md-surface-container-low: #161d1d;
+  --md-surface-container: #1a2121;
+  --md-surface-container-high: #242b2b;
+  --md-surface-container-highest: #2f3636;
+  --md-on-surface: #dde4e3;
+  --md-on-surface-variant: #bec9c8;
+  --md-outline: #889392;
+  --md-outline-variant: #3f4948;
+
+  /* Snackbar inverts to a light surface; scrim deepens */
+  --md-snackbar-bg: #dde4e3;
+  --md-snackbar-on: #2b3231;
+  --md-scrim: rgba(0, 0, 0, 0.6);
+
+  /* Elevation — deeper shadows; on dark, contrast is mostly carried by surfaces */
+  --md-elev-1: 0 1px 2px rgba(0,0,0,.5), 0 1px 3px 1px rgba(0,0,0,.35);
+  --md-elev-2: 0 1px 2px rgba(0,0,0,.5), 0 2px 6px 2px rgba(0,0,0,.35);
+  --md-elev-3: 0 4px 8px 3px rgba(0,0,0,.35), 0 1px 3px rgba(0,0,0,.5);
+  --md-elev-4: 0 6px 10px 4px rgba(0,0,0,.35), 0 2px 3px rgba(0,0,0,.5);
+
+  /* Legacy tokens still referenced directly */
+  --accent: #5fd4db;       /* bright teal accent (spinner, tints, filter chip) */
+  --accent-2: #ffb4ab;     /* error — M3 dark error tone */
+  --ok: #6ee29a;           /* status / loading green */
+  --shadow: 0 8px 24px rgba(0,0,0,.55);
+}
+
 * { box-sizing: border-box; }
 
 * { box-sizing: border-box; }
@@ -155,6 +203,24 @@ a { color: var(--md-primary); }
 .brand:hover, .brand:focus-visible { background: var(--md-surface-container-high); outline: none; }
 .brand-logo { flex: 0 0 auto; width: 30px; height: 30px; color: var(--md-on-surface); }
 .brand-text { font: 600 16px/1.15 var(--md-font); color: var(--md-on-surface); letter-spacing: 0.1px; }
+
+/* ===== Theme toggle ===== */
+.theme-toggle {
+  flex: 0 0 auto; order: 3;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 40px; height: 40px; margin: 0; padding: 0;
+  border: none; border-radius: var(--md-shape-full);
+  background: transparent; color: var(--md-on-surface-variant);
+  cursor: pointer;
+  transition: background-color var(--md-dur) var(--md-ease), color var(--md-dur) var(--md-ease);
+}
+.theme-toggle:hover, .theme-toggle:focus-visible {
+  background: var(--md-surface-container-high); color: var(--md-on-surface); outline: none;
+}
+.theme-toggle svg { width: 20px; height: 20px; display: block; }
+.theme-toggle .theme-icon-sun { display: none; }
+[data-theme="dark"] .theme-toggle .theme-icon-sun { display: block; }
+[data-theme="dark"] .theme-toggle .theme-icon-moon { display: none; }
 
 /* ===== Search ===== */
 .search {
