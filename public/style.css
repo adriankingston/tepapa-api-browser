@@ -870,6 +870,16 @@ h1, h2, h3, h4, h5, h6 { font-family: var(--md-font-display); }
   font: var(--md-label-md); cursor: pointer;
 }
 .leaflet-popup-content { margin: 12px 14px; }
+/* Marker popup: Leaflet's wrapper + tip default to white, leaving the
+   token-coloured (light) popup text unreadable in dark mode — theme them. */
+[data-theme="dark"] .leaflet-popup-content-wrapper,
+[data-theme="dark"] .leaflet-popup-tip {
+  background: var(--md-surface-container-high);
+  color: var(--md-on-surface);
+}
+[data-theme="dark"] .leaflet-popup-content-wrapper { box-shadow: var(--md-elev-3); }
+[data-theme="dark"] .leaflet-popup-close-button { color: var(--md-on-surface-variant); }
+[data-theme="dark"] .leaflet-popup-close-button:hover { color: var(--md-on-surface); background: transparent; }
 
 .list-wrap { padding: 16px 20px 40px; overflow-x: auto; }
 .list {

@@ -818,6 +818,7 @@ async function loadMapResults() {
   if (lmap) { lmap.remove(); lmap = null; }
   // canvas renderer keeps ~1000 markers smooth (SVG bogs down past a few hundred)
   lmap = L.map(mapEl, { worldCopyJump: true, preferCanvas: true }).setView([-41, 173], 4);
+  window.__lmap = lmap; // debug/automation hook
   const bases = mapBaseLayers();
   // Default to the dark base map in dark mode; the layer control still offers all.
   const darkTheme = document.documentElement.dataset.theme === 'dark';
