@@ -2533,18 +2533,19 @@ el.brand.addEventListener('click', goHome);
 // this just flips and persists it, and keeps following the OS until the user
 // makes an explicit choice.
 (function initTheme() {
-  const btn = document.getElementById('theme-toggle');
-  if (!btn) return;
+  const sw = document.getElementById('theme-switch');
+  if (!sw) return;
+  const opts = sw.querySelectorAll('.theme-opt');
   const apply = (t) => {
     document.documentElement.dataset.theme = t;
-    btn.setAttribute('aria-label', t === 'dark' ? 'Switch to light theme' : 'Switch to dark theme');
+    sw.dataset.active = t;
+    opts.forEach((b) => b.setAttribute('aria-checked', String(b.dataset.val === t)));
   };
   apply(document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light');
-  btn.addEventListener('click', () => {
-    const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
-    try { localStorage.setItem('tepapa.theme', next); } catch {}
-    apply(next);
-  });
+  opts.forEach((b) => b.addEventListener('click', () => {
+    try { localStorage.setItem('tepapa.theme', b.dataset.val); } catch {}
+    apply(b.dataset.val);
+  }));
   try {
     matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
       if (!localStorage.getItem('tepapa.theme')) apply(e.matches ? 'dark' : 'light');

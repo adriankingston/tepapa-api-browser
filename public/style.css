@@ -18,6 +18,26 @@
   unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
 
+/* Cal Sans — self-hosted display face for headings (OFL-1.1; latin + latin-ext
+   subsets so macrons render). Single weight, no synthetic bolding. Shared with
+   the Bragge story-map. */
+@font-face {
+  font-family: 'Cal Sans';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/calsans-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Cal Sans';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/calsans-latinext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
 :root {
   --bg: #ffffff;
   --panel: #f4f5f7;
@@ -38,6 +58,7 @@
    --accent / --ok / --accent-2 so brand + status colours stay in sync. */
 :root {
   --md-font: 'Roboto', system-ui, -apple-system, 'Segoe UI', Arial, sans-serif;
+  --md-font-display: 'Cal Sans', 'Roboto', system-ui, -apple-system, 'Segoe UI', Arial, sans-serif;
 
   /* Color roles (tonal palette from the Te Papa teal primary) */
   --md-primary: #00696f;                  /* AA-safe teal: white-on-teal 6.5:1 & teal-on-light ≥5:1 (WCAG AA). Bright brand #008e96 kept on the logo + graph canvas. */
@@ -160,6 +181,10 @@ body {
 
 a { color: var(--md-primary); }
 
+/* Headings use the Cal Sans display face. Rules that set `font:` shorthand
+   reset font-family, so each prominent heading re-asserts it below. */
+h1, h2, h3, h4, h5, h6 { font-family: var(--md-font-display); }
+
 /* ===== Top app bar ===== */
 .topbar {                                    /* full-bleed app bar… */
   position: sticky;
@@ -204,23 +229,73 @@ a { color: var(--md-primary); }
 .brand-logo { flex: 0 0 auto; width: 30px; height: 30px; color: var(--md-on-surface); }
 .brand-text { font: 600 16px/1.15 var(--md-font); color: var(--md-on-surface); letter-spacing: 0.1px; }
 
-/* ===== Theme toggle ===== */
-.theme-toggle {
-  flex: 0 0 auto; order: 3;
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 40px; height: 40px; margin: 0; padding: 0;
-  border: none; border-radius: var(--md-shape-full);
-  background: transparent; color: var(--md-on-surface-variant);
-  cursor: pointer;
-  transition: background-color var(--md-dur) var(--md-ease), color var(--md-dur) var(--md-ease);
+/* ===== Theme switch (Light | Dark segmented pill — shared with Bragge) ===== */
+.theme-switch {
+  position: relative; flex: 0 0 auto; order: 3;
+  box-sizing: border-box; display: inline-flex; padding: 3px;
+  background: var(--md-surface-container-low);
+  border-radius: var(--md-shape-full);
+  box-shadow: inset 0 0 0 1px var(--md-outline-variant);   /* border via shadow so % widths ignore it */
 }
-.theme-toggle:hover, .theme-toggle:focus-visible {
-  background: var(--md-surface-container-high); color: var(--md-on-surface); outline: none;
+.theme-knob {
+  position: absolute; top: 3px; bottom: 3px; left: 3px;
+  width: calc((100% - 6px) / 2); border-radius: var(--md-shape-full);
+  background: var(--md-primary);
+  transition: transform 180ms var(--md-ease);
 }
-.theme-toggle svg { width: 20px; height: 20px; display: block; }
-.theme-toggle .theme-icon-sun { display: none; }
-[data-theme="dark"] .theme-toggle .theme-icon-sun { display: block; }
-[data-theme="dark"] .theme-toggle .theme-icon-moon { display: none; }
+.theme-switch[data-active="dark"] .theme-knob { transform: translateX(100%); }
+.theme-opt {
+  position: relative; z-index: 1; box-sizing: border-box;
+  flex: 1 1 0; min-width: 52px; padding: 5px 14px; text-align: center;
+  background: none; border: none; cursor: pointer;
+  font: var(--md-label-lg); color: var(--md-on-surface-variant);
+  transition: color 160ms;
+}
+.theme-opt[aria-checked="true"] { color: var(--md-on-primary); }
+@media (prefers-reduced-motion: reduce) { .theme-knob { transition: none; } }
+
+/* ===== Animated brand mark (from the nextepisode hub) =====
+   Spokes rotate + reach and the hub breathes, snapping through 3 states on a
+   shared 0.444s step clock. currentColor is animated per theme so the mark
+   reads on both light and dark backgrounds. */
+.brand-logo-anim { overflow: visible; animation: brand-tint-light 0.444s step-end infinite; }
+[data-theme="dark"] .brand-logo-anim { animation-name: brand-tint-dark; }
+.brand-logo-anim .link { fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.brand-logo-anim .node, .brand-logo-anim .hub { fill: currentColor; }
+.brand-logo-anim .rotor, .brand-logo-anim .spoke { transform-box: view-box; transform-origin: 16px 16px; }
+.brand-logo-anim .hub { transform-box: fill-box; transform-origin: center; }
+.brand-logo-anim .rotor { animation: brand-rotor 0.444s step-end infinite; }
+.brand-logo-anim .spoke.s1, .brand-logo-anim .spoke.s3 { animation: brand-reach-a 0.444s step-end infinite; }
+.brand-logo-anim .spoke.s2, .brand-logo-anim .spoke.s4 { animation: brand-reach-b 0.444s step-end infinite; }
+.brand-logo-anim .hub { animation: brand-hub 0.444s step-end infinite; }
+
+@keyframes brand-rotor {
+  0% { transform: rotate(0deg); } 33.333% { transform: rotate(120deg); }
+  66.666% { transform: rotate(240deg); } 100% { transform: rotate(360deg); }
+}
+/* base · teal · orange — dark-mode base is warm white, light-mode base is warm charcoal */
+@keyframes brand-tint-light {
+  0% { color: #2b2926; } 33.333% { color: #00696f; } 66.666% { color: #e2710b; } 100% { color: #2b2926; }
+}
+@keyframes brand-tint-dark {
+  0% { color: #e7e3df; } 33.333% { color: #74d3da; } 66.666% { color: #fb923c; } 100% { color: #e7e3df; }
+}
+@keyframes brand-reach-a {
+  0% { transform: scale(0.74); } 33.333% { transform: scale(1.26); }
+  66.666% { transform: scale(1.26); } 100% { transform: scale(0.74); }
+}
+@keyframes brand-reach-b {
+  0% { transform: scale(0.74); } 33.333% { transform: scale(1.26); }
+  66.666% { transform: scale(0.74); } 100% { transform: scale(0.74); }
+}
+@keyframes brand-hub {
+  0% { transform: scale(0.95); } 33.333% { transform: scale(1.12); }
+  66.666% { transform: scale(1.04); } 100% { transform: scale(0.95); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .brand-logo-anim, .brand-logo-anim .rotor, .brand-logo-anim .spoke, .brand-logo-anim .hub { animation: none; }
+  .brand-logo-anim { color: var(--md-on-surface); }
+}
 
 /* ===== Search ===== */
 .search {
@@ -1000,6 +1075,7 @@ a { color: var(--md-primary); }
 .detail h2 {                                /* M3 headline-small */
   margin: 4px 0 4px;
   font: 400 24px/32px var(--md-font);
+  font-family: var(--md-font-display);
   color: var(--md-on-surface);
 }
 .detail .sub {
@@ -1176,6 +1252,7 @@ a { color: var(--md-primary); }
 .home-intro h1 {
   margin: 0 0 12px; max-width: 20ch;
   font: 700 clamp(28px, 3.4vw, 40px)/1.12 var(--md-font);
+  font-family: var(--md-font-display);
   letter-spacing: -0.01em; color: var(--md-on-surface);
 }
 .home-hero-sub { margin: 0 0 12px; max-width: 62ch; font-size: 17px; line-height: 1.5; color: var(--md-on-surface); }
@@ -1261,7 +1338,7 @@ a { color: var(--md-primary); }
 }
 
 .home-shelf { padding: 22px 0 2px; }
-.home-shelf-title { margin: 0 0 12px; padding: 0 20px; font: var(--md-title-md); font-size: 18px; color: var(--md-on-surface); }
+.home-shelf-title { margin: 0 0 12px; padding: 0 20px; font: var(--md-title-md); font-family: var(--md-font-display); font-size: 18px; color: var(--md-on-surface); }
 
 /* Curated feature banner (e.g. the James Bragge story-map) */
 .home-feature {
@@ -1276,7 +1353,7 @@ a { color: var(--md-primary); }
 .home-feature-img { flex: 0 0 auto; height: 190px; width: auto; display: block; object-fit: contain; background: #efe7da; filter: sepia(0.12); }
 .home-feature-text { display: flex; flex-direction: column; justify-content: center; gap: 6px; padding: 22px 24px; }
 .home-feature-eyebrow { font: var(--md-label-md); letter-spacing: 0.06em; text-transform: uppercase; color: var(--md-primary); }
-.home-feature-title { font: 600 22px/1.2 var(--md-font); letter-spacing: -0.01em; color: var(--md-on-surface); }
+.home-feature-title { font: 600 22px/1.2 var(--md-font); font-family: var(--md-font-display); letter-spacing: -0.01em; color: var(--md-on-surface); }
 .home-feature-blurb { font: var(--md-body-md); color: var(--md-on-surface-variant); max-width: 60ch; }
 .home-feature-cta { margin-top: 4px; font: var(--md-label-lg); color: var(--md-primary); }
 @media (max-width: 640px) {
@@ -1620,7 +1697,7 @@ a { color: var(--md-primary); }
 }
 .graph-head-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .graph-title { display: flex; align-items: baseline; gap: 12px; min-width: 0; overflow: hidden; }
-.graph-title strong { font: var(--md-title-lg); color: var(--md-on-surface); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.graph-title strong { font: var(--md-title-lg); font-family: var(--md-font-display); color: var(--md-on-surface); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .graph-focus {
   font: var(--md-body-md);
   color: var(--md-primary);
@@ -1778,7 +1855,7 @@ a { color: var(--md-primary); }
   margin-bottom: 12px;
   background: var(--md-surface-container-high);
 }
-.graph-info h3 { margin: 0 0 10px; font: var(--md-title-md); color: var(--md-on-surface); }
+.graph-info h3 { margin: 0 0 10px; font: var(--md-title-md); font-family: var(--md-font-display); color: var(--md-on-surface); }
 .graph-info .gi-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
 
 /* Card actions: first = filled primary, rest = tonal, external = outlined */
