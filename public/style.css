@@ -227,7 +227,7 @@ h1, h2, h3, h4, h5, h6 { font-family: var(--md-font-display); }
 }
 .brand:hover, .brand:focus-visible { background: var(--md-surface-container-high); outline: none; }
 .brand-logo { flex: 0 0 auto; width: 30px; height: 30px; color: var(--md-on-surface); }
-.brand-text { font: 600 16px/1.15 var(--md-font); color: var(--md-on-surface); letter-spacing: 0.1px; }
+.brand-text { font: 600 16px/1.15 var(--md-font); font-family: var(--md-font-display); color: var(--md-on-surface); letter-spacing: 0.1px; }
 
 /* ===== Theme switch (Light | Dark segmented pill — shared with Bragge) ===== */
 .theme-switch {
