@@ -2202,8 +2202,7 @@ async function loadHome() {
     const b = config.banner;
     const tag = b.href ? 'a' : 'div';
     const href = b.href ? ` href="${esc(b.href)}"` : '';
-    const bg = ` style="--home-banner-bg:url('${esc(b.image)}')"`;
-    html += `<${tag} class="home-banner"${href}${bg}>` +
+    html += `<${tag} class="home-banner"${href}>` +
       `<img class="home-banner-img" src="${esc(b.image)}" alt="${esc(b.alt || '')}">` +
       (b.caption ? `<span class="home-banner-caption">${esc(b.caption)}</span>` : '') +
       `</${tag}>`;

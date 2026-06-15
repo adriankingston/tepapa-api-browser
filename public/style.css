@@ -1040,35 +1040,28 @@ a { color: var(--md-primary); }
   background: var(--md-surface-container-low);
   text-decoration: none;
 }
-/* Blurred copy of the same image fills the band so the banner reads full-width
-   without cropping the object — the sharp image sits on top, fully contained. */
-.home-banner::before {
-  content: '';
-  position: absolute; inset: 0;
-  background: var(--home-banner-bg) center / cover no-repeat;
-  filter: blur(32px) saturate(1.15);
-  transform: scale(1.2);
-  opacity: 0.5;
-}
+/* The object spans the image's full width with ~20% white margin top and bottom.
+   A ~2.1:1 crop with cover trims that white but never clips the object (its
+   bounding box is ~2.24:1, so it stays fully inside the frame). */
 .home-banner-img {
-  position: relative; z-index: 1;
   display: block;
   width: 100%;
-  height: clamp(240px, 30vw, 380px);
-  object-fit: contain;   /* show the whole object — never crop it */
+  aspect-ratio: 2.1 / 1;
+  object-fit: cover;
+  object-position: center;
 }
+/* Caption sits in its own strip below the image so it never obscures the object. */
 .home-banner-caption {
-  position: absolute; z-index: 2;
-  left: 0; right: 0; bottom: 0;
-  padding: 40px 24px 16px;
+  display: block;
+  padding: 11px 22px 13px;
   font: var(--md-body-sm);
-  color: #fff;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.62), rgba(0, 0, 0, 0));
+  line-height: 1.45;
+  color: var(--md-on-surface-variant);
+  background: var(--md-surface-container-low);
 }
 @media (max-width: 720px) {
   .home-banner { margin: 18px 16px 12px; }
-  .home-banner-img { height: clamp(200px, 46vw, 280px); }
-  .home-banner-caption { padding: 32px 16px 12px; font-size: 12px; }
+  .home-banner-caption { padding: 10px 16px 12px; font-size: 12px; }
 }
 
 .home-intro {
