@@ -89,11 +89,11 @@
   function graphPalette() {
     const dark = document.documentElement.dataset.theme === 'dark';
     return dark ? {
-      nodeBg: '#242b2b', nodeBorder: '#54605f', label: '#dde4e3',
-      brand: '#5fd4db', focusLabel: '#dde4e3',
+      nodeBg: '#2b2926', nodeBorder: '#565250', label: '#e7e3df',
+      brand: '#5fd4db', focusLabel: '#e7e3df',
       bundleBg: '#004f54', bundleBorder: '#3f9098', bundleText: '#a8eef3',
-      doneBg: '#2f3636', doneBorder: '#54605f', doneText: '#bec9c8',
-      edge: '#54605f', edgeLabel: '#bec9c8', edgeLabelBg: '#0e1414',
+      doneBg: '#353330', doneBorder: '#565250', doneText: '#cbc6c1',
+      edge: '#565250', edgeLabel: '#cbc6c1', edgeLabelBg: '#141312',
       hover: '#ffffff',
     } : {
       nodeBg: '#ffffff', nodeBorder: '#bfc8ca', label: '#191c1d',

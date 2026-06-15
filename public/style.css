@@ -116,21 +116,21 @@
   --md-on-primary-container: #a8eef3;
   --md-primary-fixed-dim: #3f9098;
 
-  /* Neutral surfaces (M3 dark surface-container family, faint teal tint) */
-  --md-surface: #0e1414;
-  --md-surface-container-lowest: #090f0f;
-  --md-surface-container-low: #161d1d;
-  --md-surface-container: #1a2121;
-  --md-surface-container-high: #242b2b;
-  --md-surface-container-highest: #2f3636;
-  --md-on-surface: #dde4e3;
-  --md-on-surface-variant: #bec9c8;
-  --md-outline: #889392;
-  --md-outline-variant: #3f4948;
+  /* Neutral surfaces — warm-leaning charcoal (R≥G≥B, no green tint) */
+  --md-surface: #141312;
+  --md-surface-container-lowest: #0e0e0d;
+  --md-surface-container-low: #1c1b19;
+  --md-surface-container: #201f1d;
+  --md-surface-container-high: #2b2926;
+  --md-surface-container-highest: #353330;
+  --md-on-surface: #e7e3df;
+  --md-on-surface-variant: #cbc6c1;
+  --md-outline: #948f89;
+  --md-outline-variant: #4b4844;
 
   /* Snackbar inverts to a light surface; scrim deepens */
-  --md-snackbar-bg: #dde4e3;
-  --md-snackbar-on: #2b3231;
+  --md-snackbar-bg: #e7e3df;
+  --md-snackbar-on: #32302d;
   --md-scrim: rgba(0, 0, 0, 0.6);
 
   /* Elevation — deeper shadows; on dark, contrast is mostly carried by surfaces */
