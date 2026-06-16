@@ -1259,7 +1259,7 @@ h1, h2, h3, h4, h5, h6 { font-family: var(--md-font-display); }
   margin: 0 0 14px; font: 600 12px/1 var(--md-font);
   letter-spacing: 0.12em; text-transform: uppercase; color: var(--md-primary);
 }
-.home-intro h1, .hh-text h1 {
+.home-intro h1 {
   margin: 0 0 12px; max-width: 20ch;
   font: 700 clamp(28px, 3.4vw, 40px)/1.12 var(--md-font);
   font-family: var(--md-font-display);
@@ -1268,22 +1268,6 @@ h1, h2, h3, h4, h5, h6 { font-family: var(--md-font-display); }
 .home-hero-sub { margin: 0 0 12px; max-width: 62ch; font-size: 17px; line-height: 1.5; color: var(--md-on-surface); }
 .home-hero-desc { margin: 0 0 6px; max-width: 72ch; font-size: 14px; line-height: 1.6; color: var(--md-on-surface-variant); }
 
-/* Two-column intro: the text on the left, a category rail on the right */
-.home-intro.has-cats {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  align-items: start;
-}
-.home-intro.has-cats .home-intro-text { grid-column: 1; grid-row: 1; min-width: 0; }
-.home-intro.has-cats .home-intro-cats {
-  grid-column: 2; grid-row: 1;
-  padding-left: 32px; border-left: 1px solid var(--md-outline-variant);
-}
-
-.home-cats-title {
-  margin: 2px 0 12px; font: 600 12px/1 var(--md-font);
-  letter-spacing: 0.1em; text-transform: uppercase; color: var(--md-primary);
-}
 .home-cats { display: flex; flex-direction: column; gap: 2px; }
 .home-cats-auto { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 8px; align-content: start; }
 .home-cats-grouped { display: block; }   /* the groups manage their own columns */
@@ -1312,15 +1296,6 @@ h1, h2, h3, h4, h5, h6 { font-family: var(--md-font-display); }
 
 /* below this the rail drops beneath the intro text (full width), so the two
    type-columns keep room for the longest labels instead of wrapping */
-@media (max-width: 1200px) {
-  .home-intro.has-cats { grid-template-columns: 1fr; }
-  .home-intro.has-cats .home-intro-text { grid-column: 1; grid-row: auto; }
-  .home-intro.has-cats .home-intro-cats {
-    grid-column: 1; grid-row: auto;
-    padding-left: 0; border-left: none;
-    margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--md-outline-variant);
-  }
-}
 /* on phones the two sub-columns collapse to one so counts don't clip */
 @media (max-width: 520px) {
   .home-cats-auto { grid-template-columns: 1fr; }
@@ -1347,85 +1322,29 @@ h1, h2, h3, h4, h5, h6 { font-family: var(--md-font-display); }
   letter-spacing: 0.05em; text-transform: uppercase; color: var(--md-on-surface-variant);
 }
 
-/* ===== Home hero grid — image / explore / collections / stats arranged three
-   ways via [data-layout]; collections are compacted in every layout. ===== */
-.home-hero { display: grid; gap: 14px; margin: 18px 20px 16px; align-items: start; }
-.hh-cell { min-width: 0; }
-.hh-image { grid-area: image; }
-.hh-text  { grid-area: text; }
-.hh-cats  { grid-area: cats; }
-.hh-stats { grid-area: stats; }
-.hh-image .home-banner { width: 100%; max-width: none; margin: 0; }
-.hh-stats .home-stats { margin: 0; }
-.hh-text {
-  padding: 30px 30px; border-radius: 24px; border: 1px solid var(--md-outline-variant);
-  background: radial-gradient(135% 150% at 0% 0%, rgba(0,142,150,0.10), rgba(0,142,150,0) 56%), var(--md-surface-container-low);
-}
-.hh-cats {
-  padding: 20px 22px; border-radius: 24px; border: 1px solid var(--md-outline-variant);
+/* ===== Collections disclosure — collapsed by default so the long collection
+   list doesn't dominate the home page; expands on click. ===== */
+.home-cats-disc {
+  margin: 0 20px 14px;
+  border: 1px solid var(--md-outline-variant);
+  border-radius: var(--md-shape-lg);
   background: var(--md-surface-container-low);
+  overflow: hidden;
 }
-.hh-cats .home-cats-title { margin-top: 0; }
-
-/* Layout A — banner on top, explore + collections side by side, stats below.
-   Collections: a denser single-column rail. */
-.home-hero[data-layout="a"] {
-  grid-template-columns: 1.25fr 0.75fr;
-  grid-template-areas: "image image" "text cats" "stats stats";
+.home-cats-sum {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 14px 18px; cursor: pointer; list-style: none;
+  font: var(--md-title-md); font-family: var(--md-font-display); color: var(--md-on-surface);
+  transition: background-color var(--md-dur) var(--md-ease);
 }
-.home-hero[data-layout="a"] .hh-cats .home-cat-groups { grid-template-columns: 1fr; gap: 10px; }
-.home-hero[data-layout="a"] .hh-cats .home-cat-list { display: grid; grid-template-columns: 1fr 1fr; gap: 0 10px; }
-.home-hero[data-layout="a"] .hh-cats .home-cat { padding: 4px 10px; font-size: 13px; }
-
-/* Layout B — split hero (image | explore), collections as a chip cloud, stats below. */
-.home-hero[data-layout="b"] {
-  grid-template-columns: 0.95fr 1.05fr;
-  grid-template-areas: "image text" "cats cats" "stats stats";
-}
-.home-hero[data-layout="b"] .hh-cats .home-cat-groups { display: flex; flex-wrap: wrap; gap: 14px 26px; }
-.home-hero[data-layout="b"] .hh-cats .home-cat-group { flex: 1 1 260px; }
-.home-hero[data-layout="b"] .hh-cats .home-cat-list { display: flex; flex-flow: row wrap; gap: 6px; }
-.home-hero[data-layout="b"] .hh-cats .home-cat {
-  width: auto; gap: 7px; padding: 5px 12px; border-radius: var(--md-shape-full);
-  background: var(--md-surface-container-high); font-size: 13px;
-}
-.home-hero[data-layout="b"] .hh-cats .home-cat:hover { background: var(--md-surface-container-highest); }
-.home-hero[data-layout="b"] .hh-cats .home-cat-count { font-size: 11px; }
-
-/* Layout C — banner on top, explore full-width, collections list beside vertical stats. */
-.home-hero[data-layout="c"] {
-  grid-template-columns: 1.4fr 0.6fr;
-  grid-template-areas: "image image" "text text" "cats stats";
-}
-.home-hero[data-layout="c"] .hh-cats .home-cat-groups { grid-template-columns: 1fr 1fr; gap: 6px 20px; }
-.home-hero[data-layout="c"] .hh-cats .home-cat { padding: 5px 10px; font-size: 13.5px; }
-.home-hero[data-layout="c"] .hh-stats .home-stats { grid-template-columns: 1fr; gap: 8px; }
-.home-hero[data-layout="c"] .hh-stats .home-stat { padding: 12px 14px; }
-
-/* Narrow screens: stack everything regardless of layout. */
-@media (max-width: 900px) {
-  .home-hero[data-layout="a"], .home-hero[data-layout="b"], .home-hero[data-layout="c"] {
-    grid-template-columns: 1fr;
-    grid-template-areas: "image" "text" "cats" "stats";
-  }
-  .home-hero[data-layout="c"] .hh-cats .home-cat-groups { grid-template-columns: 1fr; }
-  .home-hero[data-layout="c"] .hh-stats .home-stats { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
-}
-
-/* TEMP — hero layout switcher (A/B/C exploration; remove when a layout is chosen) */
-.home-layout-switch {
-  position: fixed; right: 16px; bottom: 16px; z-index: 50;
-  display: flex; align-items: center; gap: 4px; padding: 5px 6px 5px 12px;
-  background: var(--md-surface-container-high); color: var(--md-on-surface-variant);
-  border: 1px solid var(--md-outline-variant); border-radius: var(--md-shape-full);
-  box-shadow: var(--md-elev-3); font: var(--md-label-md);
-}
-.home-layout-switch span { white-space: nowrap; }
-.home-layout-switch button {
-  width: 30px; height: 30px; border: none; border-radius: var(--md-shape-full);
-  background: transparent; color: var(--md-on-surface); cursor: pointer; font: var(--md-label-lg);
-}
-.home-layout-switch button[aria-pressed="true"] { background: var(--md-primary); color: var(--md-on-primary); }
+.home-cats-sum::-webkit-details-marker { display: none; }
+.home-cats-sum:hover { background: var(--md-surface-container); }
+.home-cats-disc:focus-within .home-cats-sum { outline: 2px solid var(--md-primary); outline-offset: -2px; }
+.home-cats-sum-meta { display: inline-flex; align-items: center; gap: 10px; color: var(--md-on-surface-variant); font: var(--md-body-sm); }
+.home-cats-chevron { flex: 0 0 auto; transition: transform var(--md-dur) var(--md-ease); }
+.home-cats-disc[open] .home-cats-chevron { transform: rotate(180deg); }
+.home-cats-disc .home-cats { padding: 2px 18px 18px; }
+@media (prefers-reduced-motion: reduce) { .home-cats-chevron { transition: none; } }
 
 .home-shelf { padding: 22px 0 2px; }
 .home-shelf-title { margin: 0 0 12px; padding: 0 20px; font: var(--md-title-md); font-family: var(--md-font-display); font-size: 18px; color: var(--md-on-surface); }
