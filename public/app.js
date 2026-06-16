@@ -2109,8 +2109,9 @@ function catListHtml(cols, showCount) {
     catButtonHtml(collectionLabel(c.token), `collection:"${c.token}"`, showCount ? c.count : null)).join('');
 }
 
-// Category links beside the intro. Either a curated `items` list, or
-// `source: "collections"` to auto-list every collection (filled in async).
+// Collection links, collapsed behind a disclosure so they don't dominate the
+// home page. Either a curated `items` list, or `source: "collections"` to
+// auto-list every collection (filled in async, which also sets the count).
 function categoriesInner(cats) {
   if (!cats) return '';
   const items = Array.isArray(cats.items) ? cats.items : null;
@@ -2119,8 +2120,15 @@ function categoriesInner(cats) {
   const title = cats.title || 'Browse';
   const grouped = auto && Array.isArray(cats.groups) && cats.groups.length;
   const body = items ? items.map((c) => catButtonHtml(c.label, c.query || c.label)).join('') : '';
-  return `<div class="home-cats-title">${esc(title)}</div>` +
-    `<nav class="home-cats${auto ? ' home-cats-auto' : ''}${grouped ? ' home-cats-grouped' : ''}" aria-label="${esc(title)}">${body}</nav>`;
+  const count = items ? `${items.length} collection${items.length === 1 ? '' : 's'}` : '';
+  return `<details class="home-cats-disc">` +
+    `<summary class="home-cats-sum">` +
+      `<span class="home-cats-sum-label">${esc(title)}</span>` +
+      `<span class="home-cats-sum-meta"><span class="home-cats-count">${count}</span>` +
+      `<svg class="home-cats-chevron" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></span>` +
+    `</summary>` +
+    `<nav class="home-cats${auto ? ' home-cats-auto' : ''}${grouped ? ' home-cats-grouped' : ''}" aria-label="${esc(title)}">${body}</nav>` +
+  `</details>`;
 }
 
 // The full collection list, from the live `collection` facet (deduped by case).
@@ -2181,6 +2189,10 @@ async function fillCollectionCats(navEl, cats) {
   }
   navEl.querySelectorAll('.home-cat').forEach((b) =>
     b.addEventListener('click', () => navigateTo({ q: b.dataset.q, type: 'all', from: 0, relField: null, relKw: null, relLabel: null, detail: null })));
+  // Surface the collection count in the disclosure summary.
+  const n = navEl.querySelectorAll('.home-cat').length;
+  const countEl = navEl.closest('.home-cats-disc') && navEl.closest('.home-cats-disc').querySelector('.home-cats-count');
+  if (countEl) countEl.textContent = `${n} collection${n === 1 ? '' : 's'}`;
 }
 // A live record count from the API (a size:0 search → the resultset count).
 async function homeCount(spec) {
@@ -2215,40 +2227,16 @@ async function loadHome() {
   const hasCats = config.categories &&
     ((Array.isArray(config.categories.items) && config.categories.items.length) ||
      config.categories.source === 'collections');
-  // Hero zone — image / explore text / collections / stats arranged by the
-  // [data-layout] grid (see .home-hero in style.css). Switch with
-  // localStorage 'tepapa.homeLayout' = a|b|c, or set the attribute live.
-  const heroLayout = localStorage.getItem('tepapa.homeLayout') || 'a';
-  const heroCells =
-    (bannerHtml ? `<div class="hh-cell hh-image">${bannerHtml}</div>` : '') +
-    (config.hero ? `<div class="hh-cell hh-text">${heroInner(config.hero, {})}</div>` : '') +
-    (hasCats ? `<div class="hh-cell hh-cats">${categoriesInner(config.categories)}</div>` : '') +
-    (config.stats ? `<div class="hh-cell hh-stats">${renderStats(config.stats)}</div>` : '');
-  if (heroCells) html += `<section class="home-hero" data-layout="${esc(heroLayout)}">${heroCells}</section>`;
+  // Hero zone: banner image, explore text, collapsible collections, stats band.
+  if (bannerHtml) html += bannerHtml;
+  if (config.hero) html += `<div class="home-intro">${heroInner(config.hero, {})}</div>`;
+  if (hasCats) html += categoriesInner(config.categories);
+  if (config.stats) html += renderStats(config.stats);
   const sections = Array.isArray(config.sections) ? config.sections : [];
   html += sections.map((s, i) =>
     `<div class="home-section" data-sec="${i}">${(s.type === 'links' || s.type === 'feature') ? '' : '<div class="home-shelf"><div class="home-skeleton"></div></div>'}</div>`
   ).join('');
   el.home.innerHTML = html;
-
-  // TEMP — A/B/C hero layout switcher for the design exploration. Remove once a
-  // layout is chosen. Flips .home-hero[data-layout] live (pure CSS) + persists.
-  const heroEl = el.home.querySelector('.home-hero');
-  if (heroEl) {
-    const sw = document.createElement('div');
-    sw.className = 'home-layout-switch';
-    sw.innerHTML = '<span>Hero layout</span>' +
-      ['a', 'b', 'c'].map((l) => `<button type="button" data-l="${l}">${l.toUpperCase()}</button>`).join('');
-    el.home.appendChild(sw);
-    const syncSw = () => sw.querySelectorAll('button').forEach((b) =>
-      b.setAttribute('aria-pressed', String(b.dataset.l === heroEl.dataset.layout)));
-    sw.querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
-      heroEl.dataset.layout = b.dataset.l;
-      try { localStorage.setItem('tepapa.homeLayout', b.dataset.l); } catch {}
-      syncSw();
-    }));
-    syncSw();
-  }
 
   // Intro category links → run the search. A "collections" rail fills in async.
   el.home.querySelectorAll('.home-cat').forEach((b) =>
