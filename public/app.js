@@ -801,6 +801,7 @@ function mapBaseLayers() {
     'Topographic': L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { maxZoom: 17, attribution: '&copy; OpenStreetMap contributors, SRTM &middot; &copy; OpenTopoMap (CC-BY-SA)' }),
     'Satellite': L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Imagery &copy; Esri, Maxar, Earthstar Geographics' }),
     'Light': L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 20, subdomains: 'abcd', attribution: '&copy; OpenStreetMap contributors &copy; CARTO' }),
+    'Dark': L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 20, subdomains: 'abcd', attribution: '&copy; OpenStreetMap contributors &copy; CARTO' }),
   };
 }
 const linzAerialLayer = (key) => L.tileLayer(
@@ -817,8 +818,11 @@ async function loadMapResults() {
   if (lmap) { lmap.remove(); lmap = null; }
   // canvas renderer keeps ~1000 markers smooth (SVG bogs down past a few hundred)
   lmap = L.map(mapEl, { worldCopyJump: true, preferCanvas: true }).setView([-41, 173], 4);
+  window.__lmap = lmap; // debug/automation hook
   const bases = mapBaseLayers();
-  bases['Map (OpenStreetMap)'].addTo(lmap);
+  // Default to the dark base map in dark mode; the layer control still offers all.
+  const darkTheme = document.documentElement.dataset.theme === 'dark';
+  (darkTheme ? bases['Dark'] : bases['Map (OpenStreetMap)']).addTo(lmap);
   const layerCtrl = L.control.layers(bases, null, { position: 'topright' }).addTo(lmap);
   // Add the LINZ aerial layer once its key resolves, if this render is still current.
   getLinzKey().then((key) => { if (key && token === mapSeq && lmap) layerCtrl.addBaseLayer(linzAerialLayer(key), 'LINZ aerial (NZ)'); });
@@ -2198,11 +2202,12 @@ async function loadHome() {
   if (!config) { el.home.innerHTML = '<div class="message">Couldn\'t load the home page (home.json).</div>'; return; }
 
   let html = '';
+  let bannerHtml = '';
   if (config.banner && config.banner.image) {
     const b = config.banner;
     const tag = b.href ? 'a' : 'div';
     const href = b.href ? ` href="${esc(b.href)}"` : '';
-    html += `<${tag} class="home-banner"${href}>` +
+    bannerHtml = `<${tag} class="home-banner"${href}>` +
       `<img class="home-banner-img" src="${esc(b.image)}" alt="${esc(b.alt || '')}">` +
       (b.caption ? `<span class="home-banner-caption">${esc(b.caption)}</span>` : '') +
       `</${tag}>`;
@@ -2210,18 +2215,40 @@ async function loadHome() {
   const hasCats = config.categories &&
     ((Array.isArray(config.categories.items) && config.categories.items.length) ||
      config.categories.source === 'collections');
-  if (config.hero || hasCats) {
-    html += `<div class="home-intro${hasCats ? ' has-cats' : ''}">` +
-      `<div class="home-intro-text">${config.hero ? heroInner(config.hero, {}) : ''}</div>` +
-      (hasCats ? `<div class="home-intro-cats">${categoriesInner(config.categories)}</div>` : '') +
-      `</div>`;
-  }
-  if (config.stats) html += renderStats(config.stats);
+  // Hero zone — image / explore text / collections / stats arranged by the
+  // [data-layout] grid (see .home-hero in style.css). Switch with
+  // localStorage 'tepapa.homeLayout' = a|b|c, or set the attribute live.
+  const heroLayout = localStorage.getItem('tepapa.homeLayout') || 'a';
+  const heroCells =
+    (bannerHtml ? `<div class="hh-cell hh-image">${bannerHtml}</div>` : '') +
+    (config.hero ? `<div class="hh-cell hh-text">${heroInner(config.hero, {})}</div>` : '') +
+    (hasCats ? `<div class="hh-cell hh-cats">${categoriesInner(config.categories)}</div>` : '') +
+    (config.stats ? `<div class="hh-cell hh-stats">${renderStats(config.stats)}</div>` : '');
+  if (heroCells) html += `<section class="home-hero" data-layout="${esc(heroLayout)}">${heroCells}</section>`;
   const sections = Array.isArray(config.sections) ? config.sections : [];
   html += sections.map((s, i) =>
     `<div class="home-section" data-sec="${i}">${(s.type === 'links' || s.type === 'feature') ? '' : '<div class="home-shelf"><div class="home-skeleton"></div></div>'}</div>`
   ).join('');
   el.home.innerHTML = html;
+
+  // TEMP — A/B/C hero layout switcher for the design exploration. Remove once a
+  // layout is chosen. Flips .home-hero[data-layout] live (pure CSS) + persists.
+  const heroEl = el.home.querySelector('.home-hero');
+  if (heroEl) {
+    const sw = document.createElement('div');
+    sw.className = 'home-layout-switch';
+    sw.innerHTML = '<span>Hero layout</span>' +
+      ['a', 'b', 'c'].map((l) => `<button type="button" data-l="${l}">${l.toUpperCase()}</button>`).join('');
+    el.home.appendChild(sw);
+    const syncSw = () => sw.querySelectorAll('button').forEach((b) =>
+      b.setAttribute('aria-pressed', String(b.dataset.l === heroEl.dataset.layout)));
+    sw.querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
+      heroEl.dataset.layout = b.dataset.l;
+      try { localStorage.setItem('tepapa.homeLayout', b.dataset.l); } catch {}
+      syncSw();
+    }));
+    syncSw();
+  }
 
   // Intro category links → run the search. A "collections" rail fills in async.
   el.home.querySelectorAll('.home-cat').forEach((b) =>
@@ -2524,4 +2551,30 @@ function goHome() {
 }
 window.goHome = goHome;
 el.brand.addEventListener('click', goHome);
+
+// ---- Theme toggle ----------------------------------------------------------
+// The inline <head> script sets the initial theme (saved choice or OS default);
+// this just flips and persists it, and keeps following the OS until the user
+// makes an explicit choice.
+(function initTheme() {
+  const sw = document.getElementById('theme-switch');
+  if (!sw) return;
+  const opts = sw.querySelectorAll('.theme-opt');
+  const apply = (t) => {
+    document.documentElement.dataset.theme = t;
+    sw.dataset.active = t;
+    opts.forEach((b) => b.setAttribute('aria-checked', String(b.dataset.val === t)));
+  };
+  apply(document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light');
+  opts.forEach((b) => b.addEventListener('click', () => {
+    try { localStorage.setItem('tepapa.theme', b.dataset.val); } catch {}
+    apply(b.dataset.val);
+  }));
+  try {
+    matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+      if (!localStorage.getItem('tepapa.theme')) apply(e.matches ? 'dark' : 'light');
+    });
+  } catch {}
+})();
+
 applyHash();

@@ -18,6 +18,26 @@
   unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
 
+/* Cal Sans — self-hosted display face for headings (OFL-1.1; latin + latin-ext
+   subsets so macrons render). Single weight, no synthetic bolding. Shared with
+   the Bragge story-map. */
+@font-face {
+  font-family: 'Cal Sans';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/calsans-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Cal Sans';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/calsans-latinext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
 :root {
   --bg: #ffffff;
   --panel: #f4f5f7;
@@ -38,6 +58,7 @@
    --accent / --ok / --accent-2 so brand + status colours stay in sync. */
 :root {
   --md-font: 'Roboto', system-ui, -apple-system, 'Segoe UI', Arial, sans-serif;
+  --md-font-display: 'Cal Sans', 'Roboto', system-ui, -apple-system, 'Segoe UI', Arial, sans-serif;
 
   /* Color roles (tonal palette from the Te Papa teal primary) */
   --md-primary: #00696f;                  /* AA-safe teal: white-on-teal 6.5:1 & teal-on-light ≥5:1 (WCAG AA). Bright brand #008e96 kept on the logo + graph canvas. */
@@ -98,6 +119,54 @@
   --md-body-sm: 400 12px/16px var(--md-font);
 }
 
+/* ===== Dark theme =====
+   Redefines only the colour tokens (shape / type / motion are shared). Applied
+   when <html data-theme="dark">, which the inline script in index.html sets from
+   localStorage, falling back to the OS prefers-color-scheme. Because --md-status
+   / --md-error resolve var(--ok) / var(--accent-2) lazily, overriding those here
+   recolours the status/error roles too. */
+:root { color-scheme: light; }
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* Primary — a lighter teal tone reads as the accent on dark surfaces */
+  --md-primary: #5fd4db;
+  --md-primary-hover: #7ce0e6;
+  --md-on-primary: #00363a;
+  --md-primary-container: #004f54;
+  --md-on-primary-container: #a8eef3;
+  --md-primary-fixed-dim: #3f9098;
+
+  /* Neutral surfaces — warm-leaning charcoal (R≥G≥B, no green tint) */
+  --md-surface: #141312;
+  --md-surface-container-lowest: #0e0e0d;
+  --md-surface-container-low: #1c1b19;
+  --md-surface-container: #201f1d;
+  --md-surface-container-high: #2b2926;
+  --md-surface-container-highest: #353330;
+  --md-on-surface: #e7e3df;
+  --md-on-surface-variant: #cbc6c1;
+  --md-outline: #948f89;
+  --md-outline-variant: #4b4844;
+
+  /* Snackbar inverts to a light surface; scrim deepens */
+  --md-snackbar-bg: #e7e3df;
+  --md-snackbar-on: #32302d;
+  --md-scrim: rgba(0, 0, 0, 0.6);
+
+  /* Elevation — deeper shadows; on dark, contrast is mostly carried by surfaces */
+  --md-elev-1: 0 1px 2px rgba(0,0,0,.5), 0 1px 3px 1px rgba(0,0,0,.35);
+  --md-elev-2: 0 1px 2px rgba(0,0,0,.5), 0 2px 6px 2px rgba(0,0,0,.35);
+  --md-elev-3: 0 4px 8px 3px rgba(0,0,0,.35), 0 1px 3px rgba(0,0,0,.5);
+  --md-elev-4: 0 6px 10px 4px rgba(0,0,0,.35), 0 2px 3px rgba(0,0,0,.5);
+
+  /* Legacy tokens still referenced directly */
+  --accent: #5fd4db;       /* bright teal accent (spinner, tints, filter chip) */
+  --accent-2: #ffb4ab;     /* error — M3 dark error tone */
+  --ok: #6ee29a;           /* status / loading green */
+  --shadow: 0 8px 24px rgba(0,0,0,.55);
+}
+
 * { box-sizing: border-box; }
 
 * { box-sizing: border-box; }
@@ -111,6 +180,10 @@ body {
 }
 
 a { color: var(--md-primary); }
+
+/* Headings use the Cal Sans display face. Rules that set `font:` shorthand
+   reset font-family, so each prominent heading re-asserts it below. */
+h1, h2, h3, h4, h5, h6 { font-family: var(--md-font-display); }
 
 /* ===== Top app bar ===== */
 .topbar {                                    /* full-bleed app bar… */
@@ -154,7 +227,75 @@ a { color: var(--md-primary); }
 }
 .brand:hover, .brand:focus-visible { background: var(--md-surface-container-high); outline: none; }
 .brand-logo { flex: 0 0 auto; width: 30px; height: 30px; color: var(--md-on-surface); }
-.brand-text { font: 600 16px/1.15 var(--md-font); color: var(--md-on-surface); letter-spacing: 0.1px; }
+.brand-text { font: 600 16px/1.15 var(--md-font); font-family: var(--md-font-display); color: var(--md-on-surface); letter-spacing: 0.1px; }
+
+/* ===== Theme switch (Light | Dark segmented pill — shared with Bragge) ===== */
+.theme-switch {
+  position: relative; flex: 0 0 auto; order: 3;
+  box-sizing: border-box; display: inline-flex; padding: 3px;
+  background: var(--md-surface-container-low);
+  border-radius: var(--md-shape-full);
+  box-shadow: inset 0 0 0 1px var(--md-outline-variant);   /* border via shadow so % widths ignore it */
+}
+.theme-knob {
+  position: absolute; top: 3px; bottom: 3px; left: 3px;
+  width: calc((100% - 6px) / 2); border-radius: var(--md-shape-full);
+  background: var(--md-primary);
+  transition: transform 180ms var(--md-ease);
+}
+.theme-switch[data-active="dark"] .theme-knob { transform: translateX(100%); }
+.theme-opt {
+  position: relative; z-index: 1; box-sizing: border-box;
+  flex: 1 1 0; min-width: 52px; padding: 5px 14px; text-align: center;
+  background: none; border: none; cursor: pointer;
+  font: var(--md-label-lg); color: var(--md-on-surface-variant);
+  transition: color 160ms;
+}
+.theme-opt[aria-checked="true"] { color: var(--md-on-primary); }
+@media (prefers-reduced-motion: reduce) { .theme-knob { transition: none; } }
+
+/* ===== Animated brand mark (from the nextepisode hub) =====
+   Spokes rotate + reach and the hub breathes, snapping through 3 states on a
+   shared 0.444s step clock. currentColor is animated per theme so the mark
+   reads on both light and dark backgrounds. */
+.brand-logo-anim { overflow: visible; animation: brand-tint-light 0.444s step-end infinite; }
+[data-theme="dark"] .brand-logo-anim { animation-name: brand-tint-dark; }
+.brand-logo-anim .link { fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.brand-logo-anim .node, .brand-logo-anim .hub { fill: currentColor; }
+.brand-logo-anim .rotor, .brand-logo-anim .spoke { transform-box: view-box; transform-origin: 16px 16px; }
+.brand-logo-anim .hub { transform-box: fill-box; transform-origin: center; }
+.brand-logo-anim .rotor { animation: brand-rotor 0.444s step-end infinite; }
+.brand-logo-anim .spoke.s1, .brand-logo-anim .spoke.s3 { animation: brand-reach-a 0.444s step-end infinite; }
+.brand-logo-anim .spoke.s2, .brand-logo-anim .spoke.s4 { animation: brand-reach-b 0.444s step-end infinite; }
+.brand-logo-anim .hub { animation: brand-hub 0.444s step-end infinite; }
+
+@keyframes brand-rotor {
+  0% { transform: rotate(0deg); } 33.333% { transform: rotate(120deg); }
+  66.666% { transform: rotate(240deg); } 100% { transform: rotate(360deg); }
+}
+/* base · teal · orange — dark-mode base is warm white, light-mode base is warm charcoal */
+@keyframes brand-tint-light {
+  0% { color: #2b2926; } 33.333% { color: #00696f; } 66.666% { color: #e2710b; } 100% { color: #2b2926; }
+}
+@keyframes brand-tint-dark {
+  0% { color: #e7e3df; } 33.333% { color: #74d3da; } 66.666% { color: #fb923c; } 100% { color: #e7e3df; }
+}
+@keyframes brand-reach-a {
+  0% { transform: scale(0.74); } 33.333% { transform: scale(1.26); }
+  66.666% { transform: scale(1.26); } 100% { transform: scale(0.74); }
+}
+@keyframes brand-reach-b {
+  0% { transform: scale(0.74); } 33.333% { transform: scale(1.26); }
+  66.666% { transform: scale(0.74); } 100% { transform: scale(0.74); }
+}
+@keyframes brand-hub {
+  0% { transform: scale(0.95); } 33.333% { transform: scale(1.12); }
+  66.666% { transform: scale(1.04); } 100% { transform: scale(0.95); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .brand-logo-anim, .brand-logo-anim .rotor, .brand-logo-anim .spoke, .brand-logo-anim .hub { animation: none; }
+  .brand-logo-anim { color: var(--md-on-surface); }
+}
 
 /* ===== Search ===== */
 .search {
@@ -623,6 +764,32 @@ a { color: var(--md-primary); }
   background: var(--md-surface-container);
   z-index: 0;
 }
+
+/* Leaflet controls. The vendored build ships no images/ dir, so the collapsed
+   layers control's icon (images/layers.png) 404s and renders as a blank square.
+   Supply our own stacked-layers glyph as an inline SVG (light + dark), and tone
+   the controls for the dark basemap. */
+/* Scoped under .leaflet-control-layers to out-specify Leaflet's own
+   .leaflet-retina / .leaflet-touch toggle rules (which set the 404-ing PNG). */
+.leaflet-control-layers .leaflet-control-layers-toggle {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23191c1d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolygon points='12 2 2 7 12 12 22 7 12 2'/%3E%3Cpolyline points='2 17 12 22 22 17'/%3E%3Cpolyline points='2 12 12 17 22 12'/%3E%3C/svg%3E");
+  background-size: 22px 22px;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+[data-theme="dark"] .leaflet-control-layers .leaflet-control-layers-toggle {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23cbc6c1' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolygon points='12 2 2 7 12 12 22 7 12 2'/%3E%3Cpolyline points='2 17 12 22 22 17'/%3E%3Cpolyline points='2 12 12 17 22 12'/%3E%3C/svg%3E");
+}
+[data-theme="dark"] .leaflet-bar a,
+[data-theme="dark"] .leaflet-control-layers,
+[data-theme="dark"] .leaflet-control-attribution {
+  background: var(--md-surface-container-high);
+  color: var(--md-on-surface-variant);
+}
+[data-theme="dark"] .leaflet-bar a { border-bottom-color: var(--md-outline-variant); }
+[data-theme="dark"] .leaflet-bar a:hover { background: var(--md-surface-container-highest); }
+[data-theme="dark"] .leaflet-control-layers a,
+[data-theme="dark"] .leaflet-control-attribution a { color: var(--md-primary); }
 /* Loading overlay — covers the map while fetching/resolving */
 .map-overlay {
   position: absolute;
@@ -703,6 +870,16 @@ a { color: var(--md-primary); }
   font: var(--md-label-md); cursor: pointer;
 }
 .leaflet-popup-content { margin: 12px 14px; }
+/* Marker popup: Leaflet's wrapper + tip default to white, leaving the
+   token-coloured (light) popup text unreadable in dark mode — theme them. */
+[data-theme="dark"] .leaflet-popup-content-wrapper,
+[data-theme="dark"] .leaflet-popup-tip {
+  background: var(--md-surface-container-high);
+  color: var(--md-on-surface);
+}
+[data-theme="dark"] .leaflet-popup-content-wrapper { box-shadow: var(--md-elev-3); }
+[data-theme="dark"] .leaflet-popup-close-button { color: var(--md-on-surface-variant); }
+[data-theme="dark"] .leaflet-popup-close-button:hover { color: var(--md-on-surface); background: transparent; }
 
 .list-wrap { padding: 16px 20px 40px; overflow-x: auto; }
 .list {
@@ -908,6 +1085,7 @@ a { color: var(--md-primary); }
 .detail h2 {                                /* M3 headline-small */
   margin: 4px 0 4px;
   font: 400 24px/32px var(--md-font);
+  font-family: var(--md-font-display);
   color: var(--md-on-surface);
 }
 .detail .sub {
@@ -1081,9 +1259,10 @@ a { color: var(--md-primary); }
   margin: 0 0 14px; font: 600 12px/1 var(--md-font);
   letter-spacing: 0.12em; text-transform: uppercase; color: var(--md-primary);
 }
-.home-intro h1 {
+.home-intro h1, .hh-text h1 {
   margin: 0 0 12px; max-width: 20ch;
   font: 700 clamp(28px, 3.4vw, 40px)/1.12 var(--md-font);
+  font-family: var(--md-font-display);
   letter-spacing: -0.01em; color: var(--md-on-surface);
 }
 .home-hero-sub { margin: 0 0 12px; max-width: 62ch; font-size: 17px; line-height: 1.5; color: var(--md-on-surface); }
@@ -1168,8 +1347,88 @@ a { color: var(--md-primary); }
   letter-spacing: 0.05em; text-transform: uppercase; color: var(--md-on-surface-variant);
 }
 
+/* ===== Home hero grid — image / explore / collections / stats arranged three
+   ways via [data-layout]; collections are compacted in every layout. ===== */
+.home-hero { display: grid; gap: 14px; margin: 18px 20px 16px; align-items: start; }
+.hh-cell { min-width: 0; }
+.hh-image { grid-area: image; }
+.hh-text  { grid-area: text; }
+.hh-cats  { grid-area: cats; }
+.hh-stats { grid-area: stats; }
+.hh-image .home-banner { width: 100%; max-width: none; margin: 0; }
+.hh-stats .home-stats { margin: 0; }
+.hh-text {
+  padding: 30px 30px; border-radius: 24px; border: 1px solid var(--md-outline-variant);
+  background: radial-gradient(135% 150% at 0% 0%, rgba(0,142,150,0.10), rgba(0,142,150,0) 56%), var(--md-surface-container-low);
+}
+.hh-cats {
+  padding: 20px 22px; border-radius: 24px; border: 1px solid var(--md-outline-variant);
+  background: var(--md-surface-container-low);
+}
+.hh-cats .home-cats-title { margin-top: 0; }
+
+/* Layout A — banner on top, explore + collections side by side, stats below.
+   Collections: a denser single-column rail. */
+.home-hero[data-layout="a"] {
+  grid-template-columns: 1.25fr 0.75fr;
+  grid-template-areas: "image image" "text cats" "stats stats";
+}
+.home-hero[data-layout="a"] .hh-cats .home-cat-groups { grid-template-columns: 1fr; gap: 10px; }
+.home-hero[data-layout="a"] .hh-cats .home-cat-list { display: grid; grid-template-columns: 1fr 1fr; gap: 0 10px; }
+.home-hero[data-layout="a"] .hh-cats .home-cat { padding: 4px 10px; font-size: 13px; }
+
+/* Layout B — split hero (image | explore), collections as a chip cloud, stats below. */
+.home-hero[data-layout="b"] {
+  grid-template-columns: 0.95fr 1.05fr;
+  grid-template-areas: "image text" "cats cats" "stats stats";
+}
+.home-hero[data-layout="b"] .hh-cats .home-cat-groups { display: flex; flex-wrap: wrap; gap: 14px 26px; }
+.home-hero[data-layout="b"] .hh-cats .home-cat-group { flex: 1 1 260px; }
+.home-hero[data-layout="b"] .hh-cats .home-cat-list { display: flex; flex-flow: row wrap; gap: 6px; }
+.home-hero[data-layout="b"] .hh-cats .home-cat {
+  width: auto; gap: 7px; padding: 5px 12px; border-radius: var(--md-shape-full);
+  background: var(--md-surface-container-high); font-size: 13px;
+}
+.home-hero[data-layout="b"] .hh-cats .home-cat:hover { background: var(--md-surface-container-highest); }
+.home-hero[data-layout="b"] .hh-cats .home-cat-count { font-size: 11px; }
+
+/* Layout C — banner on top, explore full-width, collections list beside vertical stats. */
+.home-hero[data-layout="c"] {
+  grid-template-columns: 1.4fr 0.6fr;
+  grid-template-areas: "image image" "text text" "cats stats";
+}
+.home-hero[data-layout="c"] .hh-cats .home-cat-groups { grid-template-columns: 1fr 1fr; gap: 6px 20px; }
+.home-hero[data-layout="c"] .hh-cats .home-cat { padding: 5px 10px; font-size: 13.5px; }
+.home-hero[data-layout="c"] .hh-stats .home-stats { grid-template-columns: 1fr; gap: 8px; }
+.home-hero[data-layout="c"] .hh-stats .home-stat { padding: 12px 14px; }
+
+/* Narrow screens: stack everything regardless of layout. */
+@media (max-width: 900px) {
+  .home-hero[data-layout="a"], .home-hero[data-layout="b"], .home-hero[data-layout="c"] {
+    grid-template-columns: 1fr;
+    grid-template-areas: "image" "text" "cats" "stats";
+  }
+  .home-hero[data-layout="c"] .hh-cats .home-cat-groups { grid-template-columns: 1fr; }
+  .home-hero[data-layout="c"] .hh-stats .home-stats { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+}
+
+/* TEMP — hero layout switcher (A/B/C exploration; remove when a layout is chosen) */
+.home-layout-switch {
+  position: fixed; right: 16px; bottom: 16px; z-index: 50;
+  display: flex; align-items: center; gap: 4px; padding: 5px 6px 5px 12px;
+  background: var(--md-surface-container-high); color: var(--md-on-surface-variant);
+  border: 1px solid var(--md-outline-variant); border-radius: var(--md-shape-full);
+  box-shadow: var(--md-elev-3); font: var(--md-label-md);
+}
+.home-layout-switch span { white-space: nowrap; }
+.home-layout-switch button {
+  width: 30px; height: 30px; border: none; border-radius: var(--md-shape-full);
+  background: transparent; color: var(--md-on-surface); cursor: pointer; font: var(--md-label-lg);
+}
+.home-layout-switch button[aria-pressed="true"] { background: var(--md-primary); color: var(--md-on-primary); }
+
 .home-shelf { padding: 22px 0 2px; }
-.home-shelf-title { margin: 0 0 12px; padding: 0 20px; font: var(--md-title-md); font-size: 18px; color: var(--md-on-surface); }
+.home-shelf-title { margin: 0 0 12px; padding: 0 20px; font: var(--md-title-md); font-family: var(--md-font-display); font-size: 18px; color: var(--md-on-surface); }
 
 /* Curated feature banner (e.g. the James Bragge story-map) */
 .home-feature {
@@ -1184,7 +1443,7 @@ a { color: var(--md-primary); }
 .home-feature-img { flex: 0 0 auto; height: 190px; width: auto; display: block; object-fit: contain; background: #efe7da; filter: sepia(0.12); }
 .home-feature-text { display: flex; flex-direction: column; justify-content: center; gap: 6px; padding: 22px 24px; }
 .home-feature-eyebrow { font: var(--md-label-md); letter-spacing: 0.06em; text-transform: uppercase; color: var(--md-primary); }
-.home-feature-title { font: 600 22px/1.2 var(--md-font); letter-spacing: -0.01em; color: var(--md-on-surface); }
+.home-feature-title { font: 600 22px/1.2 var(--md-font); font-family: var(--md-font-display); letter-spacing: -0.01em; color: var(--md-on-surface); }
 .home-feature-blurb { font: var(--md-body-md); color: var(--md-on-surface-variant); max-width: 60ch; }
 .home-feature-cta { margin-top: 4px; font: var(--md-label-lg); color: var(--md-primary); }
 @media (max-width: 640px) {
@@ -1528,7 +1787,7 @@ a { color: var(--md-primary); }
 }
 .graph-head-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .graph-title { display: flex; align-items: baseline; gap: 12px; min-width: 0; overflow: hidden; }
-.graph-title strong { font: var(--md-title-lg); color: var(--md-on-surface); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.graph-title strong { font: var(--md-title-lg); font-family: var(--md-font-display); color: var(--md-on-surface); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .graph-focus {
   font: var(--md-body-md);
   color: var(--md-primary);
@@ -1686,7 +1945,7 @@ a { color: var(--md-primary); }
   margin-bottom: 12px;
   background: var(--md-surface-container-high);
 }
-.graph-info h3 { margin: 0 0 10px; font: var(--md-title-md); color: var(--md-on-surface); }
+.graph-info h3 { margin: 0 0 10px; font: var(--md-title-md); font-family: var(--md-font-display); color: var(--md-on-surface); }
 .graph-info .gi-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
 
 /* Card actions: first = filled primary, rest = tonal, external = outlined */
