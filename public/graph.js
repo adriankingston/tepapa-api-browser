@@ -147,8 +147,8 @@
       },
       { selector: 'node.bundle-done', style: { 'background-color': C.doneBg, 'border-color': C.doneBorder, color: C.doneText } },
       { selector: 'node[kind="record"].expanded', style: { 'border-width': 3, 'border-color': C.brand } },
-      { selector: 'node.hover', style: { 'overlay-color': C.hover, 'overlay-opacity': 0.08, 'overlay-padding': 4 } },
-      { selector: 'node:selected', style: { 'border-color': C.brand, 'border-width': 3, 'overlay-color': C.brand, 'overlay-opacity': 0.12, 'overlay-padding': 4 } },
+      { selector: 'node.hover', style: { 'border-color': C.brand } },                          // teal ring on hover (no square overlay)
+      { selector: 'node:selected', style: { 'border-color': C.brand, 'border-width': 3 } },      // thicker teal ring when selected
       {
         selector: 'edge',
         style: {
