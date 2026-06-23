@@ -3,6 +3,9 @@
   "_schema": { "reg": "D.000xxx or O.0xxxxx", "lat": -41.0, "lng": 175.0, "by": "contributor name (optional, shown as 'located by')", "note": "optional curator note, not displayed" },
   "locations": [
     { "reg": "D.000031", "lat": -41.285399, "lng": 174.77594, "note": "Central Hotel, Wellington" },
-    { "reg": "D.000009", "lat": -41.284532, "lng": 174.776198, "note": "Joseph Nathan and Company Building, Wellington" }
+    { "reg": "D.000009", "lat": -41.284532, "lng": 174.776198, "note": "Joseph Nathan and Company Building, Wellington" },
+    { "reg": "D.000043", "lat": -41.284851, "lng": 174.776535, "note": "Nathan's Building (on completion), Wellington" },
+    { "reg": "D.000042", "lat": -41.284851, "lng": 174.776535, "note": "Nathan's Building (under construction), Wellington" },
+    { "reg": "D.000012", "lat": -41.303437, "lng": 174.779091, "note": "Wellington Tramways Company Limited" }
   ]
 }
