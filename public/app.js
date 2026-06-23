@@ -123,6 +123,10 @@ function typeColor(t) { return TYPE_COLORS[t] || '#9aa3b2'; }
 // replaced with the type colour when the SVG is built.
 const TYPE_ICONS = {
   Person: "<circle cx='12' cy='8' r='3.8'/><path d='M5 20c0-4 3.2-6.5 7-6.5s7 2.5 7 6.5v.6H5z'/>",
+  // Three people in a triangle (one above, two below) — a group / organisation.
+  Organisation: "<circle cx='12' cy='4.5' r='2.2'/><path d='M8.7 10.5c0-2.1 1.5-3.4 3.3-3.4s3.3 1.3 3.3 3.4z'/>" +
+    "<circle cx='5.8' cy='13' r='2.2'/><path d='M2.5 19c0-2.1 1.5-3.4 3.3-3.4s3.3 1.3 3.3 3.4z'/>" +
+    "<circle cx='18.2' cy='13' r='2.2'/><path d='M14.9 19c0-2.1 1.5-3.4 3.3-3.4s3.3 1.3 3.3 3.4z'/>",
   Place: "<path d='M12 2.2a6.6 6.6 0 0 0-6.6 6.6c0 4.6 6.6 12.4 6.6 12.4s6.6-7.8 6.6-12.4A6.6 6.6 0 0 0 12 2.2z'/><circle cx='12' cy='8.8' r='2.4' fill='#fff'/>",
   // Hexagon divided into six segments — spokes from the centre to every vertex.
   Object: "<g fill='none' stroke='__C__' stroke-width='2' stroke-linejoin='round' stroke-linecap='round'>" +
@@ -146,9 +150,12 @@ const TYPE_ICONS = {
     "<circle cx='10' cy='8.6' r='.65'/>",
   Category: "<path d='M3.2 11.8 11.8 3.2H21v9.2l-8.6 8.6z'/><circle cx='16.4' cy='7.6' r='1.5' fill='#fff'/>",
   Document: "<path d='M6.5 2.5h7L18 7v14.5H6.5z'/><path d='M13.5 2.5V7H18z' fill='#fff'/>",
+  // Open book — two pages meeting at a centre spine.
+  Publication: "<path d='M11.5 6.2C9 4.9 6 4.9 3.5 5.8V18.4C6 17.5 9 17.5 11.5 18.8Z'/>" +
+    "<path d='M12.5 6.2C15 4.9 18 4.9 20.5 5.8V18.4C18 17.5 15 17.5 12.5 18.8Z'/>",
   _default: "<circle cx='12' cy='12' r='6.5'/>",
 };
-const TYPE_ICON_ALIAS = { Organisation: 'Person', Topic: 'Document', Publication: 'Document', Story: 'Document' };
+const TYPE_ICON_ALIAS = { Topic: 'Document', Story: 'Document' };
 const typeIconCache = {};
 // Data-URI SVG for a type icon. `pad` units of space around the 24×24 icon —
 // circular hosts (graph nodes) need generous padding, square swatches almost none.
