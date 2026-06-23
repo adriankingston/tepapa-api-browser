@@ -72,9 +72,9 @@
 
   function buildLegend() {
     const items = [
-      ['Object', 'Object'], ['Person', 'Person / org'], ['Place', 'Place'],
-      ['Taxon', 'Taxon'], ['Specimen', 'Specimen'], ['Category', 'Category'],
-      ['Topic', 'Topic / pub'],
+      ['Object', 'Object'], ['Person', 'Person'], ['Organisation', 'Organisation'],
+      ['Place', 'Place'], ['Taxon', 'Taxon'], ['Specimen', 'Specimen'],
+      ['Category', 'Category'], ['Topic', 'Topic'], ['Publication', 'Publication'],
     ];
     const C = graphPalette();
     elLegend.innerHTML = items
