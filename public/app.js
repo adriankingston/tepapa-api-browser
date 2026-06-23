@@ -180,14 +180,14 @@ function noImageThumbHtml(type, size = 64) {
 // come via our /api/imgproxy. Composites cache per URL as data URLs.
 const edgeThumbCache = new Map();   // thumbnailUrl → Promise<dataURL | null>
 
-function edgeExtendedThumb(url) {
+function edgeExtendedThumb(url, S = 80) {
   if (!url || !/^https:\/\/media\.tepapa\.govt\.nz\//.test(url)) return Promise.resolve(null);
-  if (edgeThumbCache.has(url)) return edgeThumbCache.get(url);
+  const ck = `${url}|${S}`;   // S defaults to 2× the 40px list box; graph asks for more
+  if (edgeThumbCache.has(ck)) return edgeThumbCache.get(ck);
   const p = (async () => {
     const res = await fetch('/api/imgproxy?url=' + encodeURIComponent(url));
     if (!res.ok) return null;
     const bmp = await createImageBitmap(await res.blob());
-    const S = 80;   // 2× the 40px box for retina
     const cv = document.createElement('canvas');
     cv.width = S; cv.height = S;
     const cx = cv.getContext('2d');
@@ -212,7 +212,7 @@ function edgeExtendedThumb(url) {
     }
     return cv.toDataURL('image/jpeg', 0.92);
   })().catch(() => null);
-  edgeThumbCache.set(url, p);
+  edgeThumbCache.set(ck, p);
   return p;
 }
 

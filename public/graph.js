@@ -131,7 +131,7 @@
         selector: 'node.focus',                // starting record — teal primary emphasis
         style: {
           width: 76, height: 76, 'border-width': 4, 'border-color': C.brand,
-          'overlay-color': C.brand, 'overlay-opacity': 0.10, 'overlay-padding': 6,
+          'background-color': C.bundleBg,      // filled teal disc, no square overlay halo
           'font-size': 12, 'font-weight': 'bold', color: C.focusLabel,
         },
       },
@@ -191,15 +191,30 @@
     return { x: p.x + Math.cos(a) * r, y: p.y + Math.sin(a) * r };
   }
 
+  // Fill the circle edge-to-edge: swap a node's raw thumb for an edge-extended
+  // square composite (bands filled with the image's own edge pixels), so the
+  // whole photo shows with no white gaps and nothing cropped. Shared with the
+  // list view via app.js's edgeExtendedThumb (same /api/imgproxy + cache).
+  function extendNodeThumb(key, url) {
+    if (!url || typeof edgeExtendedThumb !== 'function') return;
+    edgeExtendedThumb(url, 160).then((d) => {
+      if (!d) return;
+      const n = cy.getElementById(key);
+      if (n.nonempty()) n.data('thumb', d);
+    });
+  }
+
   function addRecordNode(node, parentNode) {
     const existing = cy.getElementById(node.key);
     if (existing.nonempty()) return existing;
     if (atCap()) return null;
-    return cy.add({
+    const el = cy.add({
       group: 'nodes',
       data: { id: node.key, kind: 'record', label: node.title, type: node.type, href: node.href, thumb: node.thumb, expanded: false },
       position: nodePos(parentNode),
     });
+    extendNodeThumb(node.key, node.thumb);
+    return el;
   }
 
   function addEdge(source, target, label, reverse, via) {
@@ -450,6 +465,7 @@
       position: { x: 0, y: 0 },
       classes: 'focus',
     });
+    extendNodeThumb(focus.key, focus.thumb);
     // Centre the viewport on the focus node straight away — model (0,0) otherwise
     // renders at the top-left corner, so the node would appear there until the
     // first relayout fits it. Centring now means it starts centred.
