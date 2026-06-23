@@ -108,11 +108,13 @@ function predicateLabel(p) {
 // Shared by the graph view (nodes, legend) and anywhere else that shows record
 // types. Material 3-aligned; Object is the brand primary (teal #008e96) so
 // focus, selection, bundles and Object icons share one hue.
+// Palette type colours (coolors.co flat-UI set). The two bulk types (Object,
+// Category) stay neutral grey — "smart black & white" — so the rarer types pop.
 const TYPE_COLORS = {
-  Object: '#008e96', Person: '#ff7043', Organisation: '#ff7043',
-  Place: '#43a047', Taxon: '#8e5fd9', Specimen: '#c79100',
-  Category: '#5c7a99', Topic: '#d81b78', Publication: '#d81b78',
-  Document: '#d81b78', Story: '#d81b78',
+  Object: '#5e6876', Person: '#f78c6b', Organisation: '#f78c6b',
+  Place: '#06d6a0', Taxon: '#118ab2', Specimen: '#0cb0a9',
+  Category: '#828c9b', Topic: '#ef476f', Publication: '#ef476f',
+  Document: '#ef476f', Story: '#ef476f',
 };
 function typeColor(t) { return TYPE_COLORS[t] || '#9aa3b2'; }
 

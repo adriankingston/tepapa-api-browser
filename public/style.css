@@ -61,12 +61,12 @@
   --md-font-display: 'Cal Sans', 'Roboto', system-ui, -apple-system, 'Segoe UI', Arial, sans-serif;
 
   /* Color roles (tonal palette from the Te Papa teal primary) */
-  --md-primary: #118ab2;                  /* palette blue (coolors.co flat-UI set) */
-  --md-primary-hover: #0f7a9d;
+  --md-primary: #073b4c;                  /* palette navy (coolors.co flat-UI set) */
+  --md-primary-hover: #0c5266;
   --md-on-primary: #ffffff;
-  --md-primary-container: #cbe9f3;
-  --md-on-primary-container: #073b4c;     /* palette navy */
-  --md-primary-fixed-dim: #74c9e6;        /* bundle hairline */
+  --md-primary-container: #cfe7ee;
+  --md-on-primary-container: #073b4c;
+  --md-primary-fixed-dim: #5fa9c0;        /* bundle hairline */
 
   /* Neutral surfaces (M3 surface-container family) */
   --md-surface: #fbfcfd;
@@ -130,12 +130,12 @@
   color-scheme: dark;
 
   /* Primary — a lighter teal tone reads as the accent on dark surfaces */
-  --md-primary: #58c4ec;                  /* lightened palette blue for dark surfaces */
-  --md-primary-hover: #78d2f1;
-  --md-on-primary: #073b4c;               /* palette navy text on the light-blue */
-  --md-primary-container: #0e5d76;
-  --md-on-primary-container: #cbe9f3;
-  --md-primary-fixed-dim: #3f9bc0;
+  --md-primary: #6cc3dd;                  /* light tint of the navy hue for dark surfaces */
+  --md-primary-hover: #8ad1e7;
+  --md-on-primary: #073b4c;               /* palette navy text on the light tint */
+  --md-primary-container: #0c4456;
+  --md-on-primary-container: #cfe7ee;
+  --md-primary-fixed-dim: #3f8ba8;
 
   /* Neutral surfaces — warm-leaning charcoal (R≥G≥B, no green tint) */
   --md-surface: #141312;
@@ -1251,7 +1251,7 @@ h1, h2, h3, h4, h5, h6 { font-family: var(--md-font-display); }
   border-radius: 28px;
   border: 1px solid var(--md-outline-variant);
   background:
-    radial-gradient(135% 150% at 0% 0%, rgba(17, 138, 178, 0.12), rgba(17, 138, 178, 0) 56%),
+    radial-gradient(135% 150% at 0% 0%, rgba(7, 59, 76, 0.10), rgba(7, 59, 76, 0) 56%),
     var(--md-surface-container-low);
   overflow: hidden;
 }

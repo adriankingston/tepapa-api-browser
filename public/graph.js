@@ -90,15 +90,15 @@
     const dark = document.documentElement.dataset.theme === 'dark';
     return dark ? {
       nodeBg: '#2b2926', nodeBorder: '#565250', label: '#e7e3df',
-      brand: '#5fd4db', focusLabel: '#e7e3df',
-      bundleBg: '#004f54', bundleBorder: '#3f9098', bundleText: '#a8eef3',
+      brand: '#6cc3dd', focusLabel: '#e7e3df',
+      bundleBg: '#0c4456', bundleBorder: '#3f8ba8', bundleText: '#cfe7ee',
       doneBg: '#353330', doneBorder: '#565250', doneText: '#cbc6c1',
       edge: '#565250', edgeLabel: '#cbc6c1', edgeLabelBg: '#141312',
       hover: '#ffffff',
     } : {
       nodeBg: '#ffffff', nodeBorder: '#bfc8ca', label: '#191c1d',
-      brand: '#008e96', focusLabel: '#00363a',
-      bundleBg: '#bdeef1', bundleBorder: '#74d3da', bundleText: '#00363a',
+      brand: '#073b4c', focusLabel: '#073b4c',
+      bundleBg: '#cfe7ee', bundleBorder: '#5fa9c0', bundleText: '#073b4c',
       doneBg: '#e1e4e6', doneBorder: '#bfc8ca', doneText: '#3f484a',
       edge: '#bfc8ca', edgeLabel: '#3f484a', edgeLabelBg: '#fbfcfd',
       hover: '#191c1d',
