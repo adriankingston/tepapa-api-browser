@@ -139,7 +139,7 @@
         selector: 'node[kind="bundle"]',       // M3 filled-tonal chip
         style: {
           'background-image': 'none', 'background-color': C.bundleBg,
-          shape: 'round-rectangle', 'border-color': C.bundleBorder, 'border-width': 1,
+          shape: 'round-rectangle', 'border-color': C.bundleBorder, 'border-width': 2,   // match the record circles
           width: 'label', height: 'label', padding: '10px',
           label: 'data(label)', 'text-wrap': 'wrap', 'text-max-width': 130,
           'text-valign': 'center', 'text-margin-y': 0, color: C.bundleText, 'font-size': 11,
