@@ -6,6 +6,7 @@
     { "reg": "D.000009", "lat": -41.284532, "lng": 174.776198, "note": "Joseph Nathan and Company Building, Wellington" },
     { "reg": "D.000043", "lat": -41.284851, "lng": 174.776535, "note": "Nathan's Building (on completion), Wellington" },
     { "reg": "D.000042", "lat": -41.284851, "lng": 174.776535, "note": "Nathan's Building (under construction), Wellington" },
-    { "reg": "D.000012", "lat": -41.303437, "lng": 174.779091, "note": "Wellington Tramways Company Limited" }
+    { "reg": "D.000012", "lat": -41.303437, "lng": 174.779091, "note": "Wellington Tramways Company Limited" },
+    { "reg": "D.000001", "lat": -41.279803, "lng": 174.776574, "note": "Supreme Court, Whitmore St, Wellington (laying the foundation stone)" }
   ]
 }
