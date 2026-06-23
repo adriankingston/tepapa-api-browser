@@ -45,9 +45,9 @@
   --line: #d7dbe1;
   --text: #1a1d23;
   --muted: #5b6472;
-  --accent: #008e96;      /* Te Papa teal (darkened for contrast on white) */
-  --accent-2: #e23347;    /* error / danger red */
-  --ok: #15803d;          /* success / status green (white text passes AA) */
+  --accent: #0cb0a9;      /* palette teal — bright accent (spinner, tints) */
+  --accent-2: #ef476f;    /* palette pink — error / danger */
+  --ok: #0a8f67;          /* palette emerald, darkened for status legibility */
   --radius: 12px;
   --shadow: 0 8px 24px rgba(20, 30, 50, 0.12);
   --content-max: 1280px;  /* centred content column on wide screens (Material measure) */
@@ -61,12 +61,12 @@
   --md-font-display: 'Cal Sans', 'Roboto', system-ui, -apple-system, 'Segoe UI', Arial, sans-serif;
 
   /* Color roles (tonal palette from the Te Papa teal primary) */
-  --md-primary: #00696f;                  /* AA-safe teal: white-on-teal 6.5:1 & teal-on-light ≥5:1 (WCAG AA). Bright brand #008e96 kept on the logo + graph canvas. */
-  --md-primary-hover: #007b82;
+  --md-primary: #118ab2;                  /* palette blue (coolors.co flat-UI set) */
+  --md-primary-hover: #0f7a9d;
   --md-on-primary: #ffffff;
-  --md-primary-container: #bdeef1;
-  --md-on-primary-container: #00363a;
-  --md-primary-fixed-dim: #74d3da;        /* bundle hairline */
+  --md-primary-container: #cbe9f3;
+  --md-on-primary-container: #073b4c;     /* palette navy */
+  --md-primary-fixed-dim: #74c9e6;        /* bundle hairline */
 
   /* Neutral surfaces (M3 surface-container family) */
   --md-surface: #fbfcfd;
@@ -130,12 +130,12 @@
   color-scheme: dark;
 
   /* Primary — a lighter teal tone reads as the accent on dark surfaces */
-  --md-primary: #5fd4db;
-  --md-primary-hover: #7ce0e6;
-  --md-on-primary: #00363a;
-  --md-primary-container: #004f54;
-  --md-on-primary-container: #a8eef3;
-  --md-primary-fixed-dim: #3f9098;
+  --md-primary: #58c4ec;                  /* lightened palette blue for dark surfaces */
+  --md-primary-hover: #78d2f1;
+  --md-on-primary: #073b4c;               /* palette navy text on the light-blue */
+  --md-primary-container: #0e5d76;
+  --md-on-primary-container: #cbe9f3;
+  --md-primary-fixed-dim: #3f9bc0;
 
   /* Neutral surfaces — warm-leaning charcoal (R≥G≥B, no green tint) */
   --md-surface: #141312;
@@ -161,9 +161,9 @@
   --md-elev-4: 0 6px 10px 4px rgba(0,0,0,.35), 0 2px 3px rgba(0,0,0,.5);
 
   /* Legacy tokens still referenced directly */
-  --accent: #5fd4db;       /* bright teal accent (spinner, tints, filter chip) */
-  --accent-2: #ffb4ab;     /* error — M3 dark error tone */
-  --ok: #6ee29a;           /* status / loading green */
+  --accent: #2ad0cb;       /* palette teal — bright accent (spinner, tints, filter chip) */
+  --accent-2: #ff8aa0;     /* palette pink (lightened) — error */
+  --ok: #3fe0a8;           /* palette emerald (lightened) — status / loading */
   --shadow: 0 8px 24px rgba(0,0,0,.55);
 }
 
@@ -273,12 +273,12 @@ h1, h2, h3, h4, h5, h6 { font-family: var(--md-font-display); }
   0% { transform: rotate(0deg); } 33.333% { transform: rotate(120deg); }
   66.666% { transform: rotate(240deg); } 100% { transform: rotate(360deg); }
 }
-/* base · teal · orange — dark-mode base is warm white, light-mode base is warm charcoal */
+/* palette cycle: blue · teal · coral */
 @keyframes brand-tint-light {
-  0% { color: #2b2926; } 33.333% { color: #00696f; } 66.666% { color: #e2710b; } 100% { color: #2b2926; }
+  0% { color: #118ab2; } 33.333% { color: #0cb0a9; } 66.666% { color: #f78c6b; } 100% { color: #118ab2; }
 }
 @keyframes brand-tint-dark {
-  0% { color: #e7e3df; } 33.333% { color: #74d3da; } 66.666% { color: #fb923c; } 100% { color: #e7e3df; }
+  0% { color: #58c4ec; } 33.333% { color: #2ad0cb; } 66.666% { color: #f99e7e; } 100% { color: #58c4ec; }
 }
 @keyframes brand-reach-a {
   0% { transform: scale(0.74); } 33.333% { transform: scale(1.26); }
@@ -1251,7 +1251,7 @@ h1, h2, h3, h4, h5, h6 { font-family: var(--md-font-display); }
   border-radius: 28px;
   border: 1px solid var(--md-outline-variant);
   background:
-    radial-gradient(135% 150% at 0% 0%, rgba(0, 142, 150, 0.10), rgba(0, 142, 150, 0) 56%),
+    radial-gradient(135% 150% at 0% 0%, rgba(17, 138, 178, 0.12), rgba(17, 138, 178, 0) 56%),
     var(--md-surface-container-low);
   overflow: hidden;
 }
