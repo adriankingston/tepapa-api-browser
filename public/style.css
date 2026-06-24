@@ -266,8 +266,12 @@ h1, h2, h3, h4, h5, h6 { font-family: var(--md-font-display); }
 .brand-logo-anim .rotor, .brand-logo-anim .spoke { transform-box: view-box; transform-origin: 16px 16px; }
 .brand-logo-anim .hub { transform-box: fill-box; transform-origin: center; }
 .brand-logo-anim .rotor { animation: brand-rotor 21s infinite; }
-.brand-logo-anim .spoke.s1, .brand-logo-anim .spoke.s3 { animation: brand-reach-a 21s ease-in-out infinite; }
-.brand-logo-anim .spoke.s2, .brand-logo-anim .spoke.s4 { animation: brand-reach-b 21s ease-in-out infinite; }
+.brand-logo-anim .spoke.s1 { animation: brand-reach-1 21s ease-in-out infinite; }
+.brand-logo-anim .spoke.s2 { animation: brand-reach-2 21s ease-in-out infinite; }
+.brand-logo-anim .spoke.s3 { animation: brand-reach-3 21s ease-in-out infinite; }
+.brand-logo-anim .spoke.s4 { animation: brand-reach-4 21s ease-in-out infinite; }
+.brand-logo-anim .spoke.s5 { animation: brand-reach-5 21s ease-in-out infinite; }
+.brand-logo-anim .spoke.s6 { animation: brand-reach-6 21s ease-in-out infinite; }
 .brand-logo-anim .hub { animation: brand-hub 21s ease-in-out infinite; }
 
 /* Each whirl eases in/out and lands at a distinct orientation (30deg · 150deg ·
@@ -293,26 +297,39 @@ h1, h2, h3, h4, h5, h6 { font-family: var(--md-font-display); }
   40.476% { color: #2ad0cb; } 66.667% { color: #2ad0cb; }
   73.810% { color: #f99e7e; } 100%    { color: #f99e7e; }
 }
-/* Arm lengths per state: left arms (s1/s3) and right arms (s2/s4) settle at
-   different scales each pause, so every rest is a different shape. */
-@keyframes brand-reach-a {
-  0%      { transform: scale(1.18); }
-  7.143%  { transform: scale(1.34); } 33.333% { transform: scale(1.34); }   /* state 1: left long */
-  40.476% { transform: scale(0.76); } 66.667% { transform: scale(0.76); }   /* state 2: left short */
-  73.810% { transform: scale(1.18); } 100%    { transform: scale(1.18); }   /* state 3: left medium */
+/* Six arms foreshorten dramatically (0.5 retracted/away · 1.5 extended/toward).
+   The "long" cluster rotates ~120deg around the mark each state, so it reads as
+   one 3D structure tumbling. 0% == state 3 (the loop point). Holds at
+   7.143-33.333% (state 1), 40.476-66.667% (state 2), 73.810-100% (state 3). */
+@keyframes brand-reach-1 {
+  0%, 40.476%, 66.667%, 73.810%, 100% { transform: scale(0.75); }
+  7.143%, 33.333% { transform: scale(1.5); }
 }
-@keyframes brand-reach-b {
-  0%      { transform: scale(1); }
-  7.143%  { transform: scale(0.74); } 33.333% { transform: scale(0.74); }   /* state 1: right short */
-  40.476% { transform: scale(1.32); } 66.667% { transform: scale(1.32); }   /* state 2: right long */
-  73.810% { transform: scale(1); }    100%    { transform: scale(1); }      /* state 3: right normal */
+@keyframes brand-reach-2 {
+  0%, 7.143%, 33.333%, 73.810%, 100% { transform: scale(1.25); }
+  40.476%, 66.667% { transform: scale(0.5); }
 }
-/* Hub size shifts per state too */
+@keyframes brand-reach-3 {
+  0%, 73.810%, 100% { transform: scale(1.5); }
+  7.143%, 33.333%, 40.476%, 66.667% { transform: scale(0.75); }
+}
+@keyframes brand-reach-4 {
+  0%, 40.476%, 66.667%, 73.810%, 100% { transform: scale(1.25); }
+  7.143%, 33.333% { transform: scale(0.5); }
+}
+@keyframes brand-reach-5 {
+  0%, 7.143%, 33.333%, 73.810%, 100% { transform: scale(0.75); }
+  40.476%, 66.667% { transform: scale(1.5); }
+}
+@keyframes brand-reach-6 {
+  0%, 73.810%, 100% { transform: scale(0.5); }
+  7.143%, 33.333%, 40.476%, 66.667% { transform: scale(1.25); }
+}
+/* Hub size shifts per state too (its apparent depth) */
 @keyframes brand-hub {
-  0%      { transform: scale(1); }
-  7.143%  { transform: scale(1.14); } 33.333% { transform: scale(1.14); }
-  40.476% { transform: scale(0.9); }  66.667% { transform: scale(0.9); }
-  73.810% { transform: scale(1); }    100%    { transform: scale(1); }
+  0%, 73.810%, 100% { transform: scale(1); }
+  7.143%, 33.333% { transform: scale(1.18); }
+  40.476%, 66.667% { transform: scale(0.85); }
 }
 @media (prefers-reduced-motion: reduce) {
   .brand-logo-anim, .brand-logo-anim .rotor, .brand-logo-anim .spoke, .brand-logo-anim .hub { animation: none; }
