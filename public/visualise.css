@@ -311,6 +311,88 @@
 }
 .gt-key-note { margin-left: auto; font-style: italic; opacity: 0.85; }
 
+/* ── Botany collecting timeline (viz #4) ──────────────────────────────── */
+.bt-chart { --bt-green: #2f9e63; position: relative; margin-top: 8px; }
+:root[data-theme="dark"] .bt-chart { --bt-green: #54ca8b; }
+.bt-plot {
+  position: relative;
+  height: clamp(260px, 36vh, 380px);
+  border-bottom: 1.5px solid var(--md-outline-variant);
+}
+.bt-loading { display: flex; align-items: center; justify-content: center; }
+.bt-bar {
+  position: absolute; bottom: 0;
+  background: var(--bt-green);
+  border-radius: 3px 3px 0 0;
+  min-height: 3px;
+  transition: filter 120ms ease;
+}
+.bt-bar:hover, .bt-bar:focus-visible {
+  outline: none; z-index: 3;
+  filter: brightness(1.12);
+  box-shadow: 0 0 0 2px var(--bt-green);
+}
+.bt-grid { position: absolute; left: 0; right: 0; height: 1px; background: var(--md-outline-variant); opacity: 0.5; }
+.bt-ylab {
+  position: absolute; left: 0; transform: translateY(50%);
+  font: var(--md-label-md); color: var(--md-on-surface-variant);
+  background: var(--md-surface-container-low); padding: 0 5px 0 0;
+}
+.bt-axis { position: relative; height: 20px; margin-top: 5px; }
+.bt-xlab {
+  position: absolute; transform: translateX(-50%);
+  font: var(--md-label-md); color: var(--md-on-surface-variant);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Museum-eras band, sharing the timeline's x-axis. */
+.bt-institutions { position: relative; margin-top: 18px; }
+.bt-era-track { position: relative; height: 36px; }
+.bt-era {
+  position: absolute; top: 0; bottom: 0;
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 0 9px; overflow: hidden; white-space: nowrap;
+  border-radius: 4px; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+  cursor: default;
+}
+.bt-era + .bt-era { margin-left: 0; }
+.bt-era-name { font: 600 11.5px/1.25 var(--md-font); overflow: hidden; text-overflow: ellipsis; }
+.bt-era-yr { font: 500 10px/1.2 var(--md-font); opacity: 0.85; font-variant-numeric: tabular-nums; }
+.bt-era:hover { filter: brightness(1.06); }
+
+/* Collector range rows, sharing the timeline's x-axis. */
+.bt-collectors { position: relative; margin-top: 18px; }
+.bt-clabel { font: var(--md-label-md); color: var(--md-on-surface-variant); margin-bottom: 10px; }
+.bt-crow {
+  position: relative; display: block; height: 31px;
+  text-decoration: none; border-radius: 5px; cursor: pointer;
+}
+.bt-crow:hover { background: color-mix(in srgb, var(--bt-green) 16%, transparent); }
+.bt-crow:hover .bt-cname, .bt-crow:focus-visible .bt-cname {
+  text-decoration: underline; text-decoration-color: var(--bt-green); text-underline-offset: 2px;
+}
+.bt-crow:focus-visible { outline: 2px solid var(--bt-green); outline-offset: 1px; }
+.bt-cname {
+  position: absolute; top: 0; white-space: nowrap;
+  font: 600 11.5px/1.4 var(--md-font); color: var(--md-on-surface);
+  pointer-events: none;
+}
+.bt-cname-r { text-align: right; }      /* right-anchored: right edge at bar end, grows leftward */
+.bt-cn { font-weight: 500; color: var(--md-on-surface-variant); font-variant-numeric: tabular-nums; }
+.bt-cbar {
+  position: absolute; bottom: 5px; height: 8px;
+  background: var(--bt-green); opacity: 0.5;
+  border-radius: 5px; min-width: 4px;
+}
+.bt-cdot {
+  position: absolute; bottom: 1.5px; width: 15px; height: 15px;
+  border-radius: 50%; background: var(--bt-green);
+  border: 2.5px solid var(--md-surface-container-low);
+  transform: translateX(-50%);
+}
+.bt-crow:hover .bt-cbar { opacity: 0.72; }
+.bt-crow:hover .bt-cdot { filter: brightness(1.1); }
+
 @media (max-width: 640px) {
   .viz { padding: 16px 14px 18px; }
   .treemap { height: clamp(520px, 78vh, 900px); }

@@ -544,6 +544,166 @@
     gtLayout();
   }
 
+  // ════════════════════════════════════════════════════════════════════════
+  // Visualisation 4 — the botany collecting timeline.
+  //
+  // Plants specimens carry a field-collection date at
+  // evidenceFor.atEvent.eventDate. The facet API has no date histogram, so we
+  // bucket by decade with one size:0 range-count per decade (live; ~28 light
+  // queries). Bars are %-positioned (resize-free) and CSS-coloured (theme-free).
+  // ════════════════════════════════════════════════════════════════════════
+  const btPlot = document.getElementById('bt-plot');
+  const btAxis = document.getElementById('bt-axis');
+  const btSub = document.getElementById('bt-sub');
+  const btCollectors = document.getElementById('bt-collectors');
+  const btInstitutions = document.getElementById('bt-institutions');
+  const BT_START = 1750, BT_END = 2020;
+  // Shared x-axis with the histogram: year → % across the rendered decade span.
+  let btAxisStart = BT_START, btAxisEnd = BT_END + 10;
+  const btX = (y) => Math.max(0, Math.min(100, (y - btAxisStart) / (btAxisEnd - btAxisStart) * 100));
+
+  // The museum's institutional eras (name-change years, verified from Te Papa).
+  const INSTITUTIONS = [
+    { name: 'Colonial Museum', short: 'Colonial', from: 1865, to: 1907 },
+    { name: 'Dominion Museum', short: 'Dominion', from: 1907, to: 1972 },
+    { name: 'National Museum', short: 'National', from: 1972, to: 1992 },
+    { name: 'Te Papa', short: 'Te Papa', from: 1992, to: null, note: 'Museum of New Zealand Te Papa Tongarewa — established by Act 1992, opened 14 Feb 1998.' },
+  ];
+  const ERA_COLORS = ['#2f6d7a', '#3f8a9a', '#57a7b8', '#7cc4d4'];   // sequential blue-teal
+  const apiSearch = (body) => fetch('/api/search', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+  }).then((r) => r.json()).catch(() => null);
+  const btCount = (j) => (((j && j._metadata) || {}).resultset || {}).count || 0;
+  const btDeepLink = (year) =>
+    `/#q=${encodeURIComponent(`collection:"Plants" AND evidenceFor.atEvent.eventDate:[${year} TO ${year + 9}-12-31]`)}&type=Specimen`;
+
+  function btRender(decades) {
+    const n = decades.length;
+    const max = Math.max(...decades.map((d) => d.count), 1);
+    const slot = 100 / n;
+    const grid = [10000, 20000, 30000].filter((g) => g < max * 1.02).map((g) => {
+      const b = g / max * 100;
+      return `<div class="bt-grid" style="bottom:${b}%"></div><span class="bt-ylab" style="bottom:${b}%">${g / 1000}k</span>`;
+    }).join('');
+    const bars = decades.map((d, i) => {
+      const lab = d.year + 's';
+      return `<a class="bt-bar" style="left:${(i * slot + slot * 0.13).toFixed(3)}%;width:${(slot * 0.74).toFixed(3)}%;height:${(d.count / max * 100).toFixed(3)}%" ` +
+        `href="${esc(btDeepLink(d.year))}" data-decade="${lab}" data-count="${d.count}" ` +
+        `aria-label="${lab}: ${fmt(d.count)} specimens collected"></a>`;
+    }).join('');
+    btPlot.innerHTML = grid + bars;
+    btAxis.innerHTML = decades.map((d, i) =>
+      (d.year % 50 === 0 || i === 0 || i === n - 1)
+        ? `<span class="bt-xlab" style="left:${(i * slot + slot / 2).toFixed(3)}%">${d.year}s</span>` : ''
+    ).join('');
+  }
+
+  const btTipHtml = (el) =>
+    `<strong>${esc(el.dataset.decade)}</strong>` +
+    `<span class="tm-tip-row">${fmt(+el.dataset.count)} specimens collected</span>` +
+    `<span class="tm-tip-row tm-tip-cta">Click to browse →</span>`;
+  if (btPlot) {
+    btPlot.addEventListener('mouseover', (e) => { const b = e.target.closest('.bt-bar'); if (b) showTip(btTipHtml(b), e); });
+    btPlot.addEventListener('mousemove', (e) => { if (!tip.hidden) moveTip(e); });
+    btPlot.addEventListener('mouseout', (e) => { if (!btPlot.contains(e.relatedTarget)) hideTip(); });
+  }
+
+  // Top collectors as range bars on the SAME x-axis (baked in collectors-botany.json).
+  async function btRenderCollectors() {
+    if (!btCollectors) return;
+    let data;
+    try { data = await (await fetch('/collectors-botany.json', { cache: 'no-store' })).json(); }
+    catch { btCollectors.innerHTML = ''; return; }
+    const cs = (data.collectors || []).filter((c) => c.start && c.end);
+    if (!cs.length) { btCollectors.innerHTML = ''; return; }
+    const dl = (id) => `/#q=${encodeURIComponent(`collection:"Plants" AND evidenceFor.atEvent.recordedBy.id:${id}`)}&type=Specimen`;
+    const rows = cs.map((c) => {
+      const x0 = btX(c.start), x1 = btX(c.end), xm = btX(c.median);
+      const w = Math.max(0.4, x1 - x0);
+      const leftAnchor = x0 < 60;
+      const pos = leftAnchor ? `left:${x0.toFixed(2)}%` : `right:${(100 - x1).toFixed(2)}%`;
+      return `<a class="bt-crow" href="${esc(dl(c.id))}" data-name="${esc(c.name)}" data-count="${c.count}" data-start="${c.start}" data-end="${c.end}" data-peak="${c.median}" ` +
+        `aria-label="${esc(c.name)}: ${fmt(c.count)} specimens, active ${c.start} to ${c.end}, peak ${c.median}">` +
+        `<span class="bt-cname${leftAnchor ? '' : ' bt-cname-r'}" style="${pos}">${esc(c.name)} <span class="bt-cn">${fmt(c.count)}</span></span>` +
+        `<span class="bt-cbar" style="left:${x0.toFixed(2)}%;width:${w.toFixed(2)}%"></span>` +
+        `<span class="bt-cdot" style="left:${xm.toFixed(2)}%"></span>` +
+        `</a>`;
+    }).join('');
+    btCollectors.innerHTML = '<div class="bt-clabel">Its top 10 collectors — and the 1769 origin — by their active years (dot = peak). Click any to browse their specimens:</div>' + rows;
+  }
+  const btCTip = (r) =>
+    `<strong>${esc(r.dataset.name)}</strong>` +
+    `<span class="tm-tip-row">${fmt(+r.dataset.count)} specimens</span>` +
+    `<span class="tm-tip-row tm-tip-muted">active ${r.dataset.start}–${r.dataset.end} · peak ${r.dataset.peak}</span>` +
+    `<span class="tm-tip-row tm-tip-cta">Click to browse →</span>`;
+  if (btCollectors) {
+    btCollectors.addEventListener('mouseover', (e) => { const r = e.target.closest('.bt-crow'); if (r) showTip(btCTip(r), e); });
+    btCollectors.addEventListener('mousemove', (e) => { if (!tip.hidden) moveTip(e); });
+    btCollectors.addEventListener('mouseout', (e) => { if (!btCollectors.contains(e.relatedTarget)) hideTip(); });
+  }
+
+  // The museum's institutional eras as a band on the same x-axis.
+  function btRenderInstitutions() {
+    if (!btInstitutions) return;
+    const eras = INSTITUTIONS.map((m, i) => {
+      const to = m.to || Math.round(btAxisEnd);
+      const x0 = btX(m.from), x1 = btX(to);
+      const w = x1 - x0;
+      if (w <= 0) return '';
+      const bg = ERA_COLORS[i] || '#888';
+      const yrs = m.to ? `${m.from}–${m.to}` : `${m.from}–now`;
+      return `<div class="bt-era" style="left:${x0.toFixed(2)}%;width:${w.toFixed(2)}%;background:${bg};color:${textOn(bg)}" ` +
+        `data-name="${esc(m.name)}" data-years="${yrs}"${m.note ? ` data-note="${esc(m.note)}"` : ''}>` +
+        `<span class="bt-era-name">${esc(m.short || m.name)}</span><span class="bt-era-yr">${yrs}</span></div>`;
+    }).join('');
+    btInstitutions.innerHTML =
+      '<div class="bt-clabel">The museum through time — Colonial Museum to Te Papa (specimens to the left predate it):</div>' +
+      `<div class="bt-era-track">${eras}</div>`;
+  }
+  const btETip = (el) =>
+    `<strong>${esc(el.dataset.name)}</strong>` +
+    `<span class="tm-tip-row">${esc(el.dataset.years)}</span>` +
+    (el.dataset.note ? `<span class="tm-tip-row tm-tip-muted">${esc(el.dataset.note)}</span>` : '');
+  if (btInstitutions) {
+    btInstitutions.addEventListener('mouseover', (e) => { const r = e.target.closest('.bt-era'); if (r) showTip(btETip(r), e); });
+    btInstitutions.addEventListener('mousemove', (e) => { if (!tip.hidden) moveTip(e); });
+    btInstitutions.addEventListener('mouseout', (e) => { if (!btInstitutions.contains(e.relatedTarget)) hideTip(); });
+  }
+
+  async function btBoot() {
+    if (!btPlot) return;
+    const years = [];
+    for (let y = BT_START; y <= BT_END; y += 10) years.push(y);
+    try {
+      const [total, ...counts] = await Promise.all([
+        apiSearch({ query: 'collection:"Plants"', size: 0, filters: [{ field: 'type', keyword: 'Specimen' }] }).then(btCount),
+        ...years.map((y) => apiSearch({ query: `collection:"Plants" AND evidenceFor.atEvent.eventDate:[${y} TO ${y + 9}-12-31]`, size: 0, filters: [{ field: 'type', keyword: 'Specimen' }] }).then(btCount)),
+      ]);
+      let decades = years.map((y, i) => ({ year: y, count: counts[i] }));
+      while (decades.length && decades[0].count === 0) decades.shift();
+      while (decades.length && decades[decades.length - 1].count === 0) decades.pop();
+      btPlot.classList.remove('bt-loading');
+      if (decades.length) {
+        btAxisStart = decades[0].year;
+        btAxisEnd = decades[decades.length - 1].year + 10;
+        const withDate = decades.reduce((s, d) => s + d.count, 0);
+        btRender(decades);
+        if (btSub) btSub.innerHTML =
+          `<strong>${fmt(withDate)}</strong> of <strong>${fmt(total)}</strong> plant specimens carry a collection date, ` +
+          `spanning the <strong>${decades[0].year}s</strong> to today — the oldest gathered in October 1769 by ` +
+          `Banks and Solander on Cook’s <em>Endeavour</em>.`;
+      } else {
+        btPlot.innerHTML = '<div class="tm-error">No dated specimens found.</div>';
+      }
+    } catch (e) {
+      btPlot.classList.remove('bt-loading');
+      btPlot.innerHTML = `<div class="tm-error">Couldn't load the collecting timeline.<br><small>${esc(String(e))}</small></div>`;
+    }
+    btRenderInstitutions();
+    btRenderCollectors();
+  }
+
   boot();
   bootGender();
+  btBoot();
 })();

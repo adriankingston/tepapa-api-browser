@@ -1,0 +1,116 @@
+{
+  "generatedAt": "2026-06-24",
+  "note": "Top 10 collectors of Plants specimens by specimen count (excluding the \"Unknown\" aggregate), plus Banks & Solander (1769). Each active range is the 2.5th–97.5th percentile of their collection-event years (clipping misdated outliers); median = peak year.",
+  "axisStart": 1760,
+  "axisEnd": 2030,
+  "collectors": [
+    {
+      "id": "5566",
+      "name": "Sir Joseph Banks",
+      "count": 542,
+      "dated": 516,
+      "start": 1769,
+      "median": 1769,
+      "end": 1770
+    },
+    {
+      "id": "5567",
+      "name": "Dr Daniel Solander",
+      "count": 542,
+      "dated": 516,
+      "start": 1769,
+      "median": 1769,
+      "end": 1770
+    },
+    {
+      "id": "3012",
+      "name": "Reverend William Colenso",
+      "count": 5264,
+      "dated": 814,
+      "start": 1838,
+      "median": 1886,
+      "end": 1894
+    },
+    {
+      "id": "2680",
+      "name": "Thomas Kirk FLS",
+      "count": 8757,
+      "dated": 4478,
+      "start": 1864,
+      "median": 1882,
+      "end": 1895
+    },
+    {
+      "id": "558",
+      "name": "Dr Donald Petrie",
+      "count": 14432,
+      "dated": 10359,
+      "start": 1888,
+      "median": 1907,
+      "end": 1922
+    },
+    {
+      "id": "1728",
+      "name": "Dr W. Reginald B. Oliver",
+      "count": 17166,
+      "dated": 16874,
+      "start": 1908,
+      "median": 1941,
+      "end": 1955
+    },
+    {
+      "id": "2537",
+      "name": "Dr Patrick Brownsey",
+      "count": 13683,
+      "dated": 13648,
+      "start": 1974,
+      "median": 1997,
+      "end": 2018
+    },
+    {
+      "id": "2562",
+      "name": "Dr Wendy A. Nelson",
+      "count": 6455,
+      "dated": 6438,
+      "start": 1982,
+      "median": 1995,
+      "end": 2017
+    },
+    {
+      "id": "1148",
+      "name": "Dr David Glenny",
+      "count": 5689,
+      "dated": 5669,
+      "start": 1986,
+      "median": 1992,
+      "end": 2004
+    },
+    {
+      "id": "5975",
+      "name": "Peter Beveridge",
+      "count": 6454,
+      "dated": 6451,
+      "start": 2000,
+      "median": 2007,
+      "end": 2016
+    },
+    {
+      "id": "6325",
+      "name": "Leon Perrie",
+      "count": 16119,
+      "dated": 16117,
+      "start": 2002,
+      "median": 2016,
+      "end": 2025
+    },
+    {
+      "id": "29523",
+      "name": "Lara Shepherd",
+      "count": 9353,
+      "dated": 9352,
+      "start": 2003,
+      "median": 2021,
+      "end": 2025
+    }
+  ]
+}
