@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light dark" />
+  <title>Visualisations — Te Papa Collections Browser</title>
+  <!-- Set the theme before first paint (no flash): saved choice, else OS preference. -->
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem('tepapa.theme');
+        if (t !== 'dark' && t !== 'light') {
+          t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        document.documentElement.dataset.theme = t;
+      } catch (e) {
+        document.documentElement.dataset.theme = 'light';
+      }
+    })();
+  </script>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="icon" type="image/png" sizes="64x64" href="/favicon.png" />
+  <link rel="preload" href="/fonts/roboto-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/fonts/calsans-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/style.css" />
+  <link rel="stylesheet" href="/visualise.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <button class="brand" type="button" aria-label="Home — Te Papa Collection Browser">
+        <svg class="brand-logo brand-logo-anim" viewBox="0 0 32 32" aria-hidden="true">
+          <g class="rotor">
+            <g class="spoke s1"><line class="link" x1="16" y1="16" x2="7.5"  y2="8" />   <circle class="node" cx="7.5"  cy="8"    r="3" /></g>
+            <g class="spoke s2"><line class="link" x1="16" y1="16" x2="24.5" y2="9" />   <circle class="node" cx="24.5" cy="9"    r="2.2" /></g>
+            <g class="spoke s3"><line class="link" x1="16" y1="16" x2="8.5"  y2="24.5" /><circle class="node" cx="8.5"  cy="24.5" r="2.2" /></g>
+            <g class="spoke s4"><line class="link" x1="16" y1="16" x2="24.5" y2="24" />  <circle class="node" cx="24.5" cy="24"   r="3.2" /></g>
+            <circle class="hub" cx="16" cy="16" r="4" />
+          </g>
+        </svg>
+        <span class="brand-text">Te&nbsp;Papa Collection&nbsp;Browser</span>
+      </button>
+
+      <form id="search-form" class="search">
+        <input
+          id="q"
+          type="search"
+          placeholder="Search the collection — e.g. korowai, kiwi, Rita Angus, hei tiki…"
+          autocomplete="off"
+        />
+        <button type="submit">Search</button>
+      </form>
+
+      <div id="theme-switch" class="theme-switch" role="radiogroup" aria-label="Colour theme" data-active="light">
+        <span class="theme-knob" aria-hidden="true"></span>
+        <button type="button" class="theme-opt" data-val="light" role="radio" aria-checked="true">Light</button>
+        <button type="button" class="theme-opt" data-val="dark" role="radio" aria-checked="false">Dark</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="viz-page">
+    <div class="viz-intro">
+      <div class="viz-intro-eyebrow">Te Papa Tongarewa · Collections data</div>
+      <h1>The collection, visualised</h1>
+      <p class="viz-intro-sub">
+        Beyond search and lists — a few views onto the shape of Aotearoa New
+        Zealand's national collection, drawn live from the Collections API.
+      </p>
+    </div>
+
+    <!-- Visualisation: treemap of collection sizes -->
+    <section class="viz" aria-labelledby="tm-heading">
+      <div class="viz-head">
+        <h2 id="tm-heading">Objects &amp; specimens, by collection</h2>
+        <p id="tm-summary" class="viz-sub">Loading live counts from the collection…</p>
+        <p class="viz-note">Each tile is a collection; its <strong>area</strong> is the number of records it holds. Click a tile to browse that collection.</p>
+      </div>
+      <div id="treemap" class="treemap tm-loading" role="group" aria-label="Treemap of object and specimen counts per collection. Each tile links to that collection.">
+        <div class="tm-spinner"><div></div></div>
+      </div>
+    </section>
+
+    <!-- Visualisation: people associated with the collection, by gender -->
+    <section class="viz" aria-labelledby="gn-heading">
+      <div class="viz-head">
+        <div class="viz-head-text">
+          <h2 id="gn-heading">The people behind the collection</h2>
+          <p id="gn-summary" class="viz-sub">Loading live counts from the collection…</p>
+        </div>
+        <div class="gn-controls">
+          <div id="gn-mode" class="gn-mode" role="radiogroup" aria-label="Count by">
+            <button type="button" class="gn-mode-opt active" data-mode="people" role="radio" aria-checked="true">By people</button>
+            <button type="button" class="gn-mode-opt" data-mode="works" role="radio" aria-checked="false">By works</button>
+          </div>
+          <label class="gn-field">
+            <span>Break down by</span>
+            <select id="gn-breakdown">
+              <option value="role">Role</option>
+              <option value="collection">Collection</option>
+            </select>
+          </label>
+          <label class="gn-field gn-role-field" hidden>
+            <span>Role</span>
+            <select id="gn-role">
+              <option value="maker">Makers &amp; creators</option>
+              <option value="collector">Collectors</option>
+              <option value="subject">Depicted people</option>
+            </select>
+          </label>
+          <label class="gn-check">
+            <input type="checkbox" id="gn-known"> Known gender only
+          </label>
+        </div>
+      </div>
+      <div id="genderchart" class="genderchart gn-loading">
+        <div class="tm-spinner"><div></div></div>
+      </div>
+      <div id="gn-legend" class="gn-legend"></div>
+      <p id="gn-method" class="viz-note gn-method"></p>
+    </section>
+
+    <!-- Visualisation: gender map of the collections (treemap) -->
+    <section class="viz" aria-labelledby="gt-heading">
+      <div class="viz-head">
+        <div class="viz-head-text">
+          <h2 id="gt-heading">The gender map of the collections</h2>
+          <p class="viz-sub">Each tile is a collection, sized by how many people are linked to it in the chosen role and filled with their gender split. Click a tile to browse it.</p>
+        </div>
+        <div class="gn-controls">
+          <div id="gt-mode" class="gn-mode" role="radiogroup" aria-label="Size by">
+            <button type="button" class="gn-mode-opt active" data-gtmode="people" role="radio" aria-checked="true">Size by people</button>
+            <button type="button" class="gn-mode-opt" data-gtmode="works" role="radio" aria-checked="false">Size by works</button>
+          </div>
+          <label class="gn-field">
+            <span>Role</span>
+            <select id="gt-role">
+              <option value="maker">Makers &amp; creators</option>
+              <option value="collector">Collectors</option>
+              <option value="subject">Depicted people</option>
+            </select>
+          </label>
+        </div>
+      </div>
+      <div id="gendertreemap" class="treemap gt-treemap tm-loading" role="group" aria-label="Treemap of collections sized by number of people in a role, filled by gender.">
+        <div class="tm-spinner"><div></div></div>
+      </div>
+      <div id="gt-legend" class="gn-legend"></div>
+    </section>
+
+    <p class="viz-more">More visualisations to come.</p>
+  </main>
+
+  <footer class="footer">
+    Data &amp; images via Museum of New Zealand Te Papa Tongarewa
+    <a href="https://data.tepapa.govt.nz/docs/" target="_blank" rel="noopener">Collections API</a>.
+    Metadata licensed
+    <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="license noopener">CC BY 4.0</a>.
+  </footer>
+
+  <!-- Floating tooltip for treemap tiles -->
+  <div id="tm-tip" class="tm-tip" hidden></div>
+
+  <script src="/visualise.js"></script>
+</body>
+</html>

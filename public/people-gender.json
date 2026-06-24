@@ -1,0 +1,601 @@
+{
+  "generatedAt": "2026-06-24",
+  "note": "Full-population gender of people linked to collection records, by role and by collection — every linked person counted (no top-N cap). \"By works\" weights each person by how many records they are linked to. Organisations and unnamed agents have no gender and are excluded from these counts. \"Unrecorded\" = a Person record with no gender in the source data.",
+  "baseline": {
+    "total": 38086,
+    "counts": {
+      "Male": 18074,
+      "Female": 7372,
+      "Gender Diverse": 26,
+      "Unrecorded": 12614
+    }
+  },
+  "roles": [
+    {
+      "key": "maker",
+      "label": "Makers & creators",
+      "type": "Object",
+      "field": "production.contributor.id",
+      "scope": "object",
+      "distinctIds": 17332,
+      "people": {
+        "Male": 7494,
+        "Female": 2304,
+        "Unrecorded": 1326,
+        "Gender Diverse": 17
+      },
+      "works": {
+        "Male": 212686,
+        "Female": 32919,
+        "Unrecorded": 73584,
+        "Gender Diverse": 85
+      },
+      "persons": 11141,
+      "nonPersonIds": 6191,
+      "totalLinks": 444201
+    },
+    {
+      "key": "collector",
+      "label": "Collectors",
+      "type": "Specimen",
+      "field": "evidenceFor.atEvent.recordedBy.id",
+      "scope": "specimen",
+      "distinctIds": 16193,
+      "people": {
+        "Male": 4226,
+        "Female": 1915,
+        "Unrecorded": 9053,
+        "Gender Diverse": 1
+      },
+      "works": {
+        "Male": 437170,
+        "Female": 96215,
+        "Unrecorded": 74484,
+        "Gender Diverse": 458
+      },
+      "persons": 15195,
+      "nonPersonIds": 998,
+      "totalLinks": 704736
+    },
+    {
+      "key": "subject",
+      "label": "Depicted people",
+      "type": "Object",
+      "field": "depicts.id",
+      "scope": "object",
+      "distinctIds": 13639,
+      "people": {
+        "Male": 3204,
+        "Female": 1484,
+        "Unrecorded": 549,
+        "Gender Diverse": 2
+      },
+      "works": {
+        "Male": 40652,
+        "Female": 14834,
+        "Unrecorded": 2680,
+        "Gender Diverse": 13
+      },
+      "persons": 5239,
+      "nonPersonIds": 8400,
+      "totalLinks": 574809
+    }
+  ],
+  "byCollection": {
+    "maker": [
+      {
+        "collection": "Photography",
+        "label": "Photography",
+        "people": {
+          "Male": 1214,
+          "Female": 246,
+          "Unrecorded": 227,
+          "Gender Diverse": 3
+        },
+        "works": {
+          "Male": 144013,
+          "Female": 13397,
+          "Unrecorded": 24095,
+          "Gender Diverse": 16
+        },
+        "persons": 1690,
+        "nonPersonIds": 564,
+        "totalLinks": 248770
+      },
+      {
+        "collection": "History",
+        "label": "History",
+        "people": {
+          "Male": 1322,
+          "Female": 756,
+          "Unrecorded": 376,
+          "Gender Diverse": 13
+        },
+        "works": {
+          "Male": 5229,
+          "Female": 3233,
+          "Unrecorded": 11918,
+          "Gender Diverse": 63
+        },
+        "persons": 2467,
+        "nonPersonIds": 4119,
+        "totalLinks": 42687
+      },
+      {
+        "collection": "Philatelic",
+        "label": "Philatelic",
+        "people": {
+          "Male": 605,
+          "Female": 130,
+          "Unrecorded": 109
+        },
+        "works": {
+          "Male": 16517,
+          "Female": 885,
+          "Unrecorded": 2513
+        },
+        "persons": 844,
+        "nonPersonIds": 212,
+        "totalLinks": 38686
+      },
+      {
+        "collection": "CollectedArchives",
+        "label": "Collected Archives",
+        "people": {
+          "Male": 830,
+          "Female": 366,
+          "Unrecorded": 103,
+          "Gender Diverse": 1
+        },
+        "works": {
+          "Male": 13616,
+          "Female": 10325,
+          "Unrecorded": 4559,
+          "Gender Diverse": 1
+        },
+        "persons": 1300,
+        "nonPersonIds": 866,
+        "totalLinks": 36464
+      },
+      {
+        "collection": "TaongaMāori",
+        "label": "Taonga Māori",
+        "people": {
+          "Male": 136,
+          "Female": 67,
+          "Unrecorded": 16
+        },
+        "works": {
+          "Male": 482,
+          "Female": 179,
+          "Unrecorded": 25158
+        },
+        "persons": 219,
+        "nonPersonIds": 106,
+        "totalLinks": 27253
+      },
+      {
+        "collection": "Art",
+        "label": "Art",
+        "people": {
+          "Male": 2424,
+          "Female": 572,
+          "Unrecorded": 77,
+          "Gender Diverse": 2
+        },
+        "works": {
+          "Male": 15170,
+          "Female": 2913,
+          "Unrecorded": 568,
+          "Gender Diverse": 3
+        },
+        "persons": 3075,
+        "nonPersonIds": 159,
+        "totalLinks": 19468
+      },
+      {
+        "collection": "MuseumArchives",
+        "label": "Museum Archives",
+        "people": {
+          "Male": 1163,
+          "Female": 97,
+          "Unrecorded": 62
+        },
+        "works": {
+          "Male": 12554,
+          "Female": 245,
+          "Unrecorded": 422
+        },
+        "persons": 1322,
+        "nonPersonIds": 222,
+        "totalLinks": 17976
+      },
+      {
+        "collection": "RareBooks",
+        "label": "Rare Books",
+        "people": {
+          "Male": 597,
+          "Female": 66,
+          "Unrecorded": 273
+        },
+        "works": {
+          "Male": 3515,
+          "Female": 584,
+          "Unrecorded": 1598
+        },
+        "persons": 936,
+        "nonPersonIds": 326,
+        "totalLinks": 6936
+      },
+      {
+        "collection": "PacificCultures",
+        "label": "Pacific Cultures",
+        "people": {
+          "Female": 290,
+          "Male": 136,
+          "Unrecorded": 129,
+          "Gender Diverse": 2
+        },
+        "works": {
+          "Female": 1158,
+          "Male": 1590,
+          "Unrecorded": 2753,
+          "Gender Diverse": 2
+        },
+        "persons": 557,
+        "nonPersonIds": 178,
+        "totalLinks": 5961
+      }
+    ],
+    "collector": [
+      {
+        "collection": "Plants",
+        "label": "Plants",
+        "people": {
+          "Male": 1842,
+          "Female": 782,
+          "Unrecorded": 2819
+        },
+        "works": {
+          "Male": 221054,
+          "Female": 55281,
+          "Unrecorded": 35695
+        },
+        "persons": 5443,
+        "nonPersonIds": 93,
+        "totalLinks": 315031
+      },
+      {
+        "collection": "Molluscs",
+        "label": "Molluscs",
+        "people": {
+          "Male": 1044,
+          "Female": 361,
+          "Unrecorded": 1557
+        },
+        "works": {
+          "Male": 124654,
+          "Female": 32131,
+          "Unrecorded": 9345
+        },
+        "persons": 2962,
+        "nonPersonIds": 428,
+        "totalLinks": 233449
+      },
+      {
+        "collection": "Insects",
+        "label": "Insects",
+        "people": {
+          "Female": 327,
+          "Male": 825,
+          "Unrecorded": 2181,
+          "Gender Diverse": 1
+        },
+        "works": {
+          "Female": 4357,
+          "Male": 32485,
+          "Unrecorded": 12780,
+          "Gender Diverse": 458
+        },
+        "persons": 3334,
+        "nonPersonIds": 118,
+        "totalLinks": 53070
+      },
+      {
+        "collection": "Birds",
+        "label": "Birds",
+        "people": {
+          "Male": 1034,
+          "Female": 483,
+          "Unrecorded": 2083
+        },
+        "works": {
+          "Male": 16534,
+          "Female": 1566,
+          "Unrecorded": 8341
+        },
+        "persons": 3600,
+        "nonPersonIds": 202,
+        "totalLinks": 29694
+      },
+      {
+        "collection": "FossilVertebrates",
+        "label": "Fossil Vertebrates",
+        "people": {
+          "Male": 69,
+          "Unrecorded": 39,
+          "Female": 20
+        },
+        "works": {
+          "Male": 26250,
+          "Unrecorded": 1335,
+          "Female": 701
+        },
+        "persons": 128,
+        "nonPersonIds": 4,
+        "totalLinks": 28388
+      },
+      {
+        "collection": "Crustacea",
+        "label": "Crustacea",
+        "people": {
+          "Male": 464,
+          "Female": 139,
+          "Unrecorded": 526
+        },
+        "works": {
+          "Male": 9316,
+          "Female": 1169,
+          "Unrecorded": 2267
+        },
+        "persons": 1129,
+        "nonPersonIds": 273,
+        "totalLinks": 23672
+      },
+      {
+        "collection": "MarineInvertebrates",
+        "label": "Marine Invertebrates",
+        "people": {
+          "Male": 259,
+          "Female": 63,
+          "Unrecorded": 278
+        },
+        "works": {
+          "Male": 3315,
+          "Female": 579,
+          "Unrecorded": 1267
+        },
+        "persons": 600,
+        "nonPersonIds": 239,
+        "totalLinks": 11638
+      },
+      {
+        "collection": "LandMammals",
+        "label": "Land Mammals",
+        "people": {
+          "Male": 141,
+          "Female": 35,
+          "Unrecorded": 164
+        },
+        "works": {
+          "Male": 1245,
+          "Female": 271,
+          "Unrecorded": 2365
+        },
+        "persons": 340,
+        "nonPersonIds": 21,
+        "totalLinks": 4057
+      },
+      {
+        "collection": "ReptilesAndAmphibians",
+        "label": "Reptiles And Amphibians",
+        "people": {
+          "Male": 116,
+          "Unrecorded": 145,
+          "Female": 25
+        },
+        "works": {
+          "Male": 1244,
+          "Unrecorded": 516,
+          "Female": 101
+        },
+        "persons": 286,
+        "nonPersonIds": 27,
+        "totalLinks": 3305
+      },
+      {
+        "collection": "MarineMammals",
+        "label": "Marine Mammals",
+        "people": {
+          "Male": 160,
+          "Unrecorded": 126,
+          "Female": 21
+        },
+        "works": {
+          "Male": 917,
+          "Unrecorded": 550,
+          "Female": 50
+        },
+        "persons": 307,
+        "nonPersonIds": 83,
+        "totalLinks": 2121
+      },
+      {
+        "collection": "Fish",
+        "label": "Fish",
+        "people": {
+          "Male": 56,
+          "Unrecorded": 20,
+          "Female": 6
+        },
+        "works": {
+          "Male": 156,
+          "Unrecorded": 23,
+          "Female": 9
+        },
+        "persons": 82,
+        "nonPersonIds": 37,
+        "totalLinks": 309
+      }
+    ],
+    "subject": [
+      {
+        "collection": "Photography",
+        "label": "Photography",
+        "people": {
+          "Male": 1659,
+          "Female": 696,
+          "Unrecorded": 219,
+          "Gender Diverse": 2
+        },
+        "works": {
+          "Male": 27175,
+          "Female": 8645,
+          "Unrecorded": 1492,
+          "Gender Diverse": 11
+        },
+        "persons": 2576,
+        "nonPersonIds": 5805,
+        "totalLinks": 431760
+      },
+      {
+        "collection": "CollectedArchives",
+        "label": "Collected Archives",
+        "people": {
+          "Male": 797,
+          "Female": 625,
+          "Gender Diverse": 1,
+          "Unrecorded": 182
+        },
+        "works": {
+          "Male": 2517,
+          "Female": 1814,
+          "Gender Diverse": 2,
+          "Unrecorded": 266
+        },
+        "persons": 1605,
+        "nonPersonIds": 2208,
+        "totalLinks": 44995
+      },
+      {
+        "collection": "Art",
+        "label": "Art",
+        "people": {
+          "Male": 590,
+          "Female": 157,
+          "Unrecorded": 119
+        },
+        "works": {
+          "Male": 1943,
+          "Female": 358,
+          "Unrecorded": 289
+        },
+        "persons": 866,
+        "nonPersonIds": 3238,
+        "totalLinks": 33779
+      },
+      {
+        "collection": "Philatelic",
+        "label": "Philatelic",
+        "people": {
+          "Male": 185,
+          "Female": 53,
+          "Unrecorded": 35
+        },
+        "works": {
+          "Male": 2148,
+          "Female": 1910,
+          "Unrecorded": 365
+        },
+        "persons": 273,
+        "nonPersonIds": 1260,
+        "totalLinks": 26003
+      },
+      {
+        "collection": "History",
+        "label": "History",
+        "people": {
+          "Female": 97,
+          "Male": 437,
+          "Unrecorded": 55
+        },
+        "works": {
+          "Female": 1433,
+          "Male": 3364,
+          "Unrecorded": 149
+        },
+        "persons": 589,
+        "nonPersonIds": 1492,
+        "totalLinks": 18661
+      },
+      {
+        "collection": "MuseumArchives",
+        "label": "Museum Archives",
+        "people": {
+          "Male": 211,
+          "Female": 74,
+          "Unrecorded": 11
+        },
+        "works": {
+          "Male": 1877,
+          "Female": 334,
+          "Unrecorded": 15
+        },
+        "persons": 296,
+        "nonPersonIds": 646,
+        "totalLinks": 9666
+      },
+      {
+        "collection": "RareBooks",
+        "label": "Rare Books",
+        "people": {
+          "Male": 168,
+          "Female": 50,
+          "Unrecorded": 51
+        },
+        "works": {
+          "Male": 884,
+          "Female": 107,
+          "Unrecorded": 100
+        },
+        "persons": 269,
+        "nonPersonIds": 707,
+        "totalLinks": 5495
+      },
+      {
+        "collection": "PacificCultures",
+        "label": "Pacific Cultures",
+        "people": {
+          "Male": 41,
+          "Female": 10,
+          "Unrecorded": 3
+        },
+        "works": {
+          "Male": 705,
+          "Female": 221,
+          "Unrecorded": 3
+        },
+        "persons": 54,
+        "nonPersonIds": 265,
+        "totalLinks": 4272
+      },
+      {
+        "collection": "TaongaMāori",
+        "label": "Taonga Māori",
+        "people": {
+          "Male": 29,
+          "Female": 11,
+          "Unrecorded": 1
+        },
+        "works": {
+          "Male": 39,
+          "Female": 12,
+          "Unrecorded": 1
+        },
+        "persons": 41,
+        "nonPersonIds": 55,
+        "totalLinks": 178
+      }
+    ]
+  }
+}

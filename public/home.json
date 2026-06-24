@@ -53,6 +53,14 @@
       "image": "https://media.tepapa.govt.nz/collection/59193/preview"
     },
     {
+      "type": "feature",
+      "eyebrow": "Collections data",
+      "title": "The collection, visualised",
+      "blurb": "See the shape of the collection at a glance — a treemap of every object and specimen, each collection sized by how many records it holds. The first of more visualisations to come.",
+      "cta": "Open the visualisations →",
+      "href": "/visualise.html"
+    },
+    {
       "type": "recent",
       "title": "Recently updated records",
       "types": ["Object", "Specimen"],
