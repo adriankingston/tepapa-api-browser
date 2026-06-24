@@ -255,42 +255,47 @@ h1, h2, h3, h4, h5, h6 { font-family: var(--md-font-display); }
 @media (prefers-reduced-motion: reduce) { .theme-knob { transition: none; } }
 
 /* ===== Animated brand mark (from the nextepisode hub) =====
-   Spokes rotate + reach and the hub breathes, snapping through 3 states on a
-   shared 0.444s step clock. currentColor is animated per theme so the mark
-   reads on both light and dark backgrounds. */
-.brand-logo-anim { overflow: visible; animation: brand-tint-light 0.444s step-end infinite; }
+   A burst then a rest: over the first ~3s the rotor spins four full revolutions
+   while the nodes pulse, the hub breathes and the colour fades blue · teal ·
+   coral; then the whole mark holds still for 15s before the next burst (18s
+   total cycle). currentColor is animated per theme so it reads on light & dark. */
+.brand-logo-anim { overflow: visible; animation: brand-tint-light 18s linear infinite; }
 [data-theme="dark"] .brand-logo-anim { animation-name: brand-tint-dark; }
 .brand-logo-anim .link { fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; vector-effect: non-scaling-stroke; }
 .brand-logo-anim .node, .brand-logo-anim .hub { fill: currentColor; }
 .brand-logo-anim .rotor, .brand-logo-anim .spoke { transform-box: view-box; transform-origin: 16px 16px; }
 .brand-logo-anim .hub { transform-box: fill-box; transform-origin: center; }
-.brand-logo-anim .rotor { animation: brand-rotor 0.444s step-end infinite; }
-.brand-logo-anim .spoke.s1, .brand-logo-anim .spoke.s3 { animation: brand-reach-a 0.444s step-end infinite; }
-.brand-logo-anim .spoke.s2, .brand-logo-anim .spoke.s4 { animation: brand-reach-b 0.444s step-end infinite; }
-.brand-logo-anim .hub { animation: brand-hub 0.444s step-end infinite; }
+.brand-logo-anim .rotor { animation: brand-rotor 18s linear infinite; }
+.brand-logo-anim .spoke.s1, .brand-logo-anim .spoke.s3 { animation: brand-reach-a 18s ease-in-out infinite; }
+.brand-logo-anim .spoke.s2, .brand-logo-anim .spoke.s4 { animation: brand-reach-b 18s ease-in-out infinite; }
+.brand-logo-anim .hub { animation: brand-hub 18s ease-in-out infinite; }
 
+/* 4 revolutions (1440deg) over the first ~3s (16.667% of 18s), then hold. */
 @keyframes brand-rotor {
-  0% { transform: rotate(0deg); } 33.333% { transform: rotate(120deg); }
-  66.666% { transform: rotate(240deg); } 100% { transform: rotate(360deg); }
+  0% { transform: rotate(0deg); }
+  16.667% { transform: rotate(1440deg); }
+  100% { transform: rotate(1440deg); }
 }
-/* palette cycle: blue · teal · coral */
+/* palette cycle: blue · teal · coral during the spin, then hold. */
 @keyframes brand-tint-light {
-  0% { color: #118ab2; } 33.333% { color: #0cb0a9; } 66.666% { color: #f78c6b; } 100% { color: #118ab2; }
+  0% { color: #118ab2; } 5.56% { color: #0cb0a9; } 11.11% { color: #f78c6b; }
+  16.667% { color: #118ab2; } 100% { color: #118ab2; }
 }
 @keyframes brand-tint-dark {
-  0% { color: #58c4ec; } 33.333% { color: #2ad0cb; } 66.666% { color: #f99e7e; } 100% { color: #58c4ec; }
+  0% { color: #58c4ec; } 5.56% { color: #2ad0cb; } 11.11% { color: #f99e7e; }
+  16.667% { color: #58c4ec; } 100% { color: #58c4ec; }
 }
 @keyframes brand-reach-a {
-  0% { transform: scale(0.74); } 33.333% { transform: scale(1.26); }
-  66.666% { transform: scale(1.26); } 100% { transform: scale(0.74); }
+  0% { transform: scale(1); } 4.17% { transform: scale(1.22); } 8.33% { transform: scale(0.82); }
+  12.5% { transform: scale(1.22); } 16.667% { transform: scale(1); } 100% { transform: scale(1); }
 }
 @keyframes brand-reach-b {
-  0% { transform: scale(0.74); } 33.333% { transform: scale(1.26); }
-  66.666% { transform: scale(0.74); } 100% { transform: scale(0.74); }
+  0% { transform: scale(1); } 4.17% { transform: scale(0.82); } 8.33% { transform: scale(1.22); }
+  12.5% { transform: scale(0.82); } 16.667% { transform: scale(1); } 100% { transform: scale(1); }
 }
 @keyframes brand-hub {
-  0% { transform: scale(0.95); } 33.333% { transform: scale(1.12); }
-  66.666% { transform: scale(1.04); } 100% { transform: scale(0.95); }
+  0% { transform: scale(1); } 8.33% { transform: scale(1.16); }
+  16.667% { transform: scale(1); } 100% { transform: scale(1); }
 }
 @media (prefers-reduced-motion: reduce) {
   .brand-logo-anim, .brand-logo-anim .rotor, .brand-logo-anim .spoke, .brand-logo-anim .hub { animation: none; }
