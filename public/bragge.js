@@ -736,7 +736,7 @@
     const stop = GAZ_BY_KEY[key];
     if (!stop) return;
     state.selected = key;
-    if (fly) state.map.flyTo([stop.lat, stop.lon], Math.max(state.map.getZoom(), 11), { duration: 0.6 });
+    if (fly) state.map.setView([stop.lat, stop.lon], Math.max(state.map.getZoom(), 11), { animate: false });
     for (const [k, m] of state.markers) {
       const on = k === key;
       m.setStyle({ weight: on ? 3.5 : 1.5, color: on ? '#1a1d23' : '#fff' });
@@ -752,6 +752,20 @@
     }
   }
 
+  // Centre the map on a photo: its exact pin (zoom in close) if it has one, else
+  // fly to its stop. Used when a thumbnail is opened / the lightbox is paged, so
+  // the map is focused on that spot (revealed when the lightbox closes).
+  function flyToPhoto(cl) {
+    if (!cl || !state.map) return;
+    selectStop(cl.stop.key, { fly: false });     // highlight the rail + marker
+    // Centre the map on the photo's exact pin (or its stop). Use a non-animated
+    // setView: the map sits behind the lightbox here, where animated pans don't
+    // run — this updates reliably so it's framed when the lightbox closes.
+    const z = Math.max(state.map.getZoom(), cl.coord ? 15 : 11);
+    const target = cl.coord ? [cl.coord.lat, cl.coord.lng] : [cl.stop.lat, cl.stop.lon];
+    state.map.setView(target, z, { animate: false });
+  }
+
   // --- Lightbox ----------------------------------------------------------------
 
   function openLightbox(globalIdx) {
@@ -765,6 +779,7 @@
     $('#lightbox').hidden = false;
     document.body.style.overflow = 'hidden';
     renderLightbox();
+    flyToPhoto(p);
   }
   function renderLightbox() {
     const cl = state.lb.photos[state.lb.i];
@@ -804,6 +819,7 @@
     state.lb.i = (state.lb.i + d + state.lb.photos.length) % state.lb.photos.length;
     state.lb.v = 0;                 // reset to the representative when changing image
     renderLightbox();
+    flyToPhoto(state.lb.photos[state.lb.i]);
   }
   function closeLightbox() {
     $('#lightbox').hidden = true;
