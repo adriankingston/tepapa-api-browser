@@ -255,10 +255,10 @@ h1, h2, h3, h4, h5, h6 { font-family: var(--md-font-display); }
 @media (prefers-reduced-motion: reduce) { .theme-knob { transition: none; } }
 
 /* ===== Animated brand mark (from the nextepisode hub) =====
-   Spins to each of the three palette colours and rests on it: a two-revolution
-   whirl (easing in and out) lands the mark upright on blue and holds ~5.5s, then
-   spins to teal, then coral, looping (21s cycle). The nodes splay outward through
-   each whirl and settle when landed. currentColor is animated per theme. */
+   Three resting states, each a distinct colour, shape AND orientation: a whirl
+   (eased in/out) carries the mark to blue at 30deg with the left arms long; holds
+   ~5.5s; then teal at 150deg with the right arms long; then coral upright with
+   balanced arms — looping (21s cycle). currentColor animates per theme. */
 .brand-logo-anim { overflow: visible; animation: brand-tint-light 21s linear infinite; }
 [data-theme="dark"] .brand-logo-anim { animation-name: brand-tint-dark; }
 .brand-logo-anim .link { fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; vector-effect: non-scaling-stroke; }
@@ -266,22 +266,23 @@ h1, h2, h3, h4, h5, h6 { font-family: var(--md-font-display); }
 .brand-logo-anim .rotor, .brand-logo-anim .spoke { transform-box: view-box; transform-origin: 16px 16px; }
 .brand-logo-anim .hub { transform-box: fill-box; transform-origin: center; }
 .brand-logo-anim .rotor { animation: brand-rotor 21s infinite; }
-.brand-logo-anim .spoke { animation: brand-reach 21s ease-in-out infinite; }
+.brand-logo-anim .spoke.s1, .brand-logo-anim .spoke.s3 { animation: brand-reach-a 21s ease-in-out infinite; }
+.brand-logo-anim .spoke.s2, .brand-logo-anim .spoke.s4 { animation: brand-reach-b 21s ease-in-out infinite; }
 .brand-logo-anim .hub { animation: brand-hub 21s ease-in-out infinite; }
 
-/* Three whirl-and-land segments. Each whirl is two revolutions (lands upright,
-   a multiple of 360deg); the per-keyframe easing eases it in and out, then the
-   value holds (linear over equal values) for the ~5.5s pause on the colour. */
+/* Each whirl eases in/out and lands at a distinct orientation (30deg · 150deg ·
+   0deg), then holds for the ~5.5s pause. Holds: 7.143-33.333%, 40.476-66.667%,
+   73.810-100%. */
 @keyframes brand-rotor {
   0%      { transform: rotate(0deg);    animation-timing-function: cubic-bezier(.45,0,.45,1); }
-  7.143%  { transform: rotate(720deg);  animation-timing-function: linear; }
-  33.333% { transform: rotate(720deg);  animation-timing-function: cubic-bezier(.45,0,.45,1); }
-  40.476% { transform: rotate(1440deg); animation-timing-function: linear; }
-  66.667% { transform: rotate(1440deg); animation-timing-function: cubic-bezier(.45,0,.45,1); }
+  7.143%  { transform: rotate(750deg);  animation-timing-function: linear; }
+  33.333% { transform: rotate(750deg);  animation-timing-function: cubic-bezier(.45,0,.45,1); }
+  40.476% { transform: rotate(1590deg); animation-timing-function: linear; }
+  66.667% { transform: rotate(1590deg); animation-timing-function: cubic-bezier(.45,0,.45,1); }
   73.810% { transform: rotate(2160deg); }
   100%    { transform: rotate(2160deg); }
 }
-/* Colour fades to the next hue during each whirl, then holds on it: blue · teal · coral */
+/* Colour fades to the next hue during each whirl, then holds: blue · teal · coral */
 @keyframes brand-tint-light {
   0%      { color: #f78c6b; } 7.143%  { color: #118ab2; } 33.333% { color: #118ab2; }
   40.476% { color: #0cb0a9; } 66.667% { color: #0cb0a9; }
@@ -292,14 +293,26 @@ h1, h2, h3, h4, h5, h6 { font-family: var(--md-font-display); }
   40.476% { color: #2ad0cb; } 66.667% { color: #2ad0cb; }
   73.810% { color: #f99e7e; } 100%    { color: #f99e7e; }
 }
-/* Nodes splay outward mid-whirl, settle at rest while landed */
-@keyframes brand-reach {
-  0%, 7.143%, 33.333%, 40.476%, 66.667%, 73.810%, 100% { transform: scale(1); }
-  3.57%, 36.9%, 70.24% { transform: scale(1.18); }
+/* Arm lengths per state: left arms (s1/s3) and right arms (s2/s4) settle at
+   different scales each pause, so every rest is a different shape. */
+@keyframes brand-reach-a {
+  0%      { transform: scale(1.18); }
+  7.143%  { transform: scale(1.34); } 33.333% { transform: scale(1.34); }   /* state 1: left long */
+  40.476% { transform: scale(0.76); } 66.667% { transform: scale(0.76); }   /* state 2: left short */
+  73.810% { transform: scale(1.18); } 100%    { transform: scale(1.18); }   /* state 3: left medium */
 }
+@keyframes brand-reach-b {
+  0%      { transform: scale(1); }
+  7.143%  { transform: scale(0.74); } 33.333% { transform: scale(0.74); }   /* state 1: right short */
+  40.476% { transform: scale(1.32); } 66.667% { transform: scale(1.32); }   /* state 2: right long */
+  73.810% { transform: scale(1); }    100%    { transform: scale(1); }      /* state 3: right normal */
+}
+/* Hub size shifts per state too */
 @keyframes brand-hub {
-  0%, 7.143%, 33.333%, 40.476%, 66.667%, 73.810%, 100% { transform: scale(1); }
-  3.57%, 36.9%, 70.24% { transform: scale(1.12); }
+  0%      { transform: scale(1); }
+  7.143%  { transform: scale(1.14); } 33.333% { transform: scale(1.14); }
+  40.476% { transform: scale(0.9); }  66.667% { transform: scale(0.9); }
+  73.810% { transform: scale(1); }    100%    { transform: scale(1); }
 }
 @media (prefers-reduced-motion: reduce) {
   .brand-logo-anim, .brand-logo-anim .rotor, .brand-logo-anim .spoke, .brand-logo-anim .hub { animation: none; }
