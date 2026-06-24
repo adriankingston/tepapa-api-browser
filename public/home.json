@@ -7,13 +7,6 @@
     "links":  "Quick-search chips. Fields: title, items ([{label, query}])."
   },
 
-  "banner": {
-    "_help": "Full-width banner image at the top of the home page. image is a Te Papa media URL; caption is shown over the bottom of the image. href (optional) makes the banner clickable.",
-    "image": "https://media.tepapa.govt.nz/collection/976900/preview",
-    "alt": "Dominion Museum Education Box / suitcase",
-    "caption": "Dominion Museum Education Box /suitcase, Wellington, by Dominion Museum. CC BY-NC-ND 4.0. Te Papa (ME024351)"
-  },
-
   "hero": {
     "_help": "The intro text block. eyebrow/title/subtitle/description are all optional and editable; omit one to hide it.",
     "eyebrow": "Te Papa Tongarewa · Collections API",
