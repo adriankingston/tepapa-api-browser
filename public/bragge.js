@@ -670,7 +670,7 @@
       const m = L.marker([p.coord.lat, p.coord.lng], { icon, riseOnHover: true }).addTo(state.map);
       m.bindTooltip(`${shortTitle(p.rec.title)}${p.coord.by ? ' · located by ' + p.coord.by : ''}`,
         { direction: 'top', offset: [0, -9] });
-      m.on('click', () => openLightbox(gi));
+      m.on('click', () => flyThenOpen(gi));
       state.pinMarkers.push(m);
     }
     if (fit) fitToVisible();
@@ -725,7 +725,7 @@
     rail.innerHTML = html;
 
     rail.querySelectorAll('[data-photo]').forEach((b) =>
-      b.addEventListener('click', () => openLightbox(Number(b.dataset.photo))));
+      b.addEventListener('click', () => flyThenOpen(Number(b.dataset.photo))));
     rail.querySelectorAll('[data-focus]').forEach((b) =>
       b.addEventListener('click', () => selectStop(b.dataset.focus, { fly: true })));
   }
@@ -755,15 +755,40 @@
   // Centre the map on a photo: its exact pin (zoom in close) if it has one, else
   // fly to its stop. Used when a thumbnail is opened / the lightbox is paged, so
   // the map is focused on that spot (revealed when the lightbox closes).
+  // The map target for a photo: its exact pin (street zoom) or its stop.
+  function photoView(p) {
+    return {
+      target: p.coord ? [p.coord.lat, p.coord.lng] : [p.stop.lat, p.stop.lon],
+      zoom: Math.max(state.map.getZoom(), p.coord ? 15 : 11),
+    };
+  }
+
+  // Thumbnail / pin click: glide the (visible) map to the photo FIRST, then open
+  // the image view — so the user sees the map move to the spot before the
+  // lightbox covers it. The lightbox opens on the glide's moveend; a fallback
+  // snaps + opens for reduced-motion (or a backgrounded tab, where rAF pauses).
+  function flyThenOpen(gi) {
+    const p = state.photos[gi];
+    if (!p || !state.map) { openLightbox(gi); return; }
+    selectStop(p.stop.key, { fly: false });          // highlight the rail + marker
+    const { target, zoom } = photoView(p);
+    if (state.map.getZoom() >= zoom && state.map.distance(state.map.getCenter(), target) < 30) {
+      openLightbox(gi); return;                       // already framed there
+    }
+    let opened = false;
+    const open = () => { if (opened) return; opened = true; state.map.off('moveend', open); openLightbox(gi); };
+    state.map.once('moveend', open);
+    state.map.flyTo(target, zoom, { duration: 0.8 });
+    setTimeout(() => { if (!opened) { state.map.setView(target, zoom, { animate: false }); open(); } }, 1100);
+  }
+
+  // Reposition the map while the lightbox is open (paging) — instant, since the
+  // map is hidden behind it; revealed in place when the lightbox closes.
   function flyToPhoto(cl) {
     if (!cl || !state.map) return;
-    selectStop(cl.stop.key, { fly: false });     // highlight the rail + marker
-    // Centre the map on the photo's exact pin (or its stop). Use a non-animated
-    // setView: the map sits behind the lightbox here, where animated pans don't
-    // run — this updates reliably so it's framed when the lightbox closes.
-    const z = Math.max(state.map.getZoom(), cl.coord ? 15 : 11);
-    const target = cl.coord ? [cl.coord.lat, cl.coord.lng] : [cl.stop.lat, cl.stop.lon];
-    state.map.setView(target, z, { animate: false });
+    selectStop(cl.stop.key, { fly: false });
+    const { target, zoom } = photoView(cl);
+    state.map.setView(target, zoom, { animate: false });
   }
 
   // --- Lightbox ----------------------------------------------------------------
@@ -779,7 +804,6 @@
     $('#lightbox').hidden = false;
     document.body.style.overflow = 'hidden';
     renderLightbox();
-    flyToPhoto(p);
   }
   function renderLightbox() {
     const cl = state.lb.photos[state.lb.i];
