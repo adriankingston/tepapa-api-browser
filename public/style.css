@@ -258,124 +258,156 @@ h1, h2, h3, h4, h5, h6 { font-family: var(--md-font-display); }
    Three resting states, each a distinct colour, shape AND orientation: a whirl
    (eased in/out) carries the mark to blue at 30deg with the left arms long; holds
    ~5.5s; then teal at 150deg with the right arms long; then coral upright with
-   balanced arms — looping (21s cycle). currentColor animates per theme. */
-.brand-logo-anim { overflow: visible; animation: brand-tint-light 21s linear infinite; }
+   balanced arms — looping (28s cycle). currentColor animates per theme. */
+.brand-logo-anim { overflow: visible; animation: brand-tint-light 28s linear infinite; }
 [data-theme="dark"] .brand-logo-anim { animation-name: brand-tint-dark; }
 .brand-logo-anim .link { fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; vector-effect: non-scaling-stroke; }
 .brand-logo-anim .node, .brand-logo-anim .hub { fill: currentColor; }
 .brand-logo-anim .rotor, .brand-logo-anim .spoke { transform-box: view-box; transform-origin: 16px 16px; }
 .brand-logo-anim .hub, .brand-logo-anim .node { transform-box: fill-box; transform-origin: center; }
-.brand-logo-anim .rotor { animation: brand-rotor 21s infinite; }
-.brand-logo-anim .spoke.s1 { animation: brand-reach-1 21s ease-in-out infinite; }
-.brand-logo-anim .spoke.s2 { animation: brand-reach-2 21s ease-in-out infinite; }
-.brand-logo-anim .spoke.s3 { animation: brand-reach-3 21s ease-in-out infinite; }
-.brand-logo-anim .spoke.s4 { animation: brand-reach-4 21s ease-in-out infinite; }
-.brand-logo-anim .spoke.s5 { animation: brand-reach-5 21s ease-in-out infinite; }
-.brand-logo-anim .spoke.s6 { animation: brand-reach-6 21s ease-in-out infinite; }
-.brand-logo-anim .spoke.s1 .node { animation: brand-node-1 21s ease-in-out infinite; }
-.brand-logo-anim .spoke.s2 .node { animation: brand-node-2 21s ease-in-out infinite; }
-.brand-logo-anim .spoke.s3 .node { animation: brand-node-3 21s ease-in-out infinite; }
-.brand-logo-anim .spoke.s4 .node { animation: brand-node-4 21s ease-in-out infinite; }
-.brand-logo-anim .spoke.s5 .node { animation: brand-node-5 21s ease-in-out infinite; }
-.brand-logo-anim .spoke.s6 .node { animation: brand-node-6 21s ease-in-out infinite; }
-.brand-logo-anim .hub { animation: brand-hub 21s ease-in-out infinite; }
+.brand-logo-anim .rotor { animation: brand-rotor 28s infinite; }
+.brand-logo-anim .spoke.s1 { animation: brand-reach-1 28s ease-in-out infinite; }
+.brand-logo-anim .spoke.s2 { animation: brand-reach-2 28s ease-in-out infinite; }
+.brand-logo-anim .spoke.s3 { animation: brand-reach-3 28s ease-in-out infinite; }
+.brand-logo-anim .spoke.s4 { animation: brand-reach-4 28s ease-in-out infinite; }
+.brand-logo-anim .spoke.s5 { animation: brand-reach-5 28s ease-in-out infinite; }
+.brand-logo-anim .spoke.s6 { animation: brand-reach-6 28s ease-in-out infinite; }
+.brand-logo-anim .spoke.s1 .node { animation: brand-node-1 28s ease-in-out infinite; }
+.brand-logo-anim .spoke.s2 .node { animation: brand-node-2 28s ease-in-out infinite; }
+.brand-logo-anim .spoke.s3 .node { animation: brand-node-3 28s ease-in-out infinite; }
+.brand-logo-anim .spoke.s4 .node { animation: brand-node-4 28s ease-in-out infinite; }
+.brand-logo-anim .spoke.s5 .node { animation: brand-node-5 28s ease-in-out infinite; }
+.brand-logo-anim .spoke.s6 .node { animation: brand-node-6 28s ease-in-out infinite; }
+.brand-logo-anim .hub { animation: brand-hub 28s ease-in-out infinite; }
 
-/* Each whirl eases in/out and lands at a distinct orientation (30deg · 150deg ·
-   0deg), then holds for the ~5.5s pause. Holds: 7.143-33.333%, 40.476-66.667%,
-   73.810-100%. */
+/* Four states. Each whirl eases in/out and lands at a distinct orientation
+   (90 · 180 · 270 · 0deg), then holds for the ~5.5s pause. Whirls 1.5s, holds
+   5.5s, 28s loop. Holds: 5.357-25%, 30.357-50%, 55.357-75%, 80.357-100%. */
 @keyframes brand-rotor {
   0%      { transform: rotate(0deg);    animation-timing-function: cubic-bezier(.45,0,.45,1); }
-  7.143%  { transform: rotate(750deg);  animation-timing-function: linear; }
-  33.333% { transform: rotate(750deg);  animation-timing-function: cubic-bezier(.45,0,.45,1); }
-  40.476% { transform: rotate(1590deg); animation-timing-function: linear; }
-  66.667% { transform: rotate(1590deg); animation-timing-function: cubic-bezier(.45,0,.45,1); }
-  73.810% { transform: rotate(2160deg); }
-  100%    { transform: rotate(2160deg); }
+  5.357%  { transform: rotate(810deg);  animation-timing-function: linear; }
+  25%     { transform: rotate(810deg);  animation-timing-function: cubic-bezier(.45,0,.45,1); }
+  30.357% { transform: rotate(1620deg); animation-timing-function: linear; }
+  50%     { transform: rotate(1620deg); animation-timing-function: cubic-bezier(.45,0,.45,1); }
+  55.357% { transform: rotate(2430deg); animation-timing-function: linear; }
+  75%     { transform: rotate(2430deg); animation-timing-function: cubic-bezier(.45,0,.45,1); }
+  80.357% { transform: rotate(3240deg); }
+  100%    { transform: rotate(3240deg); }
 }
-/* Colour fades to the next hue during each whirl, then holds: blue · teal · coral */
+/* Colour fades to the next hue during each whirl, then holds: blue · teal · coral · emerald */
 @keyframes brand-tint-light {
-  0%      { color: #f78c6b; } 7.143%  { color: #118ab2; } 33.333% { color: #118ab2; }
-  40.476% { color: #0cb0a9; } 66.667% { color: #0cb0a9; }
-  73.810% { color: #f78c6b; } 100%    { color: #f78c6b; }
+  0%      { color: #06d6a0; }
+  5.357%  { color: #118ab2; } 25%     { color: #118ab2; }
+  30.357% { color: #0cb0a9; } 50%     { color: #0cb0a9; }
+  55.357% { color: #f78c6b; } 75%     { color: #f78c6b; }
+  80.357% { color: #06d6a0; } 100%    { color: #06d6a0; }
 }
 @keyframes brand-tint-dark {
-  0%      { color: #f99e7e; } 7.143%  { color: #58c4ec; } 33.333% { color: #58c4ec; }
-  40.476% { color: #2ad0cb; } 66.667% { color: #2ad0cb; }
-  73.810% { color: #f99e7e; } 100%    { color: #f99e7e; }
+  0%      { color: #34e2ad; }
+  5.357%  { color: #58c4ec; } 25%     { color: #58c4ec; }
+  30.357% { color: #2ad0cb; } 50%     { color: #2ad0cb; }
+  55.357% { color: #f99e7e; } 75%     { color: #f99e7e; }
+  80.357% { color: #34e2ad; } 100%    { color: #34e2ad; }
 }
 /* Arm LENGTH (spoke scale) and node SIZE (node scale) animate independently —
-   each arm has its own length pattern AND its own size pattern across the three
+   each arm has its own length pattern AND its own size pattern across the four
    states, so an arm can reach far with a small node, or short with a big one.
    The node scale is authored as desired-size / arm-length, so the *visible*
-   node size is decoupled from how far the arm reaches. 0% == state 3 (loop);
-   holds 7.143-33.333% (state 1), 40.476-66.667% (state 2), 73.810-100% (state 3). */
+   node size is decoupled from how far the arm reaches. 0% == state 4 (loop);
+   states land at 5.357% (s1), 30.357% (s2), 55.357% (s3), 80.357% (s4). */
 @keyframes brand-reach-1 {
-  0%, 73.810%, 100% { transform: scale(1); }
-  7.143%, 33.333% { transform: scale(1.45); }
-  40.476%, 66.667% { transform: scale(0.7); }
+  0% { transform: scale(1.2); }
+  5.357%, 25% { transform: scale(1.45); }
+  30.357%, 50% { transform: scale(0.7); }
+  55.357%, 75% { transform: scale(1); }
+  80.357%, 100% { transform: scale(1.2); }
 }
 @keyframes brand-reach-2 {
-  0%, 73.810%, 100% { transform: scale(0.9); }
-  7.143%, 33.333% { transform: scale(0.65); }
-  40.476%, 66.667% { transform: scale(1.4); }
+  0% { transform: scale(1.15); }
+  5.357%, 25% { transform: scale(0.65); }
+  30.357%, 50% { transform: scale(1.4); }
+  55.357%, 75% { transform: scale(0.9); }
+  80.357%, 100% { transform: scale(1.15); }
 }
 @keyframes brand-reach-3 {
-  0%, 73.810%, 100% { transform: scale(1.4); }
-  7.143%, 33.333% { transform: scale(1.1); }
-  40.476%, 66.667% { transform: scale(0.6); }
+  0% { transform: scale(0.7); }
+  5.357%, 25% { transform: scale(1.1); }
+  30.357%, 50% { transform: scale(0.6); }
+  55.357%, 75% { transform: scale(1.4); }
+  80.357%, 100% { transform: scale(0.7); }
 }
 @keyframes brand-reach-4 {
-  0%, 73.810%, 100% { transform: scale(0.65); }
-  7.143%, 33.333% { transform: scale(0.8); }
-  40.476%, 66.667% { transform: scale(1.2); }
+  0% { transform: scale(1.35); }
+  5.357%, 25% { transform: scale(0.8); }
+  30.357%, 50% { transform: scale(1.2); }
+  55.357%, 75% { transform: scale(0.65); }
+  80.357%, 100% { transform: scale(1.35); }
 }
 @keyframes brand-reach-5 {
-  0%, 73.810%, 100% { transform: scale(0.7); }
-  7.143%, 33.333% { transform: scale(1.3); }
-  40.476%, 66.667% { transform: scale(0.95); }
+  0% { transform: scale(0.6); }
+  5.357%, 25% { transform: scale(1.3); }
+  30.357%, 50% { transform: scale(0.95); }
+  55.357%, 75% { transform: scale(0.7); }
+  80.357%, 100% { transform: scale(0.6); }
 }
 @keyframes brand-reach-6 {
-  0%, 73.810%, 100% { transform: scale(1.35); }
-  7.143%, 33.333% { transform: scale(0.7); }
-  40.476%, 66.667% { transform: scale(1.05); }
+  0% { transform: scale(0.85); }
+  5.357%, 25% { transform: scale(0.7); }
+  30.357%, 50% { transform: scale(1.05); }
+  55.357%, 75% { transform: scale(1.35); }
+  80.357%, 100% { transform: scale(0.85); }
 }
 /* Node sizes — own scale = desired-size / arm-length, so the visible node size
    follows its own per-arm rhythm rather than tracking the arm's reach. */
 @keyframes brand-node-1 {
-  0%, 73.810%, 100% { transform: scale(1.05); }
-  7.143%, 33.333% { transform: scale(0.62); }
-  40.476%, 66.667% { transform: scale(1.93); }
+  0% { transform: scale(1.08); }
+  5.357%, 25% { transform: scale(0.62); }
+  30.357%, 50% { transform: scale(1.93); }
+  55.357%, 75% { transform: scale(1.05); }
+  80.357%, 100% { transform: scale(1.08); }
 }
 @keyframes brand-node-2 {
-  0%, 73.810%, 100% { transform: scale(1.22); }
-  7.143%, 33.333% { transform: scale(2.15); }
-  40.476%, 66.667% { transform: scale(0.54); }
+  0% { transform: scale(0.7); }
+  5.357%, 25% { transform: scale(2.15); }
+  30.357%, 50% { transform: scale(0.54); }
+  55.357%, 75% { transform: scale(1.22); }
+  80.357%, 100% { transform: scale(0.7); }
 }
 @keyframes brand-node-3 {
-  0%, 73.810%, 100% { transform: scale(0.5); }
-  7.143%, 33.333% { transform: scale(0.77); }
-  40.476%, 66.667% { transform: scale(2.08); }
+  0% { transform: scale(2); }
+  5.357%, 25% { transform: scale(0.77); }
+  30.357%, 50% { transform: scale(2.08); }
+  55.357%, 75% { transform: scale(0.5); }
+  80.357%, 100% { transform: scale(2); }
 }
 @keyframes brand-node-4 {
-  0%, 73.810%, 100% { transform: scale(2.08); }
-  7.143%, 33.333% { transform: scale(1.5); }
-  40.476%, 66.667% { transform: scale(0.58); }
+  0% { transform: scale(0.56); }
+  5.357%, 25% { transform: scale(1.5); }
+  30.357%, 50% { transform: scale(0.58); }
+  55.357%, 75% { transform: scale(2.08); }
+  80.357%, 100% { transform: scale(0.56); }
 }
 @keyframes brand-node-5 {
-  0%, 73.810%, 100% { transform: scale(1.86); }
-  7.143%, 33.333% { transform: scale(0.58); }
-  40.476%, 66.667% { transform: scale(1.21); }
+  0% { transform: scale(2); }
+  5.357%, 25% { transform: scale(0.58); }
+  30.357%, 50% { transform: scale(1.21); }
+  55.357%, 75% { transform: scale(1.86); }
+  80.357%, 100% { transform: scale(2); }
 }
 @keyframes brand-node-6 {
-  0%, 73.810%, 100% { transform: scale(0.56); }
-  7.143%, 33.333% { transform: scale(1.79); }
-  40.476%, 66.667% { transform: scale(0.86); }
+  0% { transform: scale(1.12); }
+  5.357%, 25% { transform: scale(1.79); }
+  30.357%, 50% { transform: scale(0.86); }
+  55.357%, 75% { transform: scale(0.56); }
+  80.357%, 100% { transform: scale(1.12); }
 }
 /* Hub size shifts per state too (its apparent depth) */
 @keyframes brand-hub {
-  0%, 73.810%, 100% { transform: scale(1); }
-  7.143%, 33.333% { transform: scale(1.18); }
-  40.476%, 66.667% { transform: scale(0.85); }
+  0% { transform: scale(1.12); }
+  5.357%, 25% { transform: scale(1.18); }
+  30.357%, 50% { transform: scale(0.85); }
+  55.357%, 75% { transform: scale(1); }
+  80.357%, 100% { transform: scale(1.12); }
 }
 @media (prefers-reduced-motion: reduce) {
   .brand-logo-anim, .brand-logo-anim .rotor, .brand-logo-anim .spoke, .brand-logo-anim .node, .brand-logo-anim .hub { animation: none; }
