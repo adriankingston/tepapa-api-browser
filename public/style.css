@@ -357,49 +357,52 @@ h1, h2, h3, h4, h5, h6 { font-family: var(--md-font-display); }
   55.357%, 75% { transform: scale(1.35); }
   80.357%, 100% { transform: scale(0.85); }
 }
-/* Node sizes — own scale = desired-size / arm-length, so the visible node size
-   follows its own per-arm rhythm rather than tracking the arm's reach. */
+/* Node SIZE (own scale = desired-size / arm-length) plus a DEPTH SHADE: each
+   node's brightness tracks its *visible* size, so the big "near" nodes come up
+   light (~1.46) and the small "far" nodes fall into shadow (~0.52). Riding on
+   currentColor, this shades whatever palette hue the state is in. The brightness
+   value below pairs with the visible size, not the raw scale. */
 @keyframes brand-node-1 {
-  0% { transform: scale(1.08); }
-  5.357%, 25% { transform: scale(0.62); }
-  30.357%, 50% { transform: scale(1.93); }
-  55.357%, 75% { transform: scale(1.05); }
-  80.357%, 100% { transform: scale(1.08); }
+  0% { transform: scale(1.08); filter: brightness(1.32); }
+  5.357%, 25% { transform: scale(0.62); filter: brightness(0.79); }
+  30.357%, 50% { transform: scale(1.93); filter: brightness(1.39); }
+  55.357%, 75% { transform: scale(1.05); filter: brightness(0.99); }
+  80.357%, 100% { transform: scale(1.08); filter: brightness(1.32); }
 }
 @keyframes brand-node-2 {
-  0% { transform: scale(0.7); }
-  5.357%, 25% { transform: scale(2.15); }
-  30.357%, 50% { transform: scale(0.54); }
-  55.357%, 75% { transform: scale(1.22); }
-  80.357%, 100% { transform: scale(0.7); }
+  0% { transform: scale(0.7); filter: brightness(0.65); }
+  5.357%, 25% { transform: scale(2.15); filter: brightness(1.46); }
+  30.357%, 50% { transform: scale(0.54); filter: brightness(0.59); }
+  55.357%, 75% { transform: scale(1.22); filter: brightness(1.06); }
+  80.357%, 100% { transform: scale(0.7); filter: brightness(0.65); }
 }
 @keyframes brand-node-3 {
-  0% { transform: scale(2); }
-  5.357%, 25% { transform: scale(0.77); }
-  30.357%, 50% { transform: scale(2.08); }
-  55.357%, 75% { transform: scale(0.5); }
-  80.357%, 100% { transform: scale(2); }
+  0% { transform: scale(2); filter: brightness(1.46); }
+  5.357%, 25% { transform: scale(0.77); filter: brightness(0.72); }
+  30.357%, 50% { transform: scale(2.08); filter: brightness(1.26); }
+  55.357%, 75% { transform: scale(0.5); filter: brightness(0.52); }
+  80.357%, 100% { transform: scale(2); filter: brightness(1.46); }
 }
 @keyframes brand-node-4 {
-  0% { transform: scale(0.56); }
-  5.357%, 25% { transform: scale(1.5); }
-  30.357%, 50% { transform: scale(0.58); }
-  55.357%, 75% { transform: scale(2.08); }
-  80.357%, 100% { transform: scale(0.56); }
+  0% { transform: scale(0.56); filter: brightness(0.59); }
+  5.357%, 25% { transform: scale(1.5); filter: brightness(1.19); }
+  30.357%, 50% { transform: scale(0.58); filter: brightness(0.52); }
+  55.357%, 75% { transform: scale(2.08); filter: brightness(1.39); }
+  80.357%, 100% { transform: scale(0.56); filter: brightness(0.59); }
 }
 @keyframes brand-node-5 {
-  0% { transform: scale(2); }
-  5.357%, 25% { transform: scale(0.58); }
-  30.357%, 50% { transform: scale(1.21); }
-  55.357%, 75% { transform: scale(1.86); }
-  80.357%, 100% { transform: scale(2); }
+  0% { transform: scale(2); filter: brightness(1.19); }
+  5.357%, 25% { transform: scale(0.58); filter: brightness(0.59); }
+  30.357%, 50% { transform: scale(1.21); filter: brightness(1.12); }
+  55.357%, 75% { transform: scale(1.86); filter: brightness(1.32); }
+  80.357%, 100% { transform: scale(2); filter: brightness(1.19); }
 }
 @keyframes brand-node-6 {
-  0% { transform: scale(1.12); }
-  5.357%, 25% { transform: scale(1.79); }
-  30.357%, 50% { transform: scale(0.86); }
-  55.357%, 75% { transform: scale(0.56); }
-  80.357%, 100% { transform: scale(1.12); }
+  0% { transform: scale(1.12); filter: brightness(0.86); }
+  5.357%, 25% { transform: scale(1.79); filter: brightness(1.26); }
+  30.357%, 50% { transform: scale(0.86); filter: brightness(0.79); }
+  55.357%, 75% { transform: scale(0.56); filter: brightness(0.59); }
+  80.357%, 100% { transform: scale(1.12); filter: brightness(0.86); }
 }
 /* Hub size shifts per state too (its apparent depth) */
 @keyframes brand-hub {
